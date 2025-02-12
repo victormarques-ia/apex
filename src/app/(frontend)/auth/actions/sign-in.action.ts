@@ -2,57 +2,43 @@
 
 import { di } from '@/app/di'
 import { cookies } from 'next/headers'
-import { redirect } from 'next/navigation'
 import { z } from 'zod'
+import { actionHandlerWithValidation } from '@/app/utils/action-handle-with-validation'
+import { redirect } from 'next/navigation'
 
 const schema = z.object({
-  email: z.string().email({
-    message: 'Email inválido',
-  }),
-  password: z.string().min(6, {
-    message: 'Senha deve ter no mínimo 6 caracteres',
-  }),
+  email: z.string().email({ message: 'Email inválido' }),
+  password: z.string().min(6, { message: 'Senha deve ter no mínimo 6 caracteres' }),
 })
 
-export async function loginAction(
-  state: { message: string | { email?: string[]; password?: string[] } },
-  formData: FormData,
-) {
-  try {
-    const validatedFields = schema.safeParse({
-      email: formData.get('email'),
-      password: formData.get('password'),
-    })
+export async function signInAction(_state: unknown, formData: FormData) {
+  return actionHandlerWithValidation(
+    formData,
+    schema,
+    async (data) => {
+      const { user, token } = await di.authService.login(data.email, data.password)
 
-    if (!validatedFields.success) {
-      return {
-        message: validatedFields.error.flatten().fieldErrors,
+      if (!user || !token) {
+        throw new Error('Usuário ou senha inválidos')
       }
-    }
 
-    const { user, token } = await di.authService.login(
-      validatedFields.data.email,
-      validatedFields.data.password,
-    )
+      const co = await cookies()
+      co.set('payload-token', token, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'strict',
+        path: '/',
+      })
 
-    if (!user || !token) {
-      return {
-        message: 'Usuário ou senha inválidos',
-      }
-    }
-
-    const co = await cookies()
-    co.set('payload-token', token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
-      path: '/',
-    })
-  } catch (error) {
-    return {
-      message: 'Erro ao fazer login',
-    }
-  }
-
-  redirect('/home')
+      return user
+    },
+    {
+      onSuccess: (_) => {
+        redirect('/home')
+      },
+      onFailure: (error) => {
+        return error
+      },
+    },
+  )
 }

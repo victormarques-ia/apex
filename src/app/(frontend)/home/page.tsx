@@ -1,9 +1,9 @@
 import { cache } from 'react'
 import { notFound } from 'next/navigation'
-import { userService } from '@/app/(payload)/services/users.service'
+import { di } from '@/app/di'
 
 export const getUsers = cache(async () => {
-  const users = await userService.getUsers()
+  const users = await di.userService.getUsers()
 
   if (!users) notFound()
   return users

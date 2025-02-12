@@ -13,7 +13,7 @@ class BaseService {
 
       return result as PaginatedDocs<T>
     } catch (error) {
-      console.error(error)
+      console.error(`[BaseService][find]: `, error)
       return
     }
   }
@@ -29,12 +29,19 @@ class BaseService {
 
       return result
     } catch (error) {
-      console.error(error)
+      console.error(`[BaseService][findById]: `, error)
+
       return
     }
   }
 
-  async create({ collection, data }: { collection: CollectionSlug; data: Record<string, any> }) {
+  async create({
+    collection,
+    data,
+  }: {
+    collection: CollectionSlug
+    data: Record<string, unknown>
+  }) {
     try {
       const result = await this.payload.create({
         collection,
@@ -45,7 +52,7 @@ class BaseService {
 
       return result
     } catch (error) {
-      console.error(error)
+      console.error(`[BaseService][create]: `, error)
       return
     }
   }

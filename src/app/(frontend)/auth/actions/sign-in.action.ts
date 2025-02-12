@@ -1,17 +1,16 @@
-// src/actions/sign-in.action.ts
 'use server'
 
-import { authService } from '@/app/(payload)/services/auth.service'
+import { di } from '@/app/di'
 import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
 import { z } from 'zod'
 
 const schema = z.object({
-  email: z.string({
-    invalid_type_error: 'Email inválido',
+  email: z.string().email({
+    message: 'Email inválido',
   }),
-  password: z.string({
-    invalid_type_error: 'Senha inválida',
+  password: z.string().min(6, {
+    message: 'Senha deve ter no mínimo 6 caracteres',
   }),
 })
 
@@ -31,7 +30,7 @@ export async function loginAction(
       }
     }
 
-    const { user, token } = await authService.login(
+    const { user, token } = await di.authService.login(
       validatedFields.data.email,
       validatedFields.data.password,
     )

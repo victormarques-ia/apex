@@ -11,6 +11,4 @@ class UserService extends BaseService {
   }
 }
 
-export const userService = new UserService()
-
 export default UserService

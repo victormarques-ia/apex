@@ -14,12 +14,10 @@ class AuthService extends BaseService {
 
       return { user, token }
     } catch (error) {
-      console.error(error)
+      console.error(`[AuthService][login]: ${error}`)
       return { user: null, token: null }
     }
   }
 }
-
-export const authService = new AuthService()
 
 export default AuthService

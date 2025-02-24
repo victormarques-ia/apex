@@ -56,7 +56,7 @@ Antes de iniciar, certifique-se de ter instalado em seu ambiente:
    Para criar migração:
 
    ```bash
-   pnpm payload migrate:create
+   pnpm payload migrate:create --name-here
    ```
 
 ## Estrutura Core do Projeto

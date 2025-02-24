@@ -15,5 +15,17 @@ export const Users: CollectionConfig = {
   fields: [
     // Email added by default
     // Add more fields as needed
+    {
+      name: 'role',
+      type: 'select',
+      options: [
+        { label: 'Athlete', value: 'athlete' },
+        { label: 'Nutritionist', value: 'nutritionist' },
+        { label: 'Trainer', value: 'trainer' },
+        { label: 'Agency', value: 'agency' },
+      ],
+      required: true,
+      defaultValue: 'user',
+    },
   ],
 }

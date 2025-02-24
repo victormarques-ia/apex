@@ -35,9 +35,9 @@ Antes de iniciar, certifique-se de ter instalado em seu ambiente:
 
    > **Observação:** Certifique-se de que o Docker e o Docker Compose estão instalados e configurados corretamente em seu sistema.
 
-3. **Iniciar o servidor de desenvolvimento**
+3. **Se quiser rodar fora do container**
 
-   Com as dependências instaladas e o banco de dados em execução, inicie a aplicação com:
+   Com as dependências instaladas e o banco de dados em execução, inicie a aplicação localmente:
 
    ```bash
    pnpm run dev

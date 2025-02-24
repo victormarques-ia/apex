@@ -25,7 +25,11 @@ export const Users: CollectionConfig = {
         { label: 'Agency', value: 'agency' },
       ],
       required: true,
-      defaultValue: 'user',
+    },
+    {
+      name: 'name',
+      type: 'text',
+      required: true,
     },
   ],
 }

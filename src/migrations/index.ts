@@ -1,5 +1,5 @@
 import * as migration_20250202_232948_initial from './20250202_232948_initial';
-import * as migration_20250224_133802_add_role_user from './20250224_133802_add_role_user';
+import * as migration_20250224_134819_add_role_and_name_field_to_user from './20250224_134819_add_role_and_name_field_to_user';
 
 export const migrations = [
   {
@@ -8,8 +8,8 @@ export const migrations = [
     name: '20250202_232948_initial',
   },
   {
-    up: migration_20250224_133802_add_role_user.up,
-    down: migration_20250224_133802_add_role_user.down,
-    name: '20250224_133802_add_role_user'
+    up: migration_20250224_134819_add_role_and_name_field_to_user.up,
+    down: migration_20250224_134819_add_role_and_name_field_to_user.down,
+    name: '20250224_134819_add_role_and_name_field_to_user'
   },
 ];

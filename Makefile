@@ -47,3 +47,6 @@ install:
 # Rodar migrações do Payload CMS
 migrate:
 	$(PNPM) payload migrate
+
+migrate-create:
+    $(PNPM) payload migrate:create $(name)

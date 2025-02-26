@@ -2,6 +2,8 @@
 DOCKER_SERVICE=payload
 PNPM=docker-compose exec $(DOCKER_SERVICE) pnpm
 
+.PHONY: build dev devsafe generate-importmap generate-types lint payload start up down restart logs install migrate migrate-create
+
 # Alvos principais baseados nos scripts do package.json
 build:
 	$(PNPM) run build
@@ -22,7 +24,7 @@ lint:
 	$(PNPM) run lint
 
 payload:
-	$(PNPM) run payload
+	$(PNPM) run payload $(cmd)
 
 start:
 	$(PNPM) run start
@@ -46,7 +48,7 @@ install:
 
 # Rodar migrações do Payload CMS
 migrate:
-	$(PNPM) payload migrate
+	$(MAKE) payload cmd="migrate"
 
 migrate-create:
-    $(PNPM) payload migrate:create $(name)
+	$(MAKE) payload cmd="migrate:create $(name)"

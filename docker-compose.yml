@@ -12,6 +12,8 @@ services:
     command: sh -c "corepack enable && corepack prepare pnpm@latest --activate && pnpm install && pnpm dev"
     depends_on:
       - postgres
+    environment:
+      DATABASE_URL: "postgres://postgres:postgres@postgres:5432/admin"
     env_file:
       - .env
 

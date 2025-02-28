@@ -15,6 +15,7 @@ export interface Config {
     media: Media;
     trainers: Trainer;
     agencies: Agency;
+    nutritionists: Nutritionist;
     'payload-locked-documents': PayloadLockedDocument;
     'payload-preferences': PayloadPreference;
     'payload-migrations': PayloadMigration;
@@ -25,6 +26,7 @@ export interface Config {
     media: MediaSelect<false> | MediaSelect<true>;
     trainers: TrainersSelect<false> | TrainersSelect<true>;
     agencies: AgenciesSelect<false> | AgenciesSelect<true>;
+    nutritionists: NutritionistsSelect<false> | NutritionistsSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
     'payload-preferences': PayloadPreferencesSelect<false> | PayloadPreferencesSelect<true>;
     'payload-migrations': PayloadMigrationsSelect<false> | PayloadMigrationsSelect<true>;
@@ -125,6 +127,18 @@ export interface Agency {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "nutritionists".
+ */
+export interface Nutritionist {
+  id: number;
+  user: number | User;
+  license_number?: string | null;
+  specialization?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-locked-documents".
  */
 export interface PayloadLockedDocument {
@@ -145,6 +159,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'agencies';
         value: number | Agency;
+      } | null)
+    | ({
+        relationTo: 'nutritionists';
+        value: number | Nutritionist;
       } | null);
   globalSlug?: string | null;
   user: {
@@ -242,6 +260,17 @@ export interface AgenciesSelect<T extends boolean = true> {
   user?: T;
   name?: T;
   contact_info?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "nutritionists_select".
+ */
+export interface NutritionistsSelect<T extends boolean = true> {
+  user?: T;
+  license_number?: T;
+  specialization?: T;
   updatedAt?: T;
   createdAt?: T;
 }

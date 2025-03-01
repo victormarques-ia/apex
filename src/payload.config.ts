@@ -10,7 +10,11 @@ import { en } from '@payloadcms/translations/languages/en'
 import { pt } from '@payloadcms/translations/languages/pt'
 
 import { Users } from './collections/Users'
+import { Trainers } from './collections/Trainers'
 import { Media } from './collections/Media'
+import { Agencies } from './collections/Agencies'
+import { Nutritionists } from './collections/Nutritionists'
+import { AthleteProfiles } from './collections/AthleteProfiles'
 
 const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
@@ -22,7 +26,7 @@ export default buildConfig({
       baseDir: path.resolve(dirname),
     },
   },
-  collections: [Users, Media],
+  collections: [Users, Media, Trainers, Agencies, Nutritionists, AthleteProfiles],
   editor: lexicalEditor(),
   secret: process.env.PAYLOAD_SECRET || '',
   i18n: {

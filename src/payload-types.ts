@@ -13,6 +13,10 @@ export interface Config {
   collections: {
     users: User;
     media: Media;
+    trainers: Trainer;
+    agencies: Agency;
+    nutritionists: Nutritionist;
+    'athlete-profiles': AthleteProfile;
     'payload-locked-documents': PayloadLockedDocument;
     'payload-preferences': PayloadPreference;
     'payload-migrations': PayloadMigration;
@@ -21,6 +25,10 @@ export interface Config {
   collectionsSelect: {
     users: UsersSelect<false> | UsersSelect<true>;
     media: MediaSelect<false> | MediaSelect<true>;
+    trainers: TrainersSelect<false> | TrainersSelect<true>;
+    agencies: AgenciesSelect<false> | AgenciesSelect<true>;
+    nutritionists: NutritionistsSelect<false> | NutritionistsSelect<true>;
+    'athlete-profiles': AthleteProfilesSelect<false> | AthleteProfilesSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
     'payload-preferences': PayloadPreferencesSelect<false> | PayloadPreferencesSelect<true>;
     'payload-migrations': PayloadMigrationsSelect<false> | PayloadMigrationsSelect<true>;
@@ -97,6 +105,60 @@ export interface Media {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "trainers".
+ */
+export interface Trainer {
+  id: number;
+  user: number | User;
+  certification?: string | null;
+  specialization?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "agencies".
+ */
+export interface Agency {
+  id: number;
+  user: number | User;
+  name: string;
+  contact_info?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "nutritionists".
+ */
+export interface Nutritionist {
+  id: number;
+  user: number | User;
+  license_number?: string | null;
+  specialization?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "athlete-profiles".
+ */
+export interface AthleteProfile {
+  id: number;
+  agency: number | Agency;
+  user: number | User;
+  weight?: number | null;
+  height?: number | null;
+  dietary_habits?: string | null;
+  physical_activity_habits?: string | null;
+  birth_date?: string | null;
+  gender?: string | null;
+  goal?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-locked-documents".
  */
 export interface PayloadLockedDocument {
@@ -109,6 +171,22 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'media';
         value: number | Media;
+      } | null)
+    | ({
+        relationTo: 'trainers';
+        value: number | Trainer;
+      } | null)
+    | ({
+        relationTo: 'agencies';
+        value: number | Agency;
+      } | null)
+    | ({
+        relationTo: 'nutritionists';
+        value: number | Nutritionist;
+      } | null)
+    | ({
+        relationTo: 'athlete-profiles';
+        value: number | AthleteProfile;
       } | null);
   globalSlug?: string | null;
   user: {
@@ -186,6 +264,56 @@ export interface MediaSelect<T extends boolean = true> {
   height?: T;
   focalX?: T;
   focalY?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "trainers_select".
+ */
+export interface TrainersSelect<T extends boolean = true> {
+  user?: T;
+  certification?: T;
+  specialization?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "agencies_select".
+ */
+export interface AgenciesSelect<T extends boolean = true> {
+  user?: T;
+  name?: T;
+  contact_info?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "nutritionists_select".
+ */
+export interface NutritionistsSelect<T extends boolean = true> {
+  user?: T;
+  license_number?: T;
+  specialization?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "athlete-profiles_select".
+ */
+export interface AthleteProfilesSelect<T extends boolean = true> {
+  agency?: T;
+  user?: T;
+  weight?: T;
+  height?: T;
+  dietary_habits?: T;
+  physical_activity_habits?: T;
+  birth_date?: T;
+  gender?: T;
+  goal?: T;
+  updatedAt?: T;
+  createdAt?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema

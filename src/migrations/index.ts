@@ -4,6 +4,7 @@ import * as migration_20250228_170337_name_add_trainers from './20250228_170337_
 import * as migration_20250228_171018_name_add_agencies from './20250228_171018_name_add_agencies';
 import * as migration_20250228_180503_name_add_nutritionists from './20250228_180503_name_add_nutritionists';
 import * as migration_20250228_180657_name_add_athleteProfiles from './20250228_180657_name_add_athleteProfiles';
+import * as migration_20250302_180344_add_workoutPlans from './20250302_180344_add_workoutPlans';
 
 export const migrations = [
   {
@@ -34,6 +35,11 @@ export const migrations = [
   {
     up: migration_20250228_180657_name_add_athleteProfiles.up,
     down: migration_20250228_180657_name_add_athleteProfiles.down,
-    name: '20250228_180657_name_add_athleteProfiles'
+    name: '20250228_180657_name_add_athleteProfiles',
+  },
+  {
+    up: migration_20250302_180344_add_workoutPlans.up,
+    down: migration_20250302_180344_add_workoutPlans.down,
+    name: '20250302_180344_add_workoutPlans'
   },
 ];

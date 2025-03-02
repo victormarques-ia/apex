@@ -22,6 +22,7 @@ export interface Config {
     'physical-activity-logs': PhysicalActivityLog;
     exercises: Exercise;
     'exercise-workouts': ExerciseWorkout;
+    'diet-plans': DietPlan;
     'payload-locked-documents': PayloadLockedDocument;
     'payload-preferences': PayloadPreference;
     'payload-migrations': PayloadMigration;
@@ -39,6 +40,7 @@ export interface Config {
     'physical-activity-logs': PhysicalActivityLogsSelect<false> | PhysicalActivityLogsSelect<true>;
     exercises: ExercisesSelect<false> | ExercisesSelect<true>;
     'exercise-workouts': ExerciseWorkoutsSelect<false> | ExerciseWorkoutsSelect<true>;
+    'diet-plans': DietPlansSelect<false> | DietPlansSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
     'payload-preferences': PayloadPreferencesSelect<false> | PayloadPreferencesSelect<true>;
     'payload-migrations': PayloadMigrationsSelect<false> | PayloadMigrationsSelect<true>;
@@ -235,6 +237,21 @@ export interface ExerciseWorkout {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "diet-plans".
+ */
+export interface DietPlan {
+  id: number;
+  athlete: number | AthleteProfile;
+  nutritionist: number | Nutritionist;
+  start_date: string;
+  end_date: string;
+  total_daily_calories?: number | null;
+  notes?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-locked-documents".
  */
 export interface PayloadLockedDocument {
@@ -283,6 +300,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'exercise-workouts';
         value: number | ExerciseWorkout;
+      } | null)
+    | ({
+        relationTo: 'diet-plans';
+        value: number | DietPlan;
       } | null);
   globalSlug?: string | null;
   user: {
@@ -468,6 +489,20 @@ export interface ExerciseWorkoutsSelect<T extends boolean = true> {
   sets?: T;
   reps?: T;
   rest_seconds?: T;
+  notes?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "diet-plans_select".
+ */
+export interface DietPlansSelect<T extends boolean = true> {
+  athlete?: T;
+  nutritionist?: T;
+  start_date?: T;
+  end_date?: T;
+  total_daily_calories?: T;
   notes?: T;
   updatedAt?: T;
   createdAt?: T;

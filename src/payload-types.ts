@@ -19,6 +19,7 @@ export interface Config {
     'athlete-profiles': AthleteProfile;
     'workout-plans': WorkoutPlan;
     'trainer-athletes': TrainerAthlete;
+    'physical-activity-logs': PhysicalActivityLog;
     'payload-locked-documents': PayloadLockedDocument;
     'payload-preferences': PayloadPreference;
     'payload-migrations': PayloadMigration;
@@ -33,6 +34,7 @@ export interface Config {
     'athlete-profiles': AthleteProfilesSelect<false> | AthleteProfilesSelect<true>;
     'workout-plans': WorkoutPlansSelect<false> | WorkoutPlansSelect<true>;
     'trainer-athletes': TrainerAthletesSelect<false> | TrainerAthletesSelect<true>;
+    'physical-activity-logs': PhysicalActivityLogsSelect<false> | PhysicalActivityLogsSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
     'payload-preferences': PayloadPreferencesSelect<false> | PayloadPreferencesSelect<true>;
     'payload-migrations': PayloadMigrationsSelect<false> | PayloadMigrationsSelect<true>;
@@ -188,6 +190,20 @@ export interface TrainerAthlete {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "physical-activity-logs".
+ */
+export interface PhysicalActivityLog {
+  id: number;
+  athlete: number | AthleteProfile;
+  workout_plan?: (number | null) | WorkoutPlan;
+  date: string;
+  duration_minutes: number;
+  calories_burned?: number | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-locked-documents".
  */
 export interface PayloadLockedDocument {
@@ -224,6 +240,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'trainer-athletes';
         value: number | TrainerAthlete;
+      } | null)
+    | ({
+        relationTo: 'physical-activity-logs';
+        value: number | PhysicalActivityLog;
       } | null);
   globalSlug?: string | null;
   user: {
@@ -372,6 +392,19 @@ export interface WorkoutPlansSelect<T extends boolean = true> {
 export interface TrainerAthletesSelect<T extends boolean = true> {
   trainer?: T;
   athlete?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "physical-activity-logs_select".
+ */
+export interface PhysicalActivityLogsSelect<T extends boolean = true> {
+  athlete?: T;
+  workout_plan?: T;
+  date?: T;
+  duration_minutes?: T;
+  calories_burned?: T;
   updatedAt?: T;
   createdAt?: T;
 }

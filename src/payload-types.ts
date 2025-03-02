@@ -20,6 +20,7 @@ export interface Config {
     'workout-plans': WorkoutPlan;
     'trainer-athletes': TrainerAthlete;
     'physical-activity-logs': PhysicalActivityLog;
+    exercises: Exercise;
     'payload-locked-documents': PayloadLockedDocument;
     'payload-preferences': PayloadPreference;
     'payload-migrations': PayloadMigration;
@@ -35,6 +36,7 @@ export interface Config {
     'workout-plans': WorkoutPlansSelect<false> | WorkoutPlansSelect<true>;
     'trainer-athletes': TrainerAthletesSelect<false> | TrainerAthletesSelect<true>;
     'physical-activity-logs': PhysicalActivityLogsSelect<false> | PhysicalActivityLogsSelect<true>;
+    exercises: ExercisesSelect<false> | ExercisesSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
     'payload-preferences': PayloadPreferencesSelect<false> | PayloadPreferencesSelect<true>;
     'payload-migrations': PayloadMigrationsSelect<false> | PayloadMigrationsSelect<true>;
@@ -204,6 +206,18 @@ export interface PhysicalActivityLog {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "exercises".
+ */
+export interface Exercise {
+  id: number;
+  name: string;
+  description?: string | null;
+  muscle_group?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-locked-documents".
  */
 export interface PayloadLockedDocument {
@@ -244,6 +258,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'physical-activity-logs';
         value: number | PhysicalActivityLog;
+      } | null)
+    | ({
+        relationTo: 'exercises';
+        value: number | Exercise;
       } | null);
   globalSlug?: string | null;
   user: {
@@ -405,6 +423,17 @@ export interface PhysicalActivityLogsSelect<T extends boolean = true> {
   date?: T;
   duration_minutes?: T;
   calories_burned?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "exercises_select".
+ */
+export interface ExercisesSelect<T extends boolean = true> {
+  name?: T;
+  description?: T;
+  muscle_group?: T;
   updatedAt?: T;
   createdAt?: T;
 }

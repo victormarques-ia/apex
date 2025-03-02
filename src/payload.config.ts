@@ -20,6 +20,7 @@ import { TrainerAthletes } from './collections/TrainerAthletes'
 import { PhysicalActivityLog } from './collections/PhysicalActivityLogs'
 import { Exercises } from './collections/Exercises'
 import { ExerciseWorkouts } from './collections/ExerciseWorkouts'
+import { DietPlans } from './collections/DietPlans'
 
 const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
@@ -43,6 +44,7 @@ export default buildConfig({
     PhysicalActivityLog,
     Exercises,
     ExerciseWorkouts,
+    DietPlans,
   ],
   editor: lexicalEditor(),
   secret: process.env.PAYLOAD_SECRET || '',

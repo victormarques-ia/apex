@@ -10,6 +10,7 @@ import * as migration_20250302_181118_add_physicalActivityLogs from './20250302_
 import * as migration_20250302_181302_add_exercises from './20250302_181302_add_exercises';
 import * as migration_20250302_181415_add_exerciseWorkouts from './20250302_181415_add_exerciseWorkouts';
 import * as migration_20250302_181457_add_dietPlans from './20250302_181457_add_dietPlans';
+import * as migration_20250302_181532_add_dietPlanDays from './20250302_181532_add_dietPlanDays';
 
 export const migrations = [
   {
@@ -70,6 +71,11 @@ export const migrations = [
   {
     up: migration_20250302_181457_add_dietPlans.up,
     down: migration_20250302_181457_add_dietPlans.down,
-    name: '20250302_181457_add_dietPlans'
+    name: '20250302_181457_add_dietPlans',
+  },
+  {
+    up: migration_20250302_181532_add_dietPlanDays.up,
+    down: migration_20250302_181532_add_dietPlanDays.down,
+    name: '20250302_181532_add_dietPlanDays'
   },
 ];

@@ -23,6 +23,7 @@ export interface Config {
     exercises: Exercise;
     'exercise-workouts': ExerciseWorkout;
     'diet-plans': DietPlan;
+    'diet-plan-days': DietPlanDay;
     'payload-locked-documents': PayloadLockedDocument;
     'payload-preferences': PayloadPreference;
     'payload-migrations': PayloadMigration;
@@ -41,6 +42,7 @@ export interface Config {
     exercises: ExercisesSelect<false> | ExercisesSelect<true>;
     'exercise-workouts': ExerciseWorkoutsSelect<false> | ExerciseWorkoutsSelect<true>;
     'diet-plans': DietPlansSelect<false> | DietPlansSelect<true>;
+    'diet-plan-days': DietPlanDaysSelect<false> | DietPlanDaysSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
     'payload-preferences': PayloadPreferencesSelect<false> | PayloadPreferencesSelect<true>;
     'payload-migrations': PayloadMigrationsSelect<false> | PayloadMigrationsSelect<true>;
@@ -252,6 +254,18 @@ export interface DietPlan {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "diet-plan-days".
+ */
+export interface DietPlanDay {
+  id: number;
+  diet_plan: number | DietPlan;
+  date: string;
+  day_of_week?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-locked-documents".
  */
 export interface PayloadLockedDocument {
@@ -304,6 +318,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'diet-plans';
         value: number | DietPlan;
+      } | null)
+    | ({
+        relationTo: 'diet-plan-days';
+        value: number | DietPlanDay;
       } | null);
   globalSlug?: string | null;
   user: {
@@ -504,6 +522,17 @@ export interface DietPlansSelect<T extends boolean = true> {
   end_date?: T;
   total_daily_calories?: T;
   notes?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "diet-plan-days_select".
+ */
+export interface DietPlanDaysSelect<T extends boolean = true> {
+  diet_plan?: T;
+  date?: T;
+  day_of_week?: T;
   updatedAt?: T;
   createdAt?: T;
 }

@@ -18,6 +18,7 @@ export interface Config {
     nutritionists: Nutritionist;
     'athlete-profiles': AthleteProfile;
     'workout-plans': WorkoutPlan;
+    'trainer-athletes': TrainerAthlete;
     'payload-locked-documents': PayloadLockedDocument;
     'payload-preferences': PayloadPreference;
     'payload-migrations': PayloadMigration;
@@ -31,6 +32,7 @@ export interface Config {
     nutritionists: NutritionistsSelect<false> | NutritionistsSelect<true>;
     'athlete-profiles': AthleteProfilesSelect<false> | AthleteProfilesSelect<true>;
     'workout-plans': WorkoutPlansSelect<false> | WorkoutPlansSelect<true>;
+    'trainer-athletes': TrainerAthletesSelect<false> | TrainerAthletesSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
     'payload-preferences': PayloadPreferencesSelect<false> | PayloadPreferencesSelect<true>;
     'payload-migrations': PayloadMigrationsSelect<false> | PayloadMigrationsSelect<true>;
@@ -175,6 +177,17 @@ export interface WorkoutPlan {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "trainer-athletes".
+ */
+export interface TrainerAthlete {
+  id: number;
+  trainer: number | Trainer;
+  athlete: number | AthleteProfile;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-locked-documents".
  */
 export interface PayloadLockedDocument {
@@ -207,6 +220,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'workout-plans';
         value: number | WorkoutPlan;
+      } | null)
+    | ({
+        relationTo: 'trainer-athletes';
+        value: number | TrainerAthlete;
       } | null);
   globalSlug?: string | null;
   user: {
@@ -345,6 +362,16 @@ export interface WorkoutPlansSelect<T extends boolean = true> {
   start_date?: T;
   end_date?: T;
   goal?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "trainer-athletes_select".
+ */
+export interface TrainerAthletesSelect<T extends boolean = true> {
+  trainer?: T;
+  athlete?: T;
   updatedAt?: T;
   createdAt?: T;
 }

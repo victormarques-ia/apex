@@ -21,6 +21,7 @@ export interface Config {
     'trainer-athletes': TrainerAthlete;
     'physical-activity-logs': PhysicalActivityLog;
     exercises: Exercise;
+    'exercise-workouts': ExerciseWorkout;
     'payload-locked-documents': PayloadLockedDocument;
     'payload-preferences': PayloadPreference;
     'payload-migrations': PayloadMigration;
@@ -37,6 +38,7 @@ export interface Config {
     'trainer-athletes': TrainerAthletesSelect<false> | TrainerAthletesSelect<true>;
     'physical-activity-logs': PhysicalActivityLogsSelect<false> | PhysicalActivityLogsSelect<true>;
     exercises: ExercisesSelect<false> | ExercisesSelect<true>;
+    'exercise-workouts': ExerciseWorkoutsSelect<false> | ExerciseWorkoutsSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
     'payload-preferences': PayloadPreferencesSelect<false> | PayloadPreferencesSelect<true>;
     'payload-migrations': PayloadMigrationsSelect<false> | PayloadMigrationsSelect<true>;
@@ -218,6 +220,21 @@ export interface Exercise {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "exercise-workouts".
+ */
+export interface ExerciseWorkout {
+  id: number;
+  workout_plan: number | WorkoutPlan;
+  exercise: number | Exercise;
+  sets: number;
+  reps: number;
+  rest_seconds?: number | null;
+  notes?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-locked-documents".
  */
 export interface PayloadLockedDocument {
@@ -262,6 +279,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'exercises';
         value: number | Exercise;
+      } | null)
+    | ({
+        relationTo: 'exercise-workouts';
+        value: number | ExerciseWorkout;
       } | null);
   globalSlug?: string | null;
   user: {
@@ -434,6 +455,20 @@ export interface ExercisesSelect<T extends boolean = true> {
   name?: T;
   description?: T;
   muscle_group?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "exercise-workouts_select".
+ */
+export interface ExerciseWorkoutsSelect<T extends boolean = true> {
+  workout_plan?: T;
+  exercise?: T;
+  sets?: T;
+  reps?: T;
+  rest_seconds?: T;
+  notes?: T;
   updatedAt?: T;
   createdAt?: T;
 }

@@ -15,6 +15,7 @@ import { Media } from './collections/Media'
 import { Agencies } from './collections/Agencies'
 import { Nutritionists } from './collections/Nutritionists'
 import { AthleteProfiles } from './collections/AthleteProfiles'
+import { WorkoutPlans } from './collections/WorkoutPlans'
 
 const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
@@ -26,7 +27,7 @@ export default buildConfig({
       baseDir: path.resolve(dirname),
     },
   },
-  collections: [Users, Media, Trainers, Agencies, Nutritionists, AthleteProfiles],
+  collections: [Users, Media, Trainers, Agencies, Nutritionists, AthleteProfiles, WorkoutPlans],
   editor: lexicalEditor(),
   secret: process.env.PAYLOAD_SECRET || '',
   i18n: {

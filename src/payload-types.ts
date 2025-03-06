@@ -27,6 +27,7 @@ export interface Config {
     meal: Meal;
     food: Food;
     'meal-food': MealFood;
+    'daily-consumption': DailyConsumption;
     'payload-locked-documents': PayloadLockedDocument;
     'payload-preferences': PayloadPreference;
     'payload-migrations': PayloadMigration;
@@ -49,6 +50,7 @@ export interface Config {
     meal: MealSelect<false> | MealSelect<true>;
     food: FoodSelect<false> | FoodSelect<true>;
     'meal-food': MealFoodSelect<false> | MealFoodSelect<true>;
+    'daily-consumption': DailyConsumptionSelect<false> | DailyConsumptionSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
     'payload-preferences': PayloadPreferencesSelect<false> | PayloadPreferencesSelect<true>;
     'payload-migrations': PayloadMigrationsSelect<false> | PayloadMigrationsSelect<true>;
@@ -311,6 +313,19 @@ export interface MealFood {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "daily-consumption".
+ */
+export interface DailyConsumption {
+  id: number;
+  athlete?: (number | null) | AthleteProfile;
+  food?: (number | null) | Food;
+  date: string;
+  quantity_grams: number;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-locked-documents".
  */
 export interface PayloadLockedDocument {
@@ -379,6 +394,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'meal-food';
         value: number | MealFood;
+      } | null)
+    | ({
+        relationTo: 'daily-consumption';
+        value: number | DailyConsumption;
       } | null);
   globalSlug?: string | null;
   user: {
@@ -625,6 +644,18 @@ export interface FoodSelect<T extends boolean = true> {
 export interface MealFoodSelect<T extends boolean = true> {
   meal?: T;
   food?: T;
+  quantity_grams?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "daily-consumption_select".
+ */
+export interface DailyConsumptionSelect<T extends boolean = true> {
+  athlete?: T;
+  food?: T;
+  date?: T;
   quantity_grams?: T;
   updatedAt?: T;
   createdAt?: T;

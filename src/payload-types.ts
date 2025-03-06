@@ -24,6 +24,7 @@ export interface Config {
     'exercise-workouts': ExerciseWorkout;
     'diet-plans': DietPlan;
     'diet-plan-days': DietPlanDay;
+    meal: Meal;
     'payload-locked-documents': PayloadLockedDocument;
     'payload-preferences': PayloadPreference;
     'payload-migrations': PayloadMigration;
@@ -43,6 +44,7 @@ export interface Config {
     'exercise-workouts': ExerciseWorkoutsSelect<false> | ExerciseWorkoutsSelect<true>;
     'diet-plans': DietPlansSelect<false> | DietPlansSelect<true>;
     'diet-plan-days': DietPlanDaysSelect<false> | DietPlanDaysSelect<true>;
+    meal: MealSelect<false> | MealSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
     'payload-preferences': PayloadPreferencesSelect<false> | PayloadPreferencesSelect<true>;
     'payload-migrations': PayloadMigrationsSelect<false> | PayloadMigrationsSelect<true>;
@@ -266,6 +268,19 @@ export interface DietPlanDay {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "meal".
+ */
+export interface Meal {
+  id: number;
+  diet_plan_day: number | DietPlanDay;
+  meal_type: string;
+  scheduled_time?: string | null;
+  order_index?: number | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-locked-documents".
  */
 export interface PayloadLockedDocument {
@@ -322,6 +337,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'diet-plan-days';
         value: number | DietPlanDay;
+      } | null)
+    | ({
+        relationTo: 'meal';
+        value: number | Meal;
       } | null);
   globalSlug?: string | null;
   user: {
@@ -533,6 +552,18 @@ export interface DietPlanDaysSelect<T extends boolean = true> {
   diet_plan?: T;
   date?: T;
   day_of_week?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "meal_select".
+ */
+export interface MealSelect<T extends boolean = true> {
+  diet_plan_day?: T;
+  meal_type?: T;
+  scheduled_time?: T;
+  order_index?: T;
   updatedAt?: T;
   createdAt?: T;
 }

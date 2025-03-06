@@ -24,6 +24,10 @@ export interface Config {
     'exercise-workouts': ExerciseWorkout;
     'diet-plans': DietPlan;
     'diet-plan-days': DietPlanDay;
+    reports: Report;
+    'agency-professionals': AgencyProfessional;
+    'nutritionist-athletes': NutritionistAthlete;
+    feedbacks: Feedback;
     'payload-locked-documents': PayloadLockedDocument;
     'payload-preferences': PayloadPreference;
     'payload-migrations': PayloadMigration;
@@ -43,6 +47,10 @@ export interface Config {
     'exercise-workouts': ExerciseWorkoutsSelect<false> | ExerciseWorkoutsSelect<true>;
     'diet-plans': DietPlansSelect<false> | DietPlansSelect<true>;
     'diet-plan-days': DietPlanDaysSelect<false> | DietPlanDaysSelect<true>;
+    reports: ReportsSelect<false> | ReportsSelect<true>;
+    'agency-professionals': AgencyProfessionalsSelect<false> | AgencyProfessionalsSelect<true>;
+    'nutritionist-athletes': NutritionistAthletesSelect<false> | NutritionistAthletesSelect<true>;
+    feedbacks: FeedbacksSelect<false> | FeedbacksSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
     'payload-preferences': PayloadPreferencesSelect<false> | PayloadPreferencesSelect<true>;
     'payload-migrations': PayloadMigrationsSelect<false> | PayloadMigrationsSelect<true>;
@@ -266,6 +274,55 @@ export interface DietPlanDay {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "reports".
+ */
+export interface Report {
+  id: number;
+  created_by: number | User;
+  athlete: number | AthleteProfile;
+  content: string;
+  created_at: string;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "agency-professionals".
+ */
+export interface AgencyProfessional {
+  id: number;
+  agency: number | Agency;
+  professional: number | User;
+  role: string;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "nutritionist-athletes".
+ */
+export interface NutritionistAthlete {
+  id: number;
+  nutritionist: number | Nutritionist;
+  athlete: number | AthleteProfile;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "feedbacks".
+ */
+export interface Feedback {
+  id: number;
+  sender: number | User;
+  receiver: number | User;
+  message: string;
+  created_at: string;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-locked-documents".
  */
 export interface PayloadLockedDocument {
@@ -322,6 +379,22 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'diet-plan-days';
         value: number | DietPlanDay;
+      } | null)
+    | ({
+        relationTo: 'reports';
+        value: number | Report;
+      } | null)
+    | ({
+        relationTo: 'agency-professionals';
+        value: number | AgencyProfessional;
+      } | null)
+    | ({
+        relationTo: 'nutritionist-athletes';
+        value: number | NutritionistAthlete;
+      } | null)
+    | ({
+        relationTo: 'feedbacks';
+        value: number | Feedback;
       } | null);
   globalSlug?: string | null;
   user: {
@@ -533,6 +606,51 @@ export interface DietPlanDaysSelect<T extends boolean = true> {
   diet_plan?: T;
   date?: T;
   day_of_week?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "reports_select".
+ */
+export interface ReportsSelect<T extends boolean = true> {
+  created_by?: T;
+  athlete?: T;
+  content?: T;
+  created_at?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "agency-professionals_select".
+ */
+export interface AgencyProfessionalsSelect<T extends boolean = true> {
+  agency?: T;
+  professional?: T;
+  role?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "nutritionist-athletes_select".
+ */
+export interface NutritionistAthletesSelect<T extends boolean = true> {
+  nutritionist?: T;
+  athlete?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "feedbacks_select".
+ */
+export interface FeedbacksSelect<T extends boolean = true> {
+  sender?: T;
+  receiver?: T;
+  message?: T;
+  created_at?: T;
   updatedAt?: T;
   createdAt?: T;
 }

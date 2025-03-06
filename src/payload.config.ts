@@ -22,6 +22,10 @@ import { Exercises } from './collections/Exercises'
 import { ExerciseWorkouts } from './collections/ExerciseWorkouts'
 import { DietPlans } from './collections/DietPlans'
 import { DietPlanDays } from './collections/DietPlanDays'
+import { Report } from './collections/Report'
+import { AgencyProfessional } from './collections/AgencyProfessional'
+import { NutritionistAthlete } from './collections/NutritionistAthlete'
+import { Feedback } from './collections/Feedback'
 
 const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
@@ -47,6 +51,10 @@ export default buildConfig({
     ExerciseWorkouts,
     DietPlans,
     DietPlanDays,
+    Report,
+    AgencyProfessional,
+    NutritionistAthlete,
+    Feedback,
   ],
   editor: lexicalEditor(),
   secret: process.env.PAYLOAD_SECRET || '',

@@ -14,6 +14,7 @@ import * as migration_20250302_181532_add_dietPlanDays from './20250302_181532_a
 import * as migration_20250306_191644_add_meal from './20250306_191644_add_meal';
 import * as migration_20250306_192740_add_food from './20250306_192740_add_food';
 import * as migration_20250306_194203_add_mealFood from './20250306_194203_add_mealFood';
+import * as migration_20250306_194851_add_dailyConsumption from './20250306_194851_add_dailyConsumption';
 
 export const migrations = [
   {
@@ -94,6 +95,11 @@ export const migrations = [
   {
     up: migration_20250306_194203_add_mealFood.up,
     down: migration_20250306_194203_add_mealFood.down,
-    name: '20250306_194203_add_mealFood'
+    name: '20250306_194203_add_mealFood',
+  },
+  {
+    up: migration_20250306_194851_add_dailyConsumption.up,
+    down: migration_20250306_194851_add_dailyConsumption.down,
+    name: '20250306_194851_add_dailyConsumption'
   },
 ];

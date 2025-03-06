@@ -26,6 +26,7 @@ export interface Config {
     'diet-plan-days': DietPlanDay;
     meal: Meal;
     food: Food;
+    'meal-food': MealFood;
     'payload-locked-documents': PayloadLockedDocument;
     'payload-preferences': PayloadPreference;
     'payload-migrations': PayloadMigration;
@@ -47,6 +48,7 @@ export interface Config {
     'diet-plan-days': DietPlanDaysSelect<false> | DietPlanDaysSelect<true>;
     meal: MealSelect<false> | MealSelect<true>;
     food: FoodSelect<false> | FoodSelect<true>;
+    'meal-food': MealFoodSelect<false> | MealFoodSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
     'payload-preferences': PayloadPreferencesSelect<false> | PayloadPreferencesSelect<true>;
     'payload-migrations': PayloadMigrationsSelect<false> | PayloadMigrationsSelect<true>;
@@ -297,6 +299,18 @@ export interface Food {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "meal-food".
+ */
+export interface MealFood {
+  id: number;
+  meal: number | Meal;
+  food: number | Food;
+  quantity_grams: number;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-locked-documents".
  */
 export interface PayloadLockedDocument {
@@ -361,6 +375,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'food';
         value: number | Food;
+      } | null)
+    | ({
+        relationTo: 'meal-food';
+        value: number | MealFood;
       } | null);
   globalSlug?: string | null;
   user: {
@@ -597,6 +615,17 @@ export interface FoodSelect<T extends boolean = true> {
   protein_per_100g?: T;
   carbs_per_100g?: T;
   fat_per_100g?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "meal-food_select".
+ */
+export interface MealFoodSelect<T extends boolean = true> {
+  meal?: T;
+  food?: T;
+  quantity_grams?: T;
   updatedAt?: T;
   createdAt?: T;
 }

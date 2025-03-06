@@ -25,6 +25,7 @@ export interface Config {
     'diet-plans': DietPlan;
     'diet-plan-days': DietPlanDay;
     meal: Meal;
+    food: Food;
     'payload-locked-documents': PayloadLockedDocument;
     'payload-preferences': PayloadPreference;
     'payload-migrations': PayloadMigration;
@@ -45,6 +46,7 @@ export interface Config {
     'diet-plans': DietPlansSelect<false> | DietPlansSelect<true>;
     'diet-plan-days': DietPlanDaysSelect<false> | DietPlanDaysSelect<true>;
     meal: MealSelect<false> | MealSelect<true>;
+    food: FoodSelect<false> | FoodSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
     'payload-preferences': PayloadPreferencesSelect<false> | PayloadPreferencesSelect<true>;
     'payload-migrations': PayloadMigrationsSelect<false> | PayloadMigrationsSelect<true>;
@@ -281,6 +283,20 @@ export interface Meal {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "food".
+ */
+export interface Food {
+  id: number;
+  name: string;
+  calories_per_100g?: number | null;
+  protein_per_100g?: number | null;
+  carbs_per_100g?: number | null;
+  fat_per_100g?: number | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-locked-documents".
  */
 export interface PayloadLockedDocument {
@@ -341,6 +357,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'meal';
         value: number | Meal;
+      } | null)
+    | ({
+        relationTo: 'food';
+        value: number | Food;
       } | null);
   globalSlug?: string | null;
   user: {
@@ -564,6 +584,19 @@ export interface MealSelect<T extends boolean = true> {
   meal_type?: T;
   scheduled_time?: T;
   order_index?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "food_select".
+ */
+export interface FoodSelect<T extends boolean = true> {
+  name?: T;
+  calories_per_100g?: T;
+  protein_per_100g?: T;
+  carbs_per_100g?: T;
+  fat_per_100g?: T;
   updatedAt?: T;
   createdAt?: T;
 }

@@ -26,6 +26,7 @@ import { Meal } from './collections/Meal'
 import { Food } from './collections/Food'
 import { MealFood } from './collections/MealFood'
 import { DailyConsumption } from './collections/DailyConsumption'
+import { HydrationLog } from './collections/HydrationLog'
 
 const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
@@ -54,7 +55,8 @@ export default buildConfig({
     Meal,
     Food,
     MealFood,
-    DailyConsumption
+    DailyConsumption,
+    HydrationLog
   ],
   editor: lexicalEditor(),
   secret: process.env.PAYLOAD_SECRET || '',

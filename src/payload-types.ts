@@ -28,6 +28,7 @@ export interface Config {
     food: Food;
     'meal-food': MealFood;
     'daily-consumption': DailyConsumption;
+    'hydration-log': HydrationLog;
     'payload-locked-documents': PayloadLockedDocument;
     'payload-preferences': PayloadPreference;
     'payload-migrations': PayloadMigration;
@@ -51,6 +52,7 @@ export interface Config {
     food: FoodSelect<false> | FoodSelect<true>;
     'meal-food': MealFoodSelect<false> | MealFoodSelect<true>;
     'daily-consumption': DailyConsumptionSelect<false> | DailyConsumptionSelect<true>;
+    'hydration-log': HydrationLogSelect<false> | HydrationLogSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
     'payload-preferences': PayloadPreferencesSelect<false> | PayloadPreferencesSelect<true>;
     'payload-migrations': PayloadMigrationsSelect<false> | PayloadMigrationsSelect<true>;
@@ -326,6 +328,18 @@ export interface DailyConsumption {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "hydration-log".
+ */
+export interface HydrationLog {
+  id: number;
+  athlete?: (number | null) | AthleteProfile;
+  date: string;
+  amount_ml: number;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-locked-documents".
  */
 export interface PayloadLockedDocument {
@@ -398,6 +412,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'daily-consumption';
         value: number | DailyConsumption;
+      } | null)
+    | ({
+        relationTo: 'hydration-log';
+        value: number | HydrationLog;
       } | null);
   globalSlug?: string | null;
   user: {
@@ -657,6 +675,17 @@ export interface DailyConsumptionSelect<T extends boolean = true> {
   food?: T;
   date?: T;
   quantity_grams?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "hydration-log_select".
+ */
+export interface HydrationLogSelect<T extends boolean = true> {
+  athlete?: T;
+  date?: T;
+  amount_ml?: T;
   updatedAt?: T;
   createdAt?: T;
 }

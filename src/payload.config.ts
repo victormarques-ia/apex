@@ -23,6 +23,7 @@ import { ExerciseWorkouts } from './collections/ExerciseWorkouts'
 import { DietPlans } from './collections/DietPlans'
 import { DietPlanDays } from './collections/DietPlanDays'
 import { Meal } from './collections/Meal'
+import { Food } from './collections/Food'
 
 const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
@@ -49,6 +50,7 @@ export default buildConfig({
     DietPlans,
     DietPlanDays,
     Meal,
+    Food,
   ],
   editor: lexicalEditor(),
   secret: process.env.PAYLOAD_SECRET || '',

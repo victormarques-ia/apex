@@ -4,6 +4,13 @@ import * as migration_20250228_170337_name_add_trainers from './20250228_170337_
 import * as migration_20250228_171018_name_add_agencies from './20250228_171018_name_add_agencies';
 import * as migration_20250228_180503_name_add_nutritionists from './20250228_180503_name_add_nutritionists';
 import * as migration_20250228_180657_name_add_athleteProfiles from './20250228_180657_name_add_athleteProfiles';
+import * as migration_20250302_180344_add_workoutPlans from './20250302_180344_add_workoutPlans';
+import * as migration_20250302_180921_add_trainerAthletes from './20250302_180921_add_trainerAthletes';
+import * as migration_20250302_181118_add_physicalActivityLogs from './20250302_181118_add_physicalActivityLogs';
+import * as migration_20250302_181302_add_exercises from './20250302_181302_add_exercises';
+import * as migration_20250302_181415_add_exerciseWorkouts from './20250302_181415_add_exerciseWorkouts';
+import * as migration_20250302_181457_add_dietPlans from './20250302_181457_add_dietPlans';
+import * as migration_20250302_181532_add_dietPlanDays from './20250302_181532_add_dietPlanDays';
 
 export const migrations = [
   {
@@ -34,6 +41,41 @@ export const migrations = [
   {
     up: migration_20250228_180657_name_add_athleteProfiles.up,
     down: migration_20250228_180657_name_add_athleteProfiles.down,
-    name: '20250228_180657_name_add_athleteProfiles'
+    name: '20250228_180657_name_add_athleteProfiles',
+  },
+  {
+    up: migration_20250302_180344_add_workoutPlans.up,
+    down: migration_20250302_180344_add_workoutPlans.down,
+    name: '20250302_180344_add_workoutPlans',
+  },
+  {
+    up: migration_20250302_180921_add_trainerAthletes.up,
+    down: migration_20250302_180921_add_trainerAthletes.down,
+    name: '20250302_180921_add_trainerAthletes',
+  },
+  {
+    up: migration_20250302_181118_add_physicalActivityLogs.up,
+    down: migration_20250302_181118_add_physicalActivityLogs.down,
+    name: '20250302_181118_add_physicalActivityLogs',
+  },
+  {
+    up: migration_20250302_181302_add_exercises.up,
+    down: migration_20250302_181302_add_exercises.down,
+    name: '20250302_181302_add_exercises',
+  },
+  {
+    up: migration_20250302_181415_add_exerciseWorkouts.up,
+    down: migration_20250302_181415_add_exerciseWorkouts.down,
+    name: '20250302_181415_add_exerciseWorkouts',
+  },
+  {
+    up: migration_20250302_181457_add_dietPlans.up,
+    down: migration_20250302_181457_add_dietPlans.down,
+    name: '20250302_181457_add_dietPlans',
+  },
+  {
+    up: migration_20250302_181532_add_dietPlanDays.up,
+    down: migration_20250302_181532_add_dietPlanDays.down,
+    name: '20250302_181532_add_dietPlanDays'
   },
 ];

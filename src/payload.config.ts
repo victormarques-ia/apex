@@ -15,6 +15,13 @@ import { Media } from './collections/Media'
 import { Agencies } from './collections/Agencies'
 import { Nutritionists } from './collections/Nutritionists'
 import { AthleteProfiles } from './collections/AthleteProfiles'
+import { WorkoutPlans } from './collections/WorkoutPlans'
+import { TrainerAthletes } from './collections/TrainerAthletes'
+import { PhysicalActivityLog } from './collections/PhysicalActivityLogs'
+import { Exercises } from './collections/Exercises'
+import { ExerciseWorkouts } from './collections/ExerciseWorkouts'
+import { DietPlans } from './collections/DietPlans'
+import { DietPlanDays } from './collections/DietPlanDays'
 
 const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
@@ -26,7 +33,21 @@ export default buildConfig({
       baseDir: path.resolve(dirname),
     },
   },
-  collections: [Users, Media, Trainers, Agencies, Nutritionists, AthleteProfiles],
+  collections: [
+    Users,
+    Media,
+    Trainers,
+    Agencies,
+    Nutritionists,
+    AthleteProfiles,
+    WorkoutPlans,
+    TrainerAthletes,
+    PhysicalActivityLog,
+    Exercises,
+    ExerciseWorkouts,
+    DietPlans,
+    DietPlanDays,
+  ],
   editor: lexicalEditor(),
   secret: process.env.PAYLOAD_SECRET || '',
   i18n: {

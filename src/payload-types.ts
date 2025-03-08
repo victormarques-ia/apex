@@ -24,6 +24,11 @@ export interface Config {
     'exercise-workouts': ExerciseWorkout;
     'diet-plans': DietPlan;
     'diet-plan-days': DietPlanDay;
+    meal: Meal;
+    food: Food;
+    'meal-food': MealFood;
+    'daily-consumption': DailyConsumption;
+    'hydration-log': HydrationLog;
     'payload-locked-documents': PayloadLockedDocument;
     'payload-preferences': PayloadPreference;
     'payload-migrations': PayloadMigration;
@@ -43,6 +48,11 @@ export interface Config {
     'exercise-workouts': ExerciseWorkoutsSelect<false> | ExerciseWorkoutsSelect<true>;
     'diet-plans': DietPlansSelect<false> | DietPlansSelect<true>;
     'diet-plan-days': DietPlanDaysSelect<false> | DietPlanDaysSelect<true>;
+    meal: MealSelect<false> | MealSelect<true>;
+    food: FoodSelect<false> | FoodSelect<true>;
+    'meal-food': MealFoodSelect<false> | MealFoodSelect<true>;
+    'daily-consumption': DailyConsumptionSelect<false> | DailyConsumptionSelect<true>;
+    'hydration-log': HydrationLogSelect<false> | HydrationLogSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
     'payload-preferences': PayloadPreferencesSelect<false> | PayloadPreferencesSelect<true>;
     'payload-migrations': PayloadMigrationsSelect<false> | PayloadMigrationsSelect<true>;
@@ -266,6 +276,70 @@ export interface DietPlanDay {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "meal".
+ */
+export interface Meal {
+  id: number;
+  diet_plan_day: number | DietPlanDay;
+  meal_type: string;
+  scheduled_time?: string | null;
+  order_index?: number | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "food".
+ */
+export interface Food {
+  id: number;
+  name: string;
+  calories_per_100g?: number | null;
+  protein_per_100g?: number | null;
+  carbs_per_100g?: number | null;
+  fat_per_100g?: number | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "meal-food".
+ */
+export interface MealFood {
+  id: number;
+  meal: number | Meal;
+  food: number | Food;
+  quantity_grams: number;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "daily-consumption".
+ */
+export interface DailyConsumption {
+  id: number;
+  athlete?: (number | null) | AthleteProfile;
+  food?: (number | null) | Food;
+  date: string;
+  quantity_grams: number;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "hydration-log".
+ */
+export interface HydrationLog {
+  id: number;
+  athlete?: (number | null) | AthleteProfile;
+  date: string;
+  amount_ml: number;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-locked-documents".
  */
 export interface PayloadLockedDocument {
@@ -322,6 +396,26 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'diet-plan-days';
         value: number | DietPlanDay;
+      } | null)
+    | ({
+        relationTo: 'meal';
+        value: number | Meal;
+      } | null)
+    | ({
+        relationTo: 'food';
+        value: number | Food;
+      } | null)
+    | ({
+        relationTo: 'meal-food';
+        value: number | MealFood;
+      } | null)
+    | ({
+        relationTo: 'daily-consumption';
+        value: number | DailyConsumption;
+      } | null)
+    | ({
+        relationTo: 'hydration-log';
+        value: number | HydrationLog;
       } | null);
   globalSlug?: string | null;
   user: {
@@ -533,6 +627,65 @@ export interface DietPlanDaysSelect<T extends boolean = true> {
   diet_plan?: T;
   date?: T;
   day_of_week?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "meal_select".
+ */
+export interface MealSelect<T extends boolean = true> {
+  diet_plan_day?: T;
+  meal_type?: T;
+  scheduled_time?: T;
+  order_index?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "food_select".
+ */
+export interface FoodSelect<T extends boolean = true> {
+  name?: T;
+  calories_per_100g?: T;
+  protein_per_100g?: T;
+  carbs_per_100g?: T;
+  fat_per_100g?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "meal-food_select".
+ */
+export interface MealFoodSelect<T extends boolean = true> {
+  meal?: T;
+  food?: T;
+  quantity_grams?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "daily-consumption_select".
+ */
+export interface DailyConsumptionSelect<T extends boolean = true> {
+  athlete?: T;
+  food?: T;
+  date?: T;
+  quantity_grams?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "hydration-log_select".
+ */
+export interface HydrationLogSelect<T extends boolean = true> {
+  athlete?: T;
+  date?: T;
+  amount_ml?: T;
   updatedAt?: T;
   createdAt?: T;
 }

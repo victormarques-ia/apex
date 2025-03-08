@@ -11,6 +11,11 @@ import * as migration_20250302_181302_add_exercises from './20250302_181302_add_
 import * as migration_20250302_181415_add_exerciseWorkouts from './20250302_181415_add_exerciseWorkouts';
 import * as migration_20250302_181457_add_dietPlans from './20250302_181457_add_dietPlans';
 import * as migration_20250302_181532_add_dietPlanDays from './20250302_181532_add_dietPlanDays';
+import * as migration_20250306_191644_add_meal from './20250306_191644_add_meal';
+import * as migration_20250306_192740_add_food from './20250306_192740_add_food';
+import * as migration_20250306_194203_add_mealFood from './20250306_194203_add_mealFood';
+import * as migration_20250306_194851_add_dailyConsumption from './20250306_194851_add_dailyConsumption';
+import * as migration_20250306_195233_add_hydrationLog from './20250306_195233_add_hydrationLog';
 
 export const migrations = [
   {
@@ -76,6 +81,31 @@ export const migrations = [
   {
     up: migration_20250302_181532_add_dietPlanDays.up,
     down: migration_20250302_181532_add_dietPlanDays.down,
-    name: '20250302_181532_add_dietPlanDays'
+    name: '20250302_181532_add_dietPlanDays',
+  },
+  {
+    up: migration_20250306_191644_add_meal.up,
+    down: migration_20250306_191644_add_meal.down,
+    name: '20250306_191644_add_meal',
+  },
+  {
+    up: migration_20250306_192740_add_food.up,
+    down: migration_20250306_192740_add_food.down,
+    name: '20250306_192740_add_food',
+  },
+  {
+    up: migration_20250306_194203_add_mealFood.up,
+    down: migration_20250306_194203_add_mealFood.down,
+    name: '20250306_194203_add_mealFood',
+  },
+  {
+    up: migration_20250306_194851_add_dailyConsumption.up,
+    down: migration_20250306_194851_add_dailyConsumption.down,
+    name: '20250306_194851_add_dailyConsumption',
+  },
+  {
+    up: migration_20250306_195233_add_hydrationLog.up,
+    down: migration_20250306_195233_add_hydrationLog.down,
+    name: '20250306_195233_add_hydrationLog'
   },
 ];

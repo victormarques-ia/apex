@@ -27,6 +27,10 @@ import { Food } from './collections/Food'
 import { MealFood } from './collections/MealFood'
 import { DailyConsumption } from './collections/DailyConsumption'
 import { HydrationLog } from './collections/HydrationLog'
+import { Report } from './collections/Report'
+import { NutritionistAthlete } from './collections/NutritionistAthlete'
+import { Feedback } from './collections/Feedback'
+import { AgencyProfessional } from './collections/AgencyProfessional'
 
 const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
@@ -56,7 +60,11 @@ export default buildConfig({
     Food,
     MealFood,
     DailyConsumption,
-    HydrationLog
+    HydrationLog,
+    Report,
+    NutritionistAthlete,
+    Feedback,
+    AgencyProfessional
   ],
   editor: lexicalEditor(),
   secret: process.env.PAYLOAD_SECRET || '',

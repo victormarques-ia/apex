@@ -23,16 +23,5 @@ export const Report: CollectionConfig = {
       type: 'textarea',
       required: true,
     },
-    {
-      name: 'created_at',
-      type: 'date',
-      required: true,
-      defaultValue: () => new Date().toISOString(),
-      admin: {
-        date: {
-          pickerAppearance: 'dayAndTime',
-        },
-      },
-    },
   ],
 }

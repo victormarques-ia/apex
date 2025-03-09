@@ -13,8 +13,6 @@ export const Users: CollectionConfig = {
     delete: ({}) => false,
   },
   fields: [
-    // Email added by default
-    // Add more fields as needed
     {
       name: 'role',
       type: 'select',

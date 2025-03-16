@@ -2,6 +2,8 @@ import { cache } from 'react'
 import { notFound } from 'next/navigation'
 import { di } from '@/app/di'
 
+export const dynamic = 'force-dynamic';
+
 const getUsers = cache(async () => {
   const users = await di.userService.getUsers()
 

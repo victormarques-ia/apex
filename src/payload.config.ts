@@ -31,6 +31,8 @@ import { Report } from './collections/Report'
 import { NutritionistAthlete } from './collections/NutritionistAthlete'
 import { Feedback } from './collections/Feedback'
 import { AgencyProfessional } from './collections/AgencyProfessional'
+import { migrations } from './migrations'
+
 
 const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
@@ -75,8 +77,10 @@ export default buildConfig({
     outputFile: path.resolve(dirname, 'payload-types.ts'),
   },
   db: postgresAdapter({
+    prodMigrations: migrations,
     pool: {
       connectionString: process.env.DATABASE_URI || '',
+      ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
     },
   }),
   sharp,

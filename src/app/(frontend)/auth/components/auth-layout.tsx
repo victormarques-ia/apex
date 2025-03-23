@@ -12,7 +12,7 @@ export function AuthLayout({ children, title }: { children: React.ReactNode; tit
               width={450}
               height={450}
               alt="logo"
-              className="w-auto h-auto"
+              className="w-[450px] h-[450px]"
               priority
             />
           </div>
@@ -34,7 +34,7 @@ export function AuthLayout({ children, title }: { children: React.ReactNode; tit
                 width={200}
                 height={200}
                 alt="logo"
-                className="w-auto h-auto"
+                className="w-[200px] h-[200px]"
                 priority
               />
             </div>

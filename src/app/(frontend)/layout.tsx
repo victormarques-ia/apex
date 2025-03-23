@@ -26,7 +26,12 @@ export default async function RootLayout(props: { children: React.ReactNode }) {
 
   return (
     <html lang="pt-br">
-      <body className={cn('min-h-screen bg-background font-sans antialiased', fontSans.variable)}>
+      <body
+        className={cn(
+          'min-h-screen bg-background font-sans antialiased max-w-screen-2xl mx-auto',
+          fontSans.variable,
+        )}
+      >
         <main>{children}</main>
         <Toaster />
       </body>

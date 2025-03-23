@@ -17,7 +17,7 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form'
-import { useCustomForm } from '@/hooks/use-custom-form'
+import { useCustomForm } from '@/app/hooks/use-custom-form'
 
 const schema = z.object({
   email: z.string().email({ message: 'Email inválido' }),

@@ -22,6 +22,7 @@ const schema = z
   .object({
     password: z.string().min(6, { message: 'Senha deve ter no mínimo 6 caracteres' }),
     confirmPassword: z.string().min(6, { message: 'Senha deve ter no mínimo 6 caracteres' }),
+    token: z.string(),
   })
   .superRefine((data, ctx) => {
     if (data.password !== data.confirmPassword) {
@@ -41,6 +42,7 @@ export default function RedefinePasswordPage() {
     defaultValues: {
       password: '',
       confirmPassword: '',
+      token: new URLSearchParams(location.search).get('token') || '',
     },
   })
   useEffect(() => {

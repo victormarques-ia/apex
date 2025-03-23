@@ -7,7 +7,7 @@ export async function fetchFromApi<T>(
   options?: RequestInit,
 ): Promise<{
   error: {
-    message: string
+    messages: string[]
     status: number
   } | null
   data: T | null
@@ -19,15 +19,16 @@ export async function fetchFromApi<T>(
     next: { revalidate: 0 },
     ...options,
     headers: {
+      'Accept-Language': 'pt-BR',
       'Content-Type': 'application/json',
-      ...headersObject,
+      Cookie: headersObject.cookie,
     },
   })
 
   if (!res.ok) {
     return {
       error: {
-        message: res.statusText,
+        messages: (await res.json()).errors.map((error: { message: string }) => error.message),
         status: res.status,
       },
       data: null,

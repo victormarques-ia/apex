@@ -3,26 +3,35 @@
 import { di } from '@/app/di'
 import { cookies } from 'next/headers'
 import { actionHandlerWithValidation } from '@/app/utils/action-handle-with-validation'
+import { fetchFromApi } from '@/app/utils/fetch-from-api'
 
 export async function signInAction(_state: unknown, formData: FormData) {
   return actionHandlerWithValidation(
     formData,
     async (data) => {
-      const { user, token } = await di.authService.login(data.email, data.password)
+      const result = await fetchFromApi<{
+        token: string
+      }>('/api/users/login', {
+        method: 'POST',
+        body: JSON.stringify({
+          email: data.email,
+          password: data.password,
+        }),
+      })
 
-      if (!user || !token) {
-        throw new Error('Usuário ou senha inválidos')
+      if (!result.data) {
+        throw new Error(result.error?.messages[0] || 'Erro ao efetuar login')
       }
 
       const co = await cookies()
-      co.set('payload-token', token, {
+      co.set('payload-token', result.data.token, {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
         sameSite: 'strict',
         path: '/',
       })
 
-      return user
+      return result.data
     },
     {
       onSuccess: (data) => {

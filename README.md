@@ -232,6 +232,10 @@ export const UsersApi: Endpoint[] = [
 ]
 ```
 
+### Adicionar componentes
+
+Caso precise de algum componente que ainda não exista no projeto, como por exemplo um Checkbox, acesse o [shadcn/ui](https://ui.shadcn.com/docs/components/checkbox) e siga as instruções. O comando irá adicionar o componente ao projeto, e você poderá personalizá-lo conforme necessário.
+
 ## Dicas Adicionais
 
 - **Instalação do PNPM:**  

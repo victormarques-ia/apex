@@ -1,12 +1,12 @@
 import { notFound } from 'next/navigation'
 import { fetchFromApi } from '@/app/utils/fetch-from-api'
 import { User } from '@/payload-types'
-import { PayloadPaginatedResponse } from '@/app/types/payload-paginated-response'
+import { PaginatedDocs } from 'payload'
 
 export const dynamic = 'force-dynamic'
 
 const getUsers = async () => {
-  const result = await fetchFromApi<PayloadPaginatedResponse<User>>('/api/users')
+  const result = await fetchFromApi<PaginatedDocs<User>>('/api/users')
 
   if (!result.data) notFound()
 

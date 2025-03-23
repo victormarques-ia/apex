@@ -351,8 +351,8 @@ export default function LandingPage() {
               {/* Testimonial 1 */}
               <div className="bg-white p-6 rounded-lg shadow-sm">
                 <p className="text-gray-700 mb-4 text-sm">
-                  "A Apex revolucionou a forma como gerenciamos nossos atletas. Agora, cada treino é
-                  otimizado com dados reais."
+                  &quot;A Apex revolucionou a forma como gerenciamos nossos atletas. Agora, cada
+                  treino é otimizado com dados reais.&quot;
                 </p>
                 <div className="flex items-center">
                   <div className="mr-4">
@@ -381,8 +381,8 @@ export default function LandingPage() {
               {/* Testimonial 2 */}
               <div className="bg-white p-6 rounded-lg shadow-sm">
                 <p className="text-gray-700 mb-4 text-sm">
-                  "A integração entre todos os dados na Apex deixou o treinamento muito mais
-                  eficiente. O feedback instantâneo é um diferencial!"
+                  &quot;A integração entre todos os dados na Apex deixou o treinamento muito mais
+                  eficiente. O feedback instantâneo é um diferencial!&quot;
                 </p>
                 <div className="flex items-center">
                   <div className="mr-4">
@@ -411,8 +411,8 @@ export default function LandingPage() {
               {/* Testimonial 3 */}
               <div className="bg-white p-6 rounded-lg shadow-sm">
                 <p className="text-gray-700 mb-4 text-sm">
-                  "Com a Apex, controlamos tudo em um só lugar. Além, claro, dos ótimos resultados
-                  conseguidos pelos nossos atletas com melhor planejamento."
+                  &quot;Com a Apex, controlamos tudo em um só lugar. Além, claro, dos ótimos
+                  resultados conseguidos pelos nossos atletas com melhor planejamento.&quot;
                 </p>
                 <div className="flex items-center">
                   <div className="mr-4">

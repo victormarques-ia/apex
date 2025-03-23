@@ -8,7 +8,6 @@ import { Input } from '@/components/ui/input'
 import { toast } from 'sonner'
 import Link from 'next/link'
 import { z } from 'zod'
-import { useRouter } from 'next/navigation'
 import {
   Form,
   FormControl,
@@ -24,8 +23,6 @@ const schema = z.object({
 })
 
 export default function RecoverPasswordPage() {
-  const router = useRouter()
-
   const { pending, state, onSubmit, ...form } = useCustomForm({
     action: recoverPasswordAction,
     schema,

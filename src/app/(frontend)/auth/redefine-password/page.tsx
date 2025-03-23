@@ -52,7 +52,7 @@ export default function RedefinePasswordPage() {
       toast.success('Senha redefinida com sucesso!')
       router.replace('/auth/sign-in')
     }
-  }, [state])
+  }, [state, router])
 
   return (
     <AuthLayout title="Redefinir senha">

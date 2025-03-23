@@ -1,6 +1,5 @@
 'use server'
 
-import { di } from '@/app/di'
 import { cookies } from 'next/headers'
 import { actionHandlerWithValidation } from '@/app/utils/action-handle-with-validation'
 import { fetchFromApi } from '@/app/utils/fetch-from-api'

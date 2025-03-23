@@ -44,7 +44,7 @@ export default function LoginPage() {
       toast.success('Login efetuado com sucesso!')
       router.replace('/home')
     }
-  }, [state])
+  }, [state, router])
 
   return (
     <AuthLayout title="Login">

@@ -15,7 +15,7 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form'
-import { useCustomForm } from '@/hooks/use-custom-form'
+import { useCustomForm } from '@/app/hooks/use-custom-form'
 import { redefinePasswordAction } from '../actions/redefine-password.action'
 
 const schema = z

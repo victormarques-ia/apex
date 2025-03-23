@@ -38,7 +38,6 @@ export default function RecoverPasswordPage() {
       toast.error(state.error)
     } else if (state.data) {
       toast.success('Email enviado com sucesso!')
-      router.push(`/auth/redefine-password?token=${state.data.token}`)
     }
   }, [state])
 

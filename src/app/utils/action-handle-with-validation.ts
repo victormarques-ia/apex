@@ -1,5 +1,3 @@
-import { z } from 'zod'
-
 export interface ActionResult<T> {
   data: T | null
   error: string | null
@@ -10,39 +8,28 @@ export interface ActionCallbacks<T> {
   onFailure?: (error: string) => void
 }
 
-export async function actionHandlerWithValidation<T, S extends z.ZodTypeAny>(
+export async function actionHandlerWithValidation<T>(
   formData: FormData,
-  schema: S,
-  fn: (data: z.infer<S>) => Promise<T>,
+  fn: (data: Record<string, any>) => Promise<T>,
   callbacks?: ActionCallbacks<T>,
 ): Promise<ActionResult<T>> {
   const dataObject = Object.fromEntries(formData.entries())
-  const parsed = schema.safeParse(dataObject)
-  let result: ActionResult<T>
 
-  if (!parsed.success) {
-    result = {
-      data: null,
-      error: Object.values(parsed.error.flatten().fieldErrors).flat().join(', '),
+  try {
+    const fnResult = await fn(dataObject)
+    const result: ActionResult<T> = { data: fnResult, error: null }
+    if (result.data) {
+      callbacks?.onSuccess?.(result.data)
     }
-  } else {
-    try {
-      const fnResult = await fn(parsed.data)
-      result = { data: fnResult, error: null }
-    } catch (error) {
-      console.warn(`[actionHandlerWithValidation]: `, error)
-      result = {
-        data: null,
-        error: error instanceof Error ? error.message : 'Erro desconhecido',
-      }
+    return result
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido'
+    const result: ActionResult<T> = { data: null, error: errorMessage }
+
+    if (result.error) {
+      callbacks?.onFailure?.(result.error)
     }
-  }
 
-  if (result.error) {
-    callbacks?.onFailure?.(result.error)
-  } else if (result.data !== null) {
-    callbacks?.onSuccess?.(result.data)
+    return result
   }
-
-  return result
 }

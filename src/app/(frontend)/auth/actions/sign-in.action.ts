@@ -2,19 +2,11 @@
 
 import { di } from '@/app/di'
 import { cookies } from 'next/headers'
-import { z } from 'zod'
 import { actionHandlerWithValidation } from '@/app/utils/action-handle-with-validation'
-import { redirect } from 'next/navigation'
-
-const schema = z.object({
-  email: z.string().email({ message: 'Email inválido' }),
-  password: z.string().min(6, { message: 'Senha deve ter no mínimo 6 caracteres' }),
-})
 
 export async function signInAction(_state: unknown, formData: FormData) {
   return actionHandlerWithValidation(
     formData,
-    schema,
     async (data) => {
       const { user, token } = await di.authService.login(data.email, data.password)
 
@@ -33,8 +25,8 @@ export async function signInAction(_state: unknown, formData: FormData) {
       return user
     },
     {
-      onSuccess: (_) => {
-        redirect('/home')
+      onSuccess: (data) => {
+        return data
       },
       onFailure: (error) => {
         return error

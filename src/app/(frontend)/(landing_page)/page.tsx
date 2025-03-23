@@ -2,15 +2,9 @@ import Head from 'next/head'
 import Image from 'next/image'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { useRouter } from 'next/router'
 import Link from 'next/link'
 
 export default function LandingPage() {
-  //   const router = useRouter()
-
-  //   const goToAuth = () => {
-  //     router.push('/auth/sign-in')
-  //   }
   return (
     <div className="flex flex-col min-h-screen">
       <Head>

@@ -1,8 +1,12 @@
 'use client'
 
 import { useEffect } from 'react'
-
+import { AuthLayout } from '../components/auth-layout'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { toast } from 'sonner'
 import { z } from 'zod'
+import { useRouter } from 'next/navigation'
 import {
   Form,
   FormControl,
@@ -11,77 +15,80 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import Link from 'next/link'
-import { toast } from 'sonner'
-import { useRouter } from 'next/navigation'
-import { signInAction } from '../actions/sign-in.action'
-import { AuthLayout } from '../components/auth-layout'
 import { useCustomForm } from '@/app/hooks/use-custom-form'
+import { redefinePasswordAction } from '../actions/redefine-password.action'
 
-const schema = z.object({
-  email: z.string().email({ message: 'Email inválido' }),
-  password: z.string().min(6, { message: 'Senha deve ter no mínimo 6 caracteres' }),
-})
-
-export default function LoginPage() {
+const schema = z
+  .object({
+    password: z.string().min(6, { message: 'Senha deve ter no mínimo 6 caracteres' }),
+    confirmPassword: z.string().min(6, { message: 'Senha deve ter no mínimo 6 caracteres' }),
+    token: z.string(),
+  })
+  .superRefine((data, ctx) => {
+    if (data.password !== data.confirmPassword) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'Senhas não conferem',
+        path: ['confirmPassword'],
+      })
+    }
+  })
+export default function RedefinePasswordPage() {
   const router = useRouter()
 
   const { pending, state, onSubmit, ...form } = useCustomForm({
-    action: signInAction,
+    action: redefinePasswordAction,
     schema,
     defaultValues: {
-      email: '',
       password: '',
+      confirmPassword: '',
+      token: new URLSearchParams(location.search).get('token') || '',
     },
   })
-
   useEffect(() => {
     if (state.error) {
       toast.error(state.error)
     } else if (state.data) {
-      toast.success('Login efetuado com sucesso!')
-      router.replace('/home')
+      toast.success('Senha redefinida com sucesso!')
+      router.replace('/auth/sign-in')
     }
   }, [state, router])
 
   return (
-    <AuthLayout title="Login">
+    <AuthLayout title="Redefinir senha">
       <Form {...form}>
         <form onSubmit={onSubmit} className="space-y-6">
           <div className="space-y-4">
             <FormField
               control={form.control}
-              name="email"
+              name="password"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Email</FormLabel>
+                  <FormLabel>Nova senha</FormLabel>
                   <FormControl>
                     <Input
+                      placeholder="******"
                       {...field}
-                      placeholder="seu@email.com"
-                      type="email"
-                      autoComplete="email"
+                      type="password"
+                      autoComplete="new-password"
                     />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
-
             <FormField
               control={form.control}
-              name="password"
+              name="confirmPassword"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Senha</FormLabel>
+                  <FormLabel>Confirme senha</FormLabel>
                   <FormControl>
                     <Input
+                      placeholder="******"
                       {...field}
                       type="password"
-                      placeholder="******"
-                      autoComplete="current-password"
+                      autoComplete="new-password"
                     />
                   </FormControl>
                   <FormMessage />
@@ -91,16 +98,10 @@ export default function LoginPage() {
           </div>
 
           <Button type="submit" className="w-full" disabled={pending}>
-            {pending ? 'Entrando...' : 'Entrar'}
+            {pending ? 'Enviando...' : 'Enviar'}
           </Button>
         </form>
       </Form>
-
-      <div className="mt-4 text-center text-sm">
-        <Link href="/auth/recover-password" className="underline hover:text-primary">
-          Recuperar senha
-        </Link>
-      </div>
     </AuthLayout>
   )
 }

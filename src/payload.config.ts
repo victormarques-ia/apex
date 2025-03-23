@@ -32,7 +32,8 @@ import { NutritionistAthlete } from './collections/NutritionistAthlete'
 import { Feedback } from './collections/Feedback'
 import { AgencyProfessional } from './collections/AgencyProfessional'
 import { migrations } from './migrations'
-
+import { nodemailerAdapter } from '@payloadcms/email-nodemailer'
+import nodemailer from 'nodemailer'
 
 const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
@@ -66,10 +67,14 @@ export default buildConfig({
     Report,
     NutritionistAthlete,
     Feedback,
-    AgencyProfessional
+    AgencyProfessional,
   ],
   editor: lexicalEditor(),
   secret: process.env.PAYLOAD_SECRET || '',
+  localization: {
+    locales: ['en', 'pt'],
+    defaultLocale: 'pt',
+  },
   i18n: {
     supportedLanguages: { en, pt },
   },
@@ -84,6 +89,19 @@ export default buildConfig({
     },
   }),
   sharp,
+  email: nodemailerAdapter({
+    defaultFromAddress: 'info@apex.com',
+    defaultFromName: 'Apex',
+    transport: nodemailer.createTransport({
+      host: process.env.SMTP_HOST,
+      port: 587,
+      secure: false,
+      auth: {
+        user: process.env.SMTP_USER,
+        pass: process.env.SMTP_PASS,
+      },
+    }),
+  }),
   plugins: [
     payloadCloudPlugin(),
     // storage-adapter-placeholder

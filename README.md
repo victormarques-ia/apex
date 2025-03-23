@@ -61,7 +61,7 @@ Antes de iniciar, certifique-se de ter instalado em seu ambiente:
 
 ## Estrutura Core do Projeto
 
-A estrutura do projeto é organizada com uma separação clara entre as **collections** (definições de entidades no Payload CMS), os **services** (lógica de negócio que interage com o Payload) e o **front-end** (Next.js PWA que consome os serviços).
+A estrutura do projeto é organizada com uma separação clara entre as **collections** (definições de entidades no Payload CMS) e o **front-end** (Next.js PWA que consome os serviços).
 
 ### Collections
 
@@ -86,74 +86,42 @@ export const Users: CollectionConfig = {
 }
 ```
 
-### Services
-
-Os services encapsulam a lógica de negócios e abstraem as interações diretas com o Payload CMS. No exemplo abaixo, `AuthService` gerencia a autenticação dos usuários:
-
-```typescript
-import BaseService from './base.service'
-
-class AuthService extends BaseService {
-  async login(email: string, password: string) {
-    try {
-      const { user, token } = await this.payload.login({
-        collection: 'users',
-        data: { email, password },
-        overrideAccess: false,
-      })
-      return { user, token }
-    } catch (error) {
-      console.error(`[AuthService][login]: ${error}`)
-      return { user: null, token: null }
-    }
-  }
-}
-
-export default AuthService
-```
-
 ### Uso no Front-end
 
-O front-end, desenvolvido com Next.js, consome os serviços por meio de ações do servidor (`server actions`). O exemplo abaixo mostra o fluxo de login usando `AuthService`:
+O front-end, desenvolvido com Next.js, consome os endpoints por meio de ações do servidor (`server actions`). O exemplo abaixo mostra o fluxo de login.
 
 ```typescript
-'use server'
-
-import { di } from '@/app/di'
-import { cookies } from 'next/headers'
-import { z } from 'zod'
-import { actionHandlerWithValidation } from '@/app/utils/action-handle-with-validation'
-import { redirect } from 'next/navigation'
-
-const schema = z.object({
-  email: z.string().email({ message: 'Email inválido' }),
-  password: z.string().min(6, { message: 'Senha deve ter no mínimo 6 caracteres' }),
-})
-
 export async function signInAction(_state: unknown, formData: FormData) {
   return actionHandlerWithValidation(
     formData,
-    schema,
     async (data) => {
-      const { user, token } = await di.authService.login(data.email, data.password)
+      const result = await fetchFromApi<{
+        token: string
+      }>('/api/users/login', {
+        method: 'POST',
+        body: JSON.stringify({
+          email: data.email,
+          password: data.password,
+        }),
+      })
 
-      if (!user || !token) {
-        throw new Error('Usuário ou senha inválidos')
+      if (!result.data) {
+        throw new Error(result.error?.messages[0] || 'Erro ao efetuar login')
       }
 
       const co = await cookies()
-      co.set('payload-token', token, {
+      co.set('payload-token', result.data.token, {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
         sameSite: 'strict',
         path: '/',
       })
 
-      return user
+      return result.data
     },
     {
-      onSuccess: (_) => {
-        redirect('/home')
+      onSuccess: (data) => {
+        return data
       },
       onFailure: (error) => {
         return error
@@ -168,16 +136,20 @@ export async function signInAction(_state: unknown, formData: FormData) {
 Aqui está um exemplo de como obter dados dos usuários e exibi-los no front-end:
 
 ```typescript
-import { cache } from 'react'
 import { notFound } from 'next/navigation'
-import { di } from '@/app/di'
+import { fetchFromApi } from '@/app/utils/fetch-from-api'
+import { User } from '@/payload-types'
+import { PaginatedDocs } from 'payload'
 
-export const getUsers = cache(async () => {
-  const users = await di.userService.getUsers()
+export const dynamic = 'force-dynamic'
 
-  if (!users) notFound()
-  return users
-})
+const getUsers = async () => {
+  const result = await fetchFromApi<PaginatedDocs<User>>('/api/users')
+
+  if (!result.data) notFound()
+
+  return result.data
+}
 
 export default async function Home() {
   const { docs } = await getUsers()
@@ -194,6 +166,70 @@ export default async function Home() {
     </div>
   )
 }
+```
+
+### Custom Endpoints
+
+Também é possível criar seus próprios endpoints, com lógica personalizada.
+
+```typescript
+const newsletterSchema = z.object({
+  email: z
+    .string({
+      required_error: 'Por favor, insira um e-mail.',
+    })
+    .email('Por favor, insira um e-mail válido.'),
+})
+
+// Examples of API endpoints
+export const UsersApi: Endpoint[] = [
+  {
+    method: 'post',
+    path: '/newsletter',
+    handler: withValidation(newsletterSchema)(async (req, validatedData) => {
+      try {
+        const { email } = validatedData
+
+        // TODO: Register email in newsletter
+
+        return Response.json({
+          data: {
+            message: `${email} cadastrado com sucesso na newsletter`,
+          },
+        })
+      } catch (error) {
+        console.error('[UsersApi][newsletter]:', error)
+        return Response.json(
+          {
+            errors: [{ message: 'Erro inesperado ao cadastrar lead' }],
+          },
+          { status: 500 },
+        )
+      }
+    }),
+  },
+  {
+    method: 'get',
+    path: '/leads',
+
+    handler: async (req: PayloadRequest) => {
+      try {
+        const leads = await req.payload.find({
+          collection: 'users',
+        })
+        return Response.json(leads)
+      } catch (error) {
+        console.error('[UsersApi][newsletter]:', error)
+        return Response.json(
+          {
+            errors: [{ message: 'Erro inesperado ao pegar leads' }],
+          },
+          { status: 500 },
+        )
+      }
+    },
+  },
+]
 ```
 
 ## Dicas Adicionais

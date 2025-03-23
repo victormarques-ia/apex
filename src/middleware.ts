@@ -20,5 +20,5 @@ export function middleware(req: NextRequest) {
 
 // Apply the middleware to these paths
 export const config = {
-  matcher: ['/', '/home', '/auth/sign-in'],
+  matcher: ['/home', '/auth/sign-in'],
 }

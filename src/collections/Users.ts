@@ -1,3 +1,4 @@
+import { UsersApi } from '@/api/users.api'
 import type { CollectionConfig } from 'payload'
 
 const BASE_URL = process.env.PAYLOAD_PUBLIC_SITE_URL || 'http://localhost:3000'
@@ -14,7 +15,7 @@ export const Users: CollectionConfig = {
         user,
       }: {
         token?: string
-        user?: any
+        user?: { email: string }
       } = {}) => {
         const resetPasswordURL = `${BASE_URL}/auth/redefine-password?token=${token}`
 
@@ -22,7 +23,7 @@ export const Users: CollectionConfig = {
           <!doctype html>
           <html>
             <body>
-              <h1>Apex Sports</h1>
+              <h1>Apex</h1>
               <p>Olá, ${user?.email || 'usuário'}!</p>
               <p>Clique abaixo para redefinir sua senha.</p>
               <p>
@@ -58,4 +59,5 @@ export const Users: CollectionConfig = {
       required: true,
     },
   ],
+  endpoints: UsersApi,
 }

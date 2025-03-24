@@ -8,7 +8,7 @@ import { addConsumptionAction,
          deleteConsumptionAction,
          getDailyConsumptionsAction,
          getNutritionalTotalsAction } from './actions/dailyConsumption.action'
-import { getAthleteProfileAction } from './actions/athlete.action'
+import { getAthleteProfileAction } from '../actions/athlete.action'
 import { searchFoodsAction } from '../../nutrition/actions/foods.action'
 
 // Card components
@@ -65,14 +65,16 @@ export default function DailyConsumptionPage() {
         
         const formData = new FormData()
         const result = await getAthleteProfileAction(null, formData)
-        
-        if (result.success && result.data) {
+
+        console.log(result)
+
+        if (result.data.data){
           setAthleteProfile(result.data.data)
           setAthleteId(result.data.data.id.toString())
-          console.log('Athlete profile loaded:', result.data.data)
+          console.log('Athlete profile loaded:', result.data.data);
         } else {
-          setAthleteError('Não foi possível carregar o perfil do atleta')
-          console.error('Failed to load athlete profile:', result.error)
+        setAthleteError('Não foi possível carregar o perfil do atleta')
+        console.error('Failed to load athlete profile:', result.error)
         }
       } catch (error) {
         setAthleteError('Erro ao carregar o perfil do atleta')

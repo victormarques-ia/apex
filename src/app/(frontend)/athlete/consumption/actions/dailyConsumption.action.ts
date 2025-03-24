@@ -159,7 +159,7 @@ export async function getDailyConsumptionsAction(_state: unknown, formData: Form
       queryParams.append('page', page as string);
 
       // Fetch the consumption records
-      const result = await fetchFromApi(`/api/daily-consumption/totals?${queryParams.toString()}`, {
+      const result = await fetchFromApi(`/api/daily-consumption/history?${queryParams.toString()}`, {
         method: 'GET',
       });
 

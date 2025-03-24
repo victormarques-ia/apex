@@ -8,24 +8,28 @@ export async function searchFoodsAction(_state: unknown, formData: FormData) {
   return actionHandlerWithValidation(
     formData,
     async (data) => {
-      const query = data.query;
+      const query = data.q || data.query;
       const limit = data.limit || 10;
       
       if (!query || (query as string).length < 2) {
-        return { foods: [] };
+        console.log('Query is too short, returning empty array');
+        return { docs: [] };
       }
 
       // Build the query parameters
       const queryParams = new URLSearchParams();
       queryParams.append('q', query as string);
       queryParams.append('limit', limit as string);
+      
+      const endpoint = `/api/food/search?${queryParams.toString()}`;
 
       // Search for foods
-      const result = await fetchFromApi(`/api/food/search?${queryParams.toString()}`, {
+      const result = await fetchFromApi(endpoint, {
         method: 'GET',
       });
-
+      
       if (!result.data) {
+        console.error('Food search API error:', result.error);
         throw new Error(result.error?.messages[0] || 'Erro ao pesquisar alimentos');
       }
 
@@ -39,6 +43,7 @@ export async function searchFoodsAction(_state: unknown, formData: FormData) {
         };
       },
       onFailure: (error) => {
+        console.error('Food search failure:', error);
         return {
           success: false,
           error,
@@ -103,7 +108,6 @@ export async function addFoodAction(_state: unknown, formData: FormData) {
         fat_per_100g: data.fat_per_100g ? parseFloat(data.fat_per_100g as string) : null,
       };
       
-      // Create a new food through the PayloadCMS API
       const result = await fetchFromApi('/api/food', {
         method: 'POST',
         body: JSON.stringify(nutritionData),

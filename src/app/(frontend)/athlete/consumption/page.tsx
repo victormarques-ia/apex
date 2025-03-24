@@ -3,11 +3,12 @@
 import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Search, Plus, X, Loader } from 'lucide-react'
+import { Search, Plus, X, Loader, AlertCircle } from 'lucide-react'
 import { addConsumptionAction,
          deleteConsumptionAction,
          getDailyConsumptionsAction,
          getNutritionalTotalsAction } from './actions/dailyConsumption.action'
+import { getAthleteProfileAction } from './actions/athlete.action'
 import { searchFoodsAction } from '../../nutrition/actions/foods.action'
 
 // Card components
@@ -36,8 +37,11 @@ const CardContent = ({ className, children, ...props }) => (
 )
 
 export default function DailyConsumptionPage() {
-  const athleteId = '1' // @TODO: Add atheleteId fetch
-
+  const [athleteId, setAthleteId] = useState<string | null>(null)
+  const [athleteProfile, setAthleteProfile] = useState<any>(null)
+  const [athleteLoading, setAthleteLoading] = useState(true)
+  const [athleteError, setAthleteError] = useState<string | null>(null)
+  
   const [date, setDate] = useState(new Date().toISOString().split('T')[0])
   const [consumptions, setConsumptions] = useState([])
   const [foods, setFoods] = useState([])
@@ -52,10 +56,41 @@ export default function DailyConsumptionPage() {
   })
   const [isLoading, setIsLoading] = useState(false)
   
-  // Fetch consumption data for the selected date
+  // Fetch athlete profile on component mount
   useEffect(() => {
-    fetchConsumptions()
-  }, [date])
+    const fetchAthleteProfile = async () => {
+      try {
+        setAthleteLoading(true)
+        setAthleteError(null)
+        
+        const formData = new FormData()
+        const result = await getAthleteProfileAction(null, formData)
+        
+        if (result.success && result.data) {
+          setAthleteProfile(result.data.data)
+          setAthleteId(result.data.data.id.toString())
+          console.log('Athlete profile loaded:', result.data.data)
+        } else {
+          setAthleteError('Não foi possível carregar o perfil do atleta')
+          console.error('Failed to load athlete profile:', result.error)
+        }
+      } catch (error) {
+        setAthleteError('Erro ao carregar o perfil do atleta')
+        console.error('Error fetching athlete profile:', error)
+      } finally {
+        setAthleteLoading(false)
+      }
+    }
+    
+    fetchAthleteProfile()
+  }, [])
+  
+  // Fetch consumption data when date or athleteId changes
+  useEffect(() => {
+    if (athleteId) {
+      fetchConsumptions()
+    }
+  }, [date, athleteId])
 
   // Search foods when query changes
   useEffect(() => {
@@ -69,6 +104,8 @@ export default function DailyConsumptionPage() {
 
   // Fetch consumption data and nutritional totals
   const fetchConsumptions = async () => {
+    if (!athleteId) return
+    
     try {
       setIsLoading(true)
       
@@ -161,7 +198,7 @@ export default function DailyConsumptionPage() {
 
   // Add consumption
   const addConsumption = async () => {
-    if (!selectedFood) {
+    if (!selectedFood || !athleteId) {
       return
     }
     
@@ -261,9 +298,51 @@ export default function DailyConsumptionPage() {
     )
   }
 
+  // If we're loading the athlete profile, show a loading state
+  if (athleteLoading) {
+    return (
+      <div className="container mx-auto p-4 flex justify-center items-center min-h-[70vh]">
+        <div className="text-center">
+          <Loader className="h-8 w-8 animate-spin mx-auto mb-4 text-blue-500" />
+          <p className="text-lg">Carregando perfil do atleta...</p>
+        </div>
+      </div>
+    )
+  }
+
+  // If there was an error loading the athlete profile, show an error state
+  if (athleteError || !athleteId) {
+    return (
+      <div className="container mx-auto p-4">
+        <div className="bg-red-50 border border-red-200 rounded-lg p-6 text-center">
+          <AlertCircle className="h-10 w-10 text-red-500 mx-auto mb-4" />
+          <h2 className="text-xl font-semibold text-red-800 mb-2">Erro ao carregar perfil</h2>
+          <p className="text-red-700 mb-6">{athleteError || 'Perfil de atleta não encontrado'}</p>
+          <Button 
+            onClick={() => window.location.reload()} 
+            className="bg-red-600 hover:bg-red-700 text-white"
+          >
+            Tentar novamente
+          </Button>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="container mx-auto p-4">
       <h1 className="text-2xl font-bold mb-4">Registro de Consumo Diário</h1>
+      
+      {/* Display athlete info */}
+      {athleteProfile && (
+        <div className="mb-4 bg-blue-50 p-3 rounded-lg text-blue-800 text-sm">
+          <p>
+            <span className="font-medium">Atleta:</span> {athleteProfile.user?.name || 'Nome não disponível'}
+            {athleteProfile.weight && <span className="ml-3">Peso: {athleteProfile.weight}kg</span>}
+            {athleteProfile.height && <span className="ml-3">Altura: {athleteProfile.height}cm</span>}
+          </p>
+        </div>
+      )}
       
       <div className="mb-6">
         <label className="block mb-2">Data:</label>

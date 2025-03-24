@@ -6,7 +6,8 @@ import { Input } from '@/components/ui/input'
 import { Search, Plus, X, Loader } from 'lucide-react'
 import { addConsumptionAction,
          deleteConsumptionAction,
-         getDailyConsumptionsAction } from './actions/dailyConsumption.action'
+         getDailyConsumptionsAction,
+         getNutritionalTotalsAction } from './actions/dailyConsumption.action'
 import { searchFoodsAction } from '../../nutrition/actions/foods.action'
 
 // Card components
@@ -66,23 +67,47 @@ export default function DailyConsumptionPage() {
     searchFoods()
   }, [searchQuery])
 
-  // Fetch consumption data
+  // Fetch consumption data and nutritional totals
   const fetchConsumptions = async () => {
     try {
       setIsLoading(true)
+      
+      // Prepare form data
       const formData = new FormData()
       formData.append('athleteId', athleteId)
       formData.append('from', date)
+      formData.append('to', date)
       
+      // Fetch consumption data
       const result = await getDailyConsumptionsAction(null, formData)
-      const consumptionDocs = result.data.docs || []
-
+      
+      // Log response and handle consumption data
       console.log('Consumption API response:', result)
+      const consumptionDocs = result.data?.docs || []
       console.log('Consumptions found:', consumptionDocs.length)
-
       setConsumptions(consumptionDocs)
-      calculateNutritionTotals(consumptionDocs)
-      setNutritionTotals({ calories: 0, protein: 0, carbs: 0, fat: 0 })
+      
+      // Fetch nutritional totals
+      const totalsFormData = new FormData()
+      totalsFormData.append('athleteId', athleteId)
+      totalsFormData.append('from', date)
+      totalsFormData.append('to', date)
+      
+      const totalsResult = await getNutritionalTotalsAction(null, totalsFormData)
+      
+      if (totalsResult.success && totalsResult.data?.totals) {
+        // Set nutrition totals from API
+        const { totals } = totalsResult.data
+        setNutritionTotals({
+          calories: Math.round(totals.calories),
+          protein: Math.round(totals.protein),
+          carbs: Math.round(totals.carbs),
+          fat: Math.round(totals.fat),
+        })
+      } else {
+        // Fallback to manual calculation
+        calculateNutritionTotals(consumptionDocs)
+      }
     } catch (error) {
       console.error('Error fetching consumption data:', error)
       setConsumptions([])
@@ -92,25 +117,7 @@ export default function DailyConsumptionPage() {
     }
   }
 
-  // Search foods
-  const searchFoods = async () => {
-    try {
-      setIsLoading(true)
-      const formData = new FormData()
-      formData.append('q', searchQuery)
-      formData.append('limit', '10')
-      const result = await searchFoodsAction(null, formData)
-      const foodDocs = result.data.docs || []
-      setFoods(foodDocs)
-    } catch (error) {
-      console.error('Error searching foods:', error)
-      setFoods([])
-    } finally {
-      setIsLoading(false)
-    }
-  }
-
-  // Calculate nutrition totals
+  // Calculate nutrition totals (fallback method)
   const calculateNutritionTotals = (consumptionData) => {
     const totals = consumptionData.reduce(
       (acc, consumption) => {
@@ -135,6 +142,21 @@ export default function DailyConsumptionPage() {
       carbs: Math.round(totals.carbs),
       fat: Math.round(totals.fat),
     })
+  }
+
+  // Search foods
+  const searchFoods = async () => {
+    try {
+      const formData = new FormData()
+      formData.append('q', searchQuery)
+      formData.append('limit', '10')
+      const result = await searchFoodsAction(null, formData)
+      const foodDocs = result.data?.docs || []
+      setFoods(foodDocs)
+    } catch (error) {
+      console.error('Error searching foods:', error)
+      setFoods([])
+    }
   }
 
   // Add consumption
@@ -183,6 +205,60 @@ export default function DailyConsumptionPage() {
     } finally {
       setIsLoading(false)
     }
+  }
+
+  // Render the nutrition bar chart
+  const renderNutritionBar = () => {
+    const proteinCal = nutritionTotals.protein * 4
+    const carbsCal = nutritionTotals.carbs * 4
+    const fatCal = nutritionTotals.fat * 9
+    const totalCal = proteinCal + carbsCal + fatCal
+    
+    if (totalCal === 0) return null
+    
+    const proteinPct = (proteinCal / totalCal) * 100
+    const carbsPct = (carbsCal / totalCal) * 100
+    const fatPct = (fatCal / totalCal) * 100
+    
+    return (
+      <div className="mt-4">
+        <h5 className="text-sm font-medium mb-1">Distribuição de Macros</h5>
+        <div className="h-6 rounded-full overflow-hidden bg-gray-200 flex">
+          <div 
+            className="bg-red-400 h-full text-xs text-white flex items-center justify-center"
+            style={{ width: `${proteinPct}%` }}
+          >
+            {proteinPct >= 10 ? `${Math.round(proteinPct)}%` : ''}
+          </div>
+          <div 
+            className="bg-yellow-400 h-full text-xs text-white flex items-center justify-center"
+            style={{ width: `${carbsPct}%` }}
+          >
+            {carbsPct >= 10 ? `${Math.round(carbsPct)}%` : ''}
+          </div>
+          <div 
+            className="bg-green-400 h-full text-xs text-white flex items-center justify-center"
+            style={{ width: `${fatPct}%` }}
+          >
+            {fatPct >= 10 ? `${Math.round(fatPct)}%` : ''}
+          </div>
+        </div>
+        <div className="flex text-xs mt-1 justify-between">
+          <div className="flex items-center">
+            <div className="w-2 h-2 bg-red-400 rounded-full mr-1"></div>
+            Proteínas
+          </div>
+          <div className="flex items-center">
+            <div className="w-2 h-2 bg-yellow-400 rounded-full mr-1"></div>
+            Carboidratos
+          </div>
+          <div className="flex items-center">
+            <div className="w-2 h-2 bg-green-400 rounded-full mr-1"></div>
+            Gorduras
+          </div>
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -325,6 +401,8 @@ export default function DailyConsumptionPage() {
                     <span className="font-bold text-lg">{nutritionTotals.fat}g</span>
                   </div>
                 </div>
+                
+                {renderNutritionBar()}
               </div>
               
               {/* Lista de alimentos consumidos */}
@@ -389,4 +467,3 @@ export default function DailyConsumptionPage() {
     </div>
   );
 }
-

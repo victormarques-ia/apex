@@ -22,6 +22,8 @@ export async function addConsumptionAction(_state: unknown, formData: FormData) 
         }),
       });
 
+      console.log('Result:', result)
+
       if (!result.data) {
         throw new Error(result.error?.messages[0] || 'Erro ao adicionar consumo');
       }
@@ -135,7 +137,6 @@ export async function deleteConsumptionAction(_state: unknown, formData: FormDat
   );
 }
 
-// Action to fetch daily consumption records for a specific date range
 export async function getDailyConsumptionsAction(_state: unknown, formData: FormData) {
   return actionHandlerWithValidation(
     formData,
@@ -181,6 +182,56 @@ export async function getDailyConsumptionsAction(_state: unknown, formData: Form
           success: false,
           error,
           message: 'Falha ao buscar consumos',
+        };
+      },
+    }
+  );
+}
+
+// Action to get nutritional totals for a specific date range
+export async function getNutritionalTotalsAction(_state: unknown, formData: FormData) {
+  return actionHandlerWithValidation(
+    formData,
+    async (data) => {
+      const athleteId = data.athleteId;
+      const from = data.from || undefined;
+      const to = data.to || undefined;
+      const groupBy = data.groupBy || undefined; // Optional parameter for grouping (e.g., by date)
+      
+      if (!athleteId) {
+        throw new Error('ID do atleta é obrigatório');
+      }
+
+      // Build the query parameters
+      const queryParams = new URLSearchParams();
+      queryParams.append('athleteId', athleteId as string);
+      if (from) queryParams.append('from', from as string);
+      if (to) queryParams.append('to', to as string);
+      if (groupBy) queryParams.append('groupBy', groupBy as string);
+
+      // Fetch the nutrition totals
+      const result = await fetchFromApi(`/api/daily-consumption/totals?${queryParams.toString()}`, {
+        method: 'GET',
+      });
+
+      if (!result.data) {
+        throw new Error(result.error?.messages[0] || 'Erro ao buscar totais nutricionais');
+      }
+
+      return result.data;
+    },
+    {
+      onSuccess: (data) => {
+        return {
+          success: true,
+          data,
+        };
+      },
+      onFailure: (error) => {
+        return {
+          success: false,
+          error,
+          message: 'Falha ao buscar totais nutricionais',
         };
       },
     }

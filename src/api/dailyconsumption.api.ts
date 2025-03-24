@@ -6,7 +6,8 @@ export const DailyConsumptionApi: Endpoint[] = [
     path: '/history',
     handler: async (req: PayloadRequest) => {
       try {
-        const { from, to, athleteId, limit, page } = req.query;
+        let { from, to } = req.query;
+        const { athleteId, page, limit } = req.query;
         
         // Basic validation
         if (!athleteId) {
@@ -33,6 +34,8 @@ export const DailyConsumptionApi: Endpoint[] = [
         const validLimit = !isNaN(parsedLimit) && parsedLimit > 0 && parsedLimit <= 500 
           ? parsedLimit 
           : 50; // Default limit
+
+        console.log('Params:', from, to, athleteId, validLimit, page);
         
         // Build the where condition based on date range
         const whereCondition = {
@@ -62,7 +65,7 @@ export const DailyConsumptionApi: Endpoint[] = [
         });
 
         return Response.json({
-          consumptionsResult,
+          ...consumptionsResult,
           dateRange: {
             from: from,
             to: to,

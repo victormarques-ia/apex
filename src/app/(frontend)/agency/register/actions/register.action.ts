@@ -23,6 +23,16 @@ interface AthleteProfileResponse {
   [key: string]: any
 }
 
+interface NutritionistProfileResponse {
+  id: number
+  [key: string]: any
+}
+
+interface TrainerProfileResponse {
+  id: number
+  [key: string]: any
+}
+
 interface UserDocsResponse {
   docs: UserResponse[]
   totalDocs: number
@@ -45,6 +55,14 @@ interface RelationshipResponse {
 interface AthleteRegistrationResponse extends AthleteProfileResponse {
   trainerRelationship: boolean
   nutritionistRelationship: boolean
+}
+
+interface NutritionistRegistrationResponse extends NutritionistProfileResponse {
+  athleteRelationship: boolean
+}
+
+interface TrainerRegistrationResponse extends TrainerProfileResponse {
+  athleteRelationship: boolean
 }
 
 // Type for searchForId function
@@ -285,6 +303,342 @@ export async function registerAthleteAction(_state: unknown, formData: FormData)
           success: false,
           error,
           message: 'Falha ao registrar perfil do atleta',
+        }
+      },
+    },
+  )
+}
+
+export async function registerNutritionistAction(_state: unknown, formData: FormData) {
+  return actionHandlerWithValidation(
+    formData,
+    async (data) => {
+      // First, ensure we have a user ID
+      if (!data.userId) {
+        throw new Error('ID do usuário é obrigatório para registrar um nutricionista')
+      }
+
+      // TODO: In the future, this should come from the agency dashboard context/session
+      // For now, we're hardcoding the agency ID as the page is part of the agency dashboard
+      const agencyId = 2
+
+      // Prepare the nutritionist data for submission
+      const nutritionistData = {
+        agency: agencyId, // Fixed agency ID
+        user: parseInt(data.userId as string, 10), // Convert to number
+        license_number: data.license_number as string,
+        specialization: data.specialization as string,
+      }
+
+      console.log(
+        'Submitting nutritionist profile data:',
+        JSON.stringify(nutritionistData, null, 2),
+      )
+
+      // Submit the nutritionist through the API
+      const result = await fetchFromApi<NutritionistProfileResponse>('/api/nutritionists', {
+        method: 'POST',
+        body: JSON.stringify(nutritionistData),
+      })
+
+      if (!result.data) {
+        console.error('Error response from API:', result.error)
+        throw new Error(result.error?.messages?.[0] || 'Erro ao registrar perfil do nutricionista')
+      }
+
+      // Extract the nutritionist ID from the response
+      let nutritionistId: number | null = null
+
+      // Function to recursively search for an ID in an object
+      const searchForId = (obj: SearchableObject): number | null => {
+        if (!obj || typeof obj !== 'object') return null
+
+        if (obj.id !== undefined) return obj.id
+        if (obj._id !== undefined) return obj._id
+
+        for (const key in obj) {
+          if (key === 'id' || key === '_id') {
+            if (typeof obj[key] === 'number') return obj[key]
+          } else if (typeof obj[key] === 'object' && obj[key] !== null) {
+            const result = searchForId(obj[key])
+            if (result !== null) return result
+          }
+        }
+        return null
+      }
+
+      if (result.data.id) {
+        nutritionistId = result.data.id
+      } else {
+        nutritionistId = searchForId(result.data as SearchableObject)
+      }
+
+      if (nutritionistId === null) {
+        console.error('Unable to extract nutritionist ID from response')
+        throw new Error('ID do perfil do nutricionista não encontrado na resposta')
+      }
+
+      console.log(`nutritionist created with ID: ${nutritionistId}`)
+
+      // Response object will track the relationships created
+      const response: NutritionistRegistrationResponse = {
+        ...result.data,
+        id: nutritionistId,
+        athleteRelationship: false,
+      }
+
+      // Handle athlete relationship if athlete email is provided
+      if (data.athleteEmail) {
+        try {
+          // First, find the athlete user by email
+          const athleteUserResult = await fetchFromApi<UserDocsResponse>(
+            `/api/users?where[email][equals]=${encodeURIComponent(data.athleteEmail as string)}`,
+            { method: 'GET' },
+          )
+
+          if (!athleteUserResult.data?.docs?.length) {
+            console.log(`No user found with email ${data.athleteEmail}`)
+            return response
+          }
+
+          const athleteUserId = athleteUserResult.data.docs[0].id
+          console.log(`Found athlete user with ID: ${athleteUserId}`)
+
+          // Find the athlete profile for this user
+          const athleteResult = await fetchFromApi<ProfileDocsResponse>(
+            `/api/athlete-profiles?where[user][equals]=${athleteUserId}`,
+            { method: 'GET' },
+          )
+
+          if (!athleteResult.data?.docs?.length) {
+            console.log(`User ${athleteResult} is not a athlete`)
+            return response
+          }
+
+          const athleteId = athleteResult.data.docs[0].id
+          console.log(`Found athlete profile with ID: ${athleteId}`)
+
+          //TODO: VERIFY THIS
+          // Check if athlete is part of the Nutritionist patient
+          // const NutritionistAthleteResult = await fetchFromApi<ProfileDocsResponse>(
+          //   `/api/nutritionistAthlete?where[athlete][equals]=${athleteUserId}&where[nutritionist][equals]=${nutritionistId}`,
+          //   { method: 'GET' },
+          // )
+
+          // if (!NutritionistAthleteResult.data?.docs?.length) {
+          //   console.log(`Athlete ${athleteUserId} is not a nutritionist ${nutritionistId} patient`)
+          //   return response
+          // }
+
+          // console.log(`Confirmed athlete ${athleteUserId} is a nutritionist ${nutritionistId} patient`)
+
+          // Create nutritionist-athlete relationship
+          const nutritionistRelationshipData = {
+            nutritionist: nutritionistId,
+            athlete: athleteUserId,
+          }
+
+          const nutritionistRelationResult = await fetchFromApi<RelationshipResponse>(
+            '/api/nutritionist-athletes',
+            {
+              method: 'POST',
+              body: JSON.stringify(nutritionistRelationshipData),
+            },
+          )
+
+          if (nutritionistRelationResult.data) {
+            console.log(`Created nutritionist-athlete relationship successfully`)
+            response.nutritionistRelationship = true
+          }
+        } catch (error) {
+          console.error('Error creating nutritionist-athlete relationship:', error)
+        }
+      }
+
+      return response
+    },
+    {
+      onSuccess: function (data) {
+        return {
+          success: true,
+          data,
+          message: 'Perfil do nutricionista registrado com sucesso',
+        }
+      },
+      onFailure: function (error) {
+        console.error('Registration failure:', error)
+        return {
+          success: false,
+          error,
+          message: 'Falha ao registrar perfil do nutricionista',
+        }
+      },
+    },
+  )
+}
+
+export async function registerTrainerAction(_state: unknown, formData: FormData) {
+  return actionHandlerWithValidation(
+    formData,
+    async (data) => {
+      // First, ensure we have a user ID
+      if (!data.userId) {
+        throw new Error('ID do usuário é obrigatório para registrar um treinador')
+      }
+
+      // TODO: In the future, this should come from the agency dashboard context/session
+      // For now, we're hardcoding the agency ID as the page is part of the agency dashboard
+      const agencyId = 2
+
+      // Prepare the trainer data for submission
+      const trainerData = {
+        agency: agencyId, // Fixed agency ID
+        user: parseInt(data.userId as string, 10), // Convert to number
+        certification: data.certification as string,
+        specialization: data.specialization as string,
+      }
+
+      console.log(
+        'Submitting trainer profile data:',
+        JSON.stringify(trainerData, null, 2),
+      )
+
+      // Submit the trainer through the API
+      const result = await fetchFromApi<TrainerProfileResponse>('/api/trainers', {
+        method: 'POST',
+        body: JSON.stringify(trainerData),
+      })
+
+      if (!result.data) {
+        console.error('Error response from API:', result.error)
+        throw new Error(result.error?.messages?.[0] || 'Erro ao registrar perfil do treinador')
+      }
+
+      // Extract the trainer ID from the response
+      let trainerId: number | null = null
+
+      // Function to recursively search for an ID in an object
+      const searchForId = (obj: SearchableObject): number | null => {
+        if (!obj || typeof obj !== 'object') return null
+
+        if (obj.id !== undefined) return obj.id
+        if (obj._id !== undefined) return obj._id
+
+        for (const key in obj) {
+          if (key === 'id' || key === '_id') {
+            if (typeof obj[key] === 'number') return obj[key]
+          } else if (typeof obj[key] === 'object' && obj[key] !== null) {
+            const result = searchForId(obj[key])
+            if (result !== null) return result
+          }
+        }
+        return null
+      }
+
+      if (result.data.id) {
+        trainerId = result.data.id
+      } else {
+        trainerId = searchForId(result.data as SearchableObject)
+      }
+
+      if (trainerId === null) {
+        console.error('Unable to extract trainer ID from response')
+        throw new Error('ID do perfil do treinador não encontrado na resposta')
+      }
+
+      console.log(`trainer created with ID: ${trainerId}`)
+
+      // Response object will track the relationships created
+      const response: TrainerRegistrationResponse = {
+        ...result.data,
+        id: trainerId,
+        athleteRelationship: false,
+      }
+
+      // Handle athlete relationship if athlete email is provided
+      if (data.athleteEmail) {
+        try {
+          // First, find the athlete user by email
+          const athleteUserResult = await fetchFromApi<UserDocsResponse>(
+            `/api/users?where[email][equals]=${encodeURIComponent(data.athleteEmail as string)}`,
+            { method: 'GET' },
+          )
+
+          if (!athleteUserResult.data?.docs?.length) {
+            console.log(`No user found with email ${data.athleteEmail}`)
+            return response
+          }
+
+          const athleteUserId = athleteUserResult.data.docs[0].id
+          console.log(`Found athlete user with ID: ${athleteUserId}`)
+
+          // Find the athlete profile for this user
+          const athleteResult = await fetchFromApi<ProfileDocsResponse>(
+            `/api/athlete-profiles?where[user][equals]=${athleteUserId}`,
+            { method: 'GET' },
+          )
+
+          if (!athleteResult.data?.docs?.length) {
+            console.log(`User ${athleteResult} is not a athlete`)
+            return response
+          }
+
+          const athleteId = athleteResult.data.docs[0].id
+          console.log(`Found athlete profile with ID: ${athleteId}`)
+
+          //TODO: VERIFY THIS
+          // Check if athlete is part of the Nutritionist patient
+          // const NutritionistAthleteResult = await fetchFromApi<ProfileDocsResponse>(
+          //   `/api/nutritionistAthlete?where[athlete][equals]=${athleteUserId}&where[nutritionist][equals]=${nutritionistId}`,
+          //   { method: 'GET' },
+          // )
+
+          // if (!NutritionistAthleteResult.data?.docs?.length) {
+          //   console.log(`Athlete ${athleteUserId} is not a nutritionist ${nutritionistId} patient`)
+          //   return response
+          // }
+
+          // console.log(`Confirmed athlete ${athleteUserId} is a nutritionist ${nutritionistId} patient`)
+
+          // Create trainer-athlete relationship
+          const athleteRelationshipData = {
+            trainer: trainerId,
+            athlete: athleteUserId,
+          }
+
+          const trainerRelationResult = await fetchFromApi<RelationshipResponse>(
+            '/api/trainer-athletes',
+            {
+              method: 'POST',
+              body: JSON.stringify(athleteRelationshipData),
+            },
+          )
+
+          if (trainerRelationResult.data) {
+            console.log(`Created trainer-athlete relationship successfully`)
+            response.trainerRelationship = true
+          }
+        } catch (error) {
+          console.error('Error creating trainer-athlete relationship:', error)
+        }
+      }
+
+      return response
+    },
+    {
+      onSuccess: function (data) {
+        return {
+          success: true,
+          data,
+          message: 'Perfil do treinador registrado com sucesso',
+        }
+      },
+      onFailure: function (error) {
+        console.error('Registration failure:', error)
+        return {
+          success: false,
+          error,
+          message: 'Falha ao registrar perfil do treinador',
         }
       },
     },

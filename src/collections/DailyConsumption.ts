@@ -1,4 +1,5 @@
 import type { CollectionConfig } from "payload";
+import { DailyConsumptionApi } from "@/api/dailyconsumption.api";
 
 export const DailyConsumption: CollectionConfig = {
     slug: 'daily-consumption',
@@ -29,4 +30,5 @@ export const DailyConsumption: CollectionConfig = {
         required: true
       }
     ],
+    endpoints: DailyConsumptionApi,
   }

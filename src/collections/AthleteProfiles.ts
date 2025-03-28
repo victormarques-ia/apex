@@ -1,4 +1,5 @@
 import type { CollectionConfig } from 'payload'
+import { AthleteApi } from '../api/athlete.api'
 
 export const AthleteProfiles: CollectionConfig = {
   slug: 'athlete-profiles',
@@ -54,4 +55,5 @@ export const AthleteProfiles: CollectionConfig = {
       required: false,
     },
   ],
+  endpoints: AthleteApi,
 }

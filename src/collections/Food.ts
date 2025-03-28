@@ -1,4 +1,5 @@
 import type { CollectionConfig } from "payload";
+import { FoodApi } from "@/api/food.api";
 
 export const Food: CollectionConfig = {
     slug: 'food',
@@ -33,4 +34,5 @@ export const Food: CollectionConfig = {
         required: false,
       }
     ],
+    endpoints: FoodApi,
   }

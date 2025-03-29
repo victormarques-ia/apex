@@ -1,45 +1,36 @@
 import { Endpoint, PayloadRequest } from 'payload'
 
+async function getLoggedInNutritionistId(req: PayloadRequest) {
+    if (!req.user) {
+        throw new Error('Usuário não autenticado');
+    }
+
+    const userId = req.user.id;
+
+    const nutritionistProfiles = await req.payload.find({
+        collection: 'nutritionists',
+        where: {
+            user: {
+                equals: userId,
+            },
+        },
+        limit: 1,
+    });
+
+    if (!nutritionistProfiles.docs || nutritionistProfiles.docs.length === 0) {
+        throw new Error('Perfil de nutricionista não encontrado para este usuário');
+    }
+
+    return nutritionistProfiles.docs[0].id;
+}
+
 export const NutritionistApi: Endpoint[] = [
   {
     method: 'get',
-    path: '/patients',
+    path: '/my-athletes',
     handler: async (req: PayloadRequest) => {
       try {
-        // Verifica se o usuário está autenticado
-        if (!req.user) {
-          return Response.json(
-            {
-              errors: [{ message: 'Usuário não autenticado' }],
-            },
-            { status: 401 }
-          );
-        }
-
-        const userId = req.user.id;
-
-        // Encontra o perfil de nutricionista associado ao usuário autenticado
-        const nutritionistProfiles = await req.payload.find({
-          collection: 'nutritionists',
-          where: {
-            user: {
-              equals: userId,
-            },
-          },
-          limit: 1,
-        });
-
-        // Verifica se o perfil de nutricionista existe
-        if (!nutritionistProfiles.docs || nutritionistProfiles.docs.length === 0) {
-          return Response.json(
-            {
-              errors: [{ message: 'Perfil de nutricionista não encontrado para este usuário' }],
-            },
-            { status: 404 }
-          );
-        }
-
-        const nutritionistId = nutritionistProfiles.docs[0].id;
+        const nutritionistId = await getLoggedInNutritionistId(req);
 
         // Busca todos os relacionamentos nutricionista-atleta para este nutricionista
         const nutritionistAthletes = await req.payload.find({
@@ -53,17 +44,17 @@ export const NutritionistApi: Endpoint[] = [
         });
 
         // Extrai apenas os perfis de atletas da lista de relacionamentos
-        const patients = nutritionistAthletes.docs.map(relation => relation.athlete);
+        const athletes = nutritionistAthletes.docs.map(relation => relation.athlete);
 
         return Response.json({
           data: {
             total: nutritionistAthletes.totalDocs,
-            patients: patients,
+            athletes: athletes,
           },
         });
 
       } catch (error) {
-        console.error('[NutritionistApi][patients]:', error);
+        console.error('[NutritionistApi][athletes]:', error);
         return Response.json(
           {
             errors: [{ message: 'Erro inesperado ao buscar pacientes do nutricionista' }],

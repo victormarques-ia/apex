@@ -1,3 +1,4 @@
+import { TrainerApi } from '@/api/trainer.api'
 import type { CollectionConfig } from 'payload'
 
 export const Trainers: CollectionConfig = {
@@ -23,4 +24,5 @@ export const Trainers: CollectionConfig = {
       required: false,
     },
   ],
+  endpoints: TrainerApi,
 }

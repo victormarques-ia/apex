@@ -149,7 +149,7 @@ export const DailyConsumptionApi: Endpoint[] = [
         };
 
         // Group by date if requested
-        let groupedTotals = {};
+        const groupedTotals = {};
         
         consumptionsResult.docs.forEach(consumption => {
           const food = consumption.food;

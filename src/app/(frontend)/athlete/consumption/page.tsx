@@ -1,3 +1,19 @@
+/*
+  * ATENÇÃO FRONTENDERS: Modifique o arquivo abaixo para atender às suas necessidades
+  * ATENÇÃO FRONTENDERS: Modifique o arquivo abaixo para atender às suas necessidades
+  * ATENÇÃO FRONTENDERS: Modifique o arquivo abaixo para atender às suas necessidades
+  * ATENÇÃO FRONTENDERS: Modifique o arquivo abaixo para atender às suas necessidades
+  * ATENÇÃO FRONTENDERS: Modifique o arquivo abaixo para atender às suas necessidades
+  * ATENÇÃO FRONTENDERS: Modifique o arquivo abaixo para atender às suas necessidades
+  * ATENÇÃO FRONTENDERS: Modifique o arquivo abaixo para atender às suas necessidades
+  * ATENÇÃO FRONTENDERS: Modifique o arquivo abaixo para atender às suas necessidades
+  * ATENÇÃO FRONTENDERS: Modifique o arquivo abaixo para atender às suas necessidades
+  * ATENÇÃO FRONTENDERS: Modifique o arquivo abaixo para atender às suas necessidades
+  * ATENÇÃO FRONTENDERS: Modifique o arquivo abaixo para atender às suas necessidades
+  * ATENÇÃO FRONTENDERS: Modifique o arquivo abaixo para atender às suas necessidades
+  * ATENÇÃO FRONTENDERS: Modifique o arquivo abaixo para atender às suas necessidades
+  * ATENÇÃO FRONTENDERS: Modifique o arquivo abaixo para atender às suas necessidades
+*/
 'use client'
 
 import { useState, useEffect } from 'react'

@@ -3,84 +3,232 @@ import Image from 'next/image'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import Link from 'next/link'
+import { SolutionCard } from './components/solution-card'
+import { FeatureItem } from './components/feature-item'
+import { TestimonialCard } from './components/testimonial-card'
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetTitle,
+  SheetTrigger,
+} from '@/components/ui/sheet'
+import { Menu, Play, UserCircle } from 'lucide-react'
+import { fetchFromApi } from '@/app/utils/fetch-from-api'
+import { User } from '@/payload-types'
 
 export default function LandingPage() {
+  const solutions = [
+    {
+      iconSrc: '/assets/icons/shoe.svg',
+      title: 'Monitoramento Inteligente',
+      description:
+        'Acompanhe a evolução de seus atletas com métricas avançadas e insights personalizados.',
+      iconAlt: 'Sapato',
+    },
+    {
+      iconSrc: '/assets/icons/dumbbell.svg',
+      title: 'Programação de Treinos e Metas',
+      description:
+        'Planejamento completo e personalizado para atingir os melhores resultados de forma sustentável.',
+      iconAlt: 'Halter',
+    },
+    {
+      iconSrc: '/assets/icons/apple.svg',
+      title: 'Feedback em Tempo Real',
+      description:
+        'Avaliações imediatas permitem ajustes rápidos e melhoria contínua da performance.',
+      iconAlt: 'Maça',
+    },
+  ]
+
+  const features = [
+    {
+      iconSrc: '/assets/icons/shoe.svg',
+      title: 'Dashboard Personalizado',
+      description: 'Acesso a dados de performance em tempo real para tomada de decisões',
+      iconAlt: 'Sapato',
+    },
+    {
+      iconSrc: '/assets/icons/dumbbell.svg',
+      title: 'Análise Biomecânica',
+      description: 'Avaliações detalhadas para otimizar a técnica e prevenir lesões',
+      iconAlt: 'Halter',
+    },
+    {
+      iconSrc: '/assets/icons/apple.svg',
+      title: 'Integração com Wearables',
+      description: 'Compatível com os principais dispositivos do mercado',
+      iconAlt: 'Maça',
+      iconWidth: 44,
+      iconHeight: 50,
+    },
+    {
+      iconSrc: '/assets/icons/bottle.svg',
+      title: 'Gestão Completa de Atletas',
+      description: 'Cadastro, histórico e acompanhamento de planos de treino',
+      iconAlt: 'Garrafa',
+      iconWidth: 32,
+      iconHeight: 32,
+    },
+  ]
+
+  const testimonials = [
+    {
+      text: 'A Apex revolucionou a forma como gerenciamos nossos atletas. Agora, cada treino é otimizado com dados reais.',
+      authorName: 'Carlos Mendes',
+      authorRole: 'Preparador Físico - TeamRun',
+    },
+    {
+      text: 'A integração entre todos os dados na Apex deixou o treinamento muito mais eficiente. O feedback instantâneo é um diferencial!',
+      authorName: 'Ana Oliveira',
+      authorRole: 'Treinadora Esportiva',
+    },
+    {
+      text: 'Com a Apex, controlamos tudo em um só lugar. Além, claro, dos ótimos resultados conseguidos pelos nossos atletas com melhor planejamento.',
+      authorName: 'Felipe Souza',
+      authorRole: 'Fundador Elite Runners',
+    },
+  ]
+
   return (
-    <div className="flex flex-col min-h-screen">
+    <div className="flex flex-col min-h-screen mx-auto">
       <Head>
         <title>Apex - Aprimore o desempenho da sua equipe</title>
         <meta name="description" content="Soluções exclusivas para sua assessoria esportiva" />
         <link rel="icon" href="/favicon.ico" />
       </Head>
 
-      {/* Header */}
-      <header className="bg-white py-3 px-4 shadow-sm">
-        <div className="container mx-auto flex items-center justify-between">
+      <header className="fixed top-0 left-0 w-full bg-white py-5 shadow-sm z-50 container px-4 md:px-10">
+        <div className="flex items-center justify-between">
           <div className="flex items-center">
-            <div className="bg-gray-200 rounded-full h-6 w-6 flex items-center justify-center text-xs">
-              LOGO
-            </div>
+            <Image
+              src="/assets/logo-name.svg"
+              width={138}
+              height={52}
+              alt="logo"
+              className="w-[86px] h-[32px] md:w-[138px] md:h-[52px]"
+              priority
+            />
+            <div className="w-[1px] min-h-10 bg-gray-300 mx-6 hidden md:block" />
+            <nav className="hidden md:flex space-x-6 text-sm font-medium">
+              <a href="#about" className="text-gray-700 hover:text-primary hover:underline">
+                Sobre
+              </a>
+              <a href="#services" className="text-gray-700 hover:text-primary hover:underline">
+                Soluções
+              </a>
+              <a href="#testimonials" className="text-gray-700 hover:text-primary hover:underline">
+                Depoimentos
+              </a>
+              <a href="#contact" className="text-gray-700 hover:text-primary hover:underline">
+                Contato
+              </a>
+            </nav>
           </div>
-          <nav className="hidden md:flex space-x-6 text-sm">
-            <a href="#" className="text-gray-700 hover:text-blue-600">
-              Home
-            </a>
-            <a href="#" className="text-gray-700 hover:text-blue-600">
-              Descubra
-            </a>
-            <a href="#" className="text-gray-700 hover:text-blue-600">
-              Planos
-            </a>
-            <a href="#" className="text-gray-700 hover:text-blue-600">
-              Sobre nós
-            </a>
-            <a href="#" className="text-gray-700 hover:text-blue-600">
-              Contato
-            </a>
-          </nav>
+          <div className="hidden md:flex">
+            <AuthButton />
+          </div>
+
+          <div className="md:hidden">
+            <Sheet>
+              <SheetTrigger asChild>
+                <Button variant="link" size="icon" className="h-12 w-12">
+                  <Menu className="h-12 w-12" />
+                  <span className="sr-only">Toggle Menu</span>
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="right" className="w-[250px] sm:w-[300px] flex flex-col h-full">
+                <SheetTitle>
+                  <Image
+                    src="/assets/logo-name.svg"
+                    width={138}
+                    height={52}
+                    alt="logo"
+                    className="w-[86px] h-[32px] md:w-[138px] md:h-[52px]"
+                    priority
+                  />
+                </SheetTitle>
+                <SheetDescription></SheetDescription>
+                <nav className="flex flex-col space-y-4 mt-8 text-lg">
+                  <a
+                    href="#about"
+                    className="text-gray-700 hover:text-primary hover:underline py-2"
+                  >
+                    Sobre
+                  </a>
+                  <a
+                    href="#services"
+                    className="text-gray-700 hover:text-primary hover:underline py-2"
+                  >
+                    Soluções
+                  </a>
+                  <a
+                    href="#testimonials"
+                    className="text-gray-700 hover:text-primary hover:underline py-2"
+                  >
+                    Depoimentos
+                  </a>
+                  <a
+                    href="#contact"
+                    className="text-gray-700 hover:text-primary hover:underline py-2"
+                  >
+                    Contato
+                  </a>
+                </nav>
+                <div className="mt-auto mb-4">
+                  <AuthButton />
+                </div>
+              </SheetContent>
+            </Sheet>
+          </div>
         </div>
       </header>
 
-      <main className="flex-grow">
+      <main className="pt-20 flex-grow">
         {/* Hero Section */}
-        <section className="relative h-64 md:h-96">
-          <div className="absolute inset-0 bg-gradient-to-r from-green-500 to-teal-400 opacity-80"></div>
-          <div className="absolute inset-0">
+        <section className="relative h-[320px] md:h-[500px]">
+          <div className="absolute inset-0 opacity-95">
             <Image
-              src="/api/placeholder/1200/600"
+              src="/assets/homepage/athlete-running.png"
               alt="Atleta correndo"
               layout="fill"
               objectFit="cover"
               className="mix-blend-overlay"
             />
           </div>
-          <div className="relative container mx-auto px-4 h-full flex flex-col justify-center">
-            <h1 className="text-2xl md:text-4xl font-bold text-blue-800 max-w-md">
+          <div className="relative container px-4 md:px-10 h-full flex flex-col justify-center">
+            <h1 className="text-3xl md:text-6xl font-bold text-primary max-w-md">
               Aprimore o desempenho da sua equipe com a Apex.
             </h1>
-            <p className="text-blue-900 mt-4 max-w-lg text-sm md:text-base">
-              Descubra o poder da nossa ferramenta de treinamento em uma solução integrada. Eleve o
-              potencial do seu time com insights personalizados para o máximo desempenho.
+            <p className="text-white mt-4 max-w-lg text-sm md:text-base">
+              Centralize a gestão de atletas, treinadores e nutricionistas em uma única plataforma.
+              Utilize dados em tempo real para personalizar treinos e dietas, garantindo melhores
+              resultados.
             </p>
             <div className="mt-6">
               <Link href="auth/sign-in">
-                <Button className="bg-blue-700 hover:bg-blue-800 text-white">Comece Agora</Button>
+                <Button className="bg-primary hover:bg-primary-800 text-white">Comece Agora</Button>
               </Link>
             </div>
           </div>
         </section>
 
         {/* Logo and Introduction */}
-        <section className="py-16 container mx-auto px-4">
-          <div className="flex flex-col md:flex-row items-center justify-center gap-8">
-            <div className="w-40 h-40">
-              <Image src="/api/placeholder/160/160" alt="Logo Apex" width={160} height={160} />
-            </div>
-            <div className="md:max-w-md">
-              <h2 className="text-2xl md:text-3xl font-bold text-blue-700 mb-4">
+        <section id="about" className="py-8 md:py-16 bg-gray-50">
+          <div className="flex flex-col md:flex-row items-center justify-center gap-10 md:gap-20 mx-4 md:mx-10 max-w-screen-lg">
+            <Image
+              src="/assets/logo.svg"
+              alt="Logo Apex"
+              width={381}
+              height={500}
+              className="h-[220px] md:h-[500px]"
+            />
+            <div className="text-center md:text-left">
+              <h2 className="text-3xl md:text-6xl font-bold text-primary mb-4 md:mb-6">
                 O futuro da performance esportiva
               </h2>
-              <p className="text-gray-700">
+              <p className="text-accent text-base">
                 A Apex é uma plataforma completa para monitoramento e análise de desempenho
                 esportivo. Combinamos tecnologia avançada, metodologias comprovadas e personalização
                 para oferecer a performance que seu atleta merece.
@@ -90,376 +238,88 @@ export default function LandingPage() {
         </section>
 
         {/* Solutions Section */}
-        <section className="py-12 bg-white">
-          <div className="container mx-auto px-4">
-            <h2 className="text-center text-xl text-blue-700 font-medium mb-8">
+        <section id="services" className="py-12 bg-white">
+          <div className="container mx-auto px-4 md:px-10 max-w-screen-lg">
+            <h2 className="text-center text-2xl text-primary font-medium md:text-3xl mb-8">
               Soluções exclusivas para sua assessoria
             </h2>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {/* Card 1 */}
-              <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-                <div className="h-48 bg-gray-300 flex items-center justify-center">
-                  <svg
-                    className="w-12 h-12 text-gray-400"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                    xmlns="http://www.w3.org/2000/svg"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
-                    />
-                  </svg>
-                </div>
-                <div className="p-4">
-                  <h3 className="text-blue-600 font-medium mb-2">Monitoramento Inteligente</h3>
-                  <p className="text-sm text-gray-600 mb-2">
-                    Acompanhe a evolução de seus atletas com métricas avançadas e insights
-                    personalizados.
-                  </p>
-                </div>
-              </div>
-
-              {/* Card 2 */}
-              <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-                <div className="h-48 bg-gray-300 flex items-center justify-center">
-                  <svg
-                    className="w-12 h-12 text-gray-400"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                    xmlns="http://www.w3.org/2000/svg"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
-                    />
-                  </svg>
-                </div>
-                <div className="p-4">
-                  <h3 className="text-blue-600 font-medium mb-2">Programação de Treinos e Metas</h3>
-                  <p className="text-sm text-gray-600 mb-2">
-                    Planejamento completo e personalizado para atingir os melhores resultados de
-                    forma sustentável.
-                  </p>
-                </div>
-              </div>
-
-              {/* Card 3 */}
-              <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-                <div className="h-48 bg-gray-300 flex items-center justify-center">
-                  <svg
-                    className="w-12 h-12 text-gray-400"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                    xmlns="http://www.w3.org/2000/svg"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
-                    />
-                  </svg>
-                </div>
-                <div className="p-4">
-                  <h3 className="text-blue-600 font-medium mb-2">Feedback em Tempo Real</h3>
-                  <p className="text-sm text-gray-600 mb-2">
-                    Avaliações imediatas permitem ajustes rápidos e melhoria contínua da
-                    performance.
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* Main Service Section */}
-        <section className="py-12 bg-white">
-          <div className="container mx-auto px-4 text-center">
-            <h3 className="text-gray-700 mb-2">Main Service</h3>
-            <h2 className="text-xl font-semibold mb-8">Choose your favorite favor</h2>
-
-            <div className="flex flex-wrap justify-center gap-4">
-              {[1, 2, 3, 4, 5, 6].map((item) => (
-                <div key={item} className="text-center">
-                  <div className="w-16 h-16 border border-gray-300 rounded-full flex items-center justify-center mx-auto mb-2">
-                    <svg
-                      className="w-8 h-8 text-gray-500"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                      xmlns="http://www.w3.org/2000/svg"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M12 6v6m0 0v6m0-6h6m-6 0H6"
-                      />
-                    </svg>
-                  </div>
-                  <p className="text-xs">Cupcake</p>
-                </div>
+              {solutions.map((solution, index) => (
+                <SolutionCard key={index} {...solution} />
               ))}
             </div>
           </div>
         </section>
 
         {/* Features Section */}
-        <section className="py-12 bg-white">
-          <div className="container mx-auto px-4">
-            <h2 className="text-center text-blue-700 text-xl font-medium mb-8">
+        <section className="py-12 bg-gray-50">
+          <div className="container mx-auto px-4 md:px-10 max-w-screen-lg">
+            <h2 className="text-center text-primary text-2xl md:text-3xl font-medium mb-8">
               Transforme sua assessoria com a Apex
             </h2>
 
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-6 max-w-4xl mx-auto">
-              {/* Feature 1 */}
-              <div className="text-center">
-                <div className="mb-4">
-                  <Image
-                    src="/api/placeholder/50/50"
-                    alt="Dashboard"
-                    width={50}
-                    height={50}
-                    className="mx-auto"
-                  />
-                </div>
-                <h3 className="text-green-600 font-medium mb-2">Dashboard Personalizado</h3>
-                <p className="text-xs text-gray-500 mb-1">
-                  Acesso a dados de performance em tempo real para tomada de decisões
-                </p>
-                <a href="#" className="text-xs text-blue-500">
-                  Saiba mais
-                </a>
-              </div>
-
-              {/* Feature 2 */}
-              <div className="text-center">
-                <div className="mb-4">
-                  <Image
-                    src="/api/placeholder/50/50"
-                    alt="Análise"
-                    width={50}
-                    height={50}
-                    className="mx-auto"
-                  />
-                </div>
-                <h3 className="text-green-600 font-medium mb-2">Análise Biomecânica</h3>
-                <p className="text-xs text-gray-500 mb-1">
-                  Avaliações detalhadas para otimizar a técnica e prevenir lesões
-                </p>
-                <a href="#" className="text-xs text-blue-500">
-                  Saiba mais
-                </a>
-              </div>
-
-              {/* Feature 3 */}
-              <div className="text-center">
-                <div className="mb-4">
-                  <Image
-                    src="/api/placeholder/50/50"
-                    alt="Integração"
-                    width={50}
-                    height={50}
-                    className="mx-auto"
-                  />
-                </div>
-                <h3 className="text-green-600 font-medium mb-2">Integração com Wearables</h3>
-                <p className="text-xs text-gray-500 mb-1">
-                  Compatível com os principais dispositivos do mercado
-                </p>
-                <a href="#" className="text-xs text-blue-500">
-                  Saiba mais
-                </a>
-              </div>
-
-              {/* Feature 4 */}
-              <div className="text-center">
-                <div className="mb-4">
-                  <Image
-                    src="/api/placeholder/50/50"
-                    alt="Gestão"
-                    width={50}
-                    height={50}
-                    className="mx-auto"
-                  />
-                </div>
-                <h3 className="text-green-600 font-medium mb-2">Gestão Completa de Atletas</h3>
-                <p className="text-xs text-gray-500 mb-1">
-                  Cadastro, histórico e acompanhamento de planos de treino
-                </p>
-                <a href="#" className="text-xs text-blue-500">
-                  Saiba mais
-                </a>
-              </div>
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mx-auto h-full">
+              {features.map((feature, index) => (
+                <FeatureItem key={index} {...feature} />
+              ))}
             </div>
           </div>
         </section>
 
         {/* Video Section */}
         <section className="py-12 bg-gray-50">
-          <div className="container mx-auto px-4">
-            <h2 className="text-center text-gray-500 mb-2">Métodos</h2>
-            <h3 className="text-center text-blue-700 text-xl font-medium mb-8">
+          <div className="container mx-auto px-4 md:px-10 max-w-screen-lg">
+            <h2 className="text-center text-accent mb-2 text-xl md:text-2xl">Motivos</h2>
+            <h3 className="text-center text-primary text-2xl md:text-3xl font-medium mb-8">
               Por que Escolher a Apex?
             </h3>
 
             <div className="max-w-3xl mx-auto bg-gray-100 rounded-lg aspect-video flex items-center justify-center">
               <button className="w-16 h-16 rounded-full bg-white flex items-center justify-center shadow-md">
-                <svg
-                  className="w-8 h-8 text-gray-400"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"
-                  />
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                  />
-                </svg>
+                <Play className="w-8 h-8 text-primary" />
               </button>
             </div>
           </div>
         </section>
 
         {/* Testimonials Section */}
-        <section className="py-12 bg-white">
-          <div className="container mx-auto px-4">
-            <h2 className="text-center text-green-500 mb-2">Resultados que fazem a diferença!</h2>
-            <h3 className="text-center text-blue-700 text-xl font-medium mb-8">
+        <section id="testimonials" className="py-12 bg-white">
+          <div className="container mx-auto px-4 md:px-10 max-w-screen-lg">
+            <h2 className="text-center text-accent mb-2 text-xl md:text-2xl">
+              Resultados que fazem a diferença!
+            </h2>
+            <h3 className="text-center text-primary text-2xl md:text-3xl font-medium mb-8">
               O que Nossos Clientes Dizem?
             </h3>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl mx-auto">
-              {/* Testimonial 1 */}
-              <div className="bg-white p-6 rounded-lg shadow-sm">
-                <p className="text-gray-700 mb-4 text-sm">
-                  &quot;A Apex revolucionou a forma como gerenciamos nossos atletas. Agora, cada
-                  treino é otimizado com dados reais.&quot;
-                </p>
-                <div className="flex items-center">
-                  <div className="mr-4">
-                    <svg
-                      className="w-8 h-8 text-blue-600"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                      xmlns="http://www.w3.org/2000/svg"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-                      />
-                    </svg>
-                  </div>
-                  <div>
-                    <h4 className="font-medium">Carlos Mendes</h4>
-                    <p className="text-xs text-gray-500">Preparador Físico - TeamRun</p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Testimonial 2 */}
-              <div className="bg-white p-6 rounded-lg shadow-sm">
-                <p className="text-gray-700 mb-4 text-sm">
-                  &quot;A integração entre todos os dados na Apex deixou o treinamento muito mais
-                  eficiente. O feedback instantâneo é um diferencial!&quot;
-                </p>
-                <div className="flex items-center">
-                  <div className="mr-4">
-                    <svg
-                      className="w-8 h-8 text-blue-600"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                      xmlns="http://www.w3.org/2000/svg"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-                      />
-                    </svg>
-                  </div>
-                  <div>
-                    <h4 className="font-medium">Ana Oliveira</h4>
-                    <p className="text-xs text-gray-500">Treinadora Esportiva</p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Testimonial 3 */}
-              <div className="bg-white p-6 rounded-lg shadow-sm">
-                <p className="text-gray-700 mb-4 text-sm">
-                  &quot;Com a Apex, controlamos tudo em um só lugar. Além, claro, dos ótimos
-                  resultados conseguidos pelos nossos atletas com melhor planejamento.&quot;
-                </p>
-                <div className="flex items-center">
-                  <div className="mr-4">
-                    <svg
-                      className="w-8 h-8 text-blue-600"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                      xmlns="http://www.w3.org/2000/svg"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-                      />
-                    </svg>
-                  </div>
-                  <div>
-                    <h4 className="font-medium">Felipe Souza</h4>
-                    <p className="text-xs text-gray-500">Fundador Elite Runners</p>
-                  </div>
-                </div>
-              </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mx-auto">
+              {testimonials.map((testimonial, index) => (
+                <TestimonialCard key={index} {...testimonial} />
+              ))}
             </div>
           </div>
         </section>
 
         {/* Newsletter Section */}
         <section className="py-12 bg-white">
-          <div className="container mx-auto px-4 max-w-lg text-center">
-            <h2 className="text-center text-green-500 mb-2">Mantenha-se Atualizado</h2>
-            <h3 className="text-center text-blue-700 text-xl font-medium mb-4">Nossa Newsletter</h3>
-            <p className="text-gray-600 mb-6">
-              Receba novidades, dicas e conteúdos exclusivos direto no seu email.
+          <div className="container mx-auto px-4 md:px-10 max-w-lg text-center">
+            <h2 className="text-center text-accent text-xl">Mantenha-se Atualizado</h2>
+            <h3 className="text-center text-primary font-medium mb-4 text-2xl">Nossa Newsletter</h3>
+            <p className="text-secondary mb-6 text-sm">
+              Assine nossa Newsletter e receba dicas exclusivas sobre performance esportiva!
             </p>
 
-            <div className="flex gap-2">
+            <div className="flex gap-8">
               <Input type="email" placeholder="Seu Email" className="flex-grow" />
-              <Button className="bg-blue-700 hover:bg-blue-800 text-white">Assinar</Button>
+              <Button className="bg-primary hover:bg-primary-800 text-white w-32">Assinar</Button>
             </div>
           </div>
         </section>
 
         {/* Partners/Gallery Section */}
         <section className="py-12 bg-gray-200">
-          <div className="container mx-auto px-4">
+          <div className="container mx-auto px-4 md:px-10">
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               {[1, 2, 3, 4].map((item) => (
                 <div key={item} className="bg-white p-4 flex items-center justify-center">
@@ -484,9 +344,8 @@ export default function LandingPage() {
         </section>
       </main>
 
-      {/* Footer */}
-      <footer className="bg-gray-100 py-12">
-        <div className="container mx-auto px-4">
+      <footer id="contact" className="bg-gray-100 py-12">
+        <div className="container mx-auto px-4 md:px-10">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
             <div>
               <h4 className="font-medium mb-4">Apex</h4>
@@ -498,19 +357,30 @@ export default function LandingPage() {
             <div>
               <h4 className="font-medium mb-4">Menu</h4>
               <ul className="text-sm text-gray-600 space-y-2">
-                <li>Planos de Treinamento</li>
-                <li>Gestão de Treinos</li>
-                <li>Plataforma Tecnológica</li>
-                <li>Depoimentos de Usuários</li>
+                <li className="cursor-pointer hover:text-primary-600 hover:font-medium">
+                  Planos e Preços
+                </li>
+                <li className="cursor-pointer hover:text-primary-600 hover:font-medium">
+                  Descubra
+                </li>
+                <li className="cursor-pointer hover:text-primary-600 hover:font-medium">
+                  Sobre nós
+                </li>
+                <li className="cursor-pointer hover:text-primary-600 hover:font-medium">
+                  Depoimentos
+                </li>
               </ul>
             </div>
 
             <div>
               <h4 className="font-medium mb-4">Legal</h4>
               <ul className="text-sm text-gray-600 space-y-2">
-                <li>Termos de Serviço</li>
-                <li>Política de Privacidade</li>
-                <li>Procedimentos & Segurança</li>
+                <li className="cursor-pointer hover:text-primary-600 hover:font-medium">
+                  Termos de Serviço
+                </li>
+                <li className="cursor-pointer hover:text-primary-600 hover:font-medium">
+                  Política de Privacidade
+                </li>
               </ul>
             </div>
 
@@ -567,5 +437,33 @@ export default function LandingPage() {
         </div>
       </footer>
     </div>
+  )
+}
+
+const getMe = async () => {
+  const result = await fetchFromApi<{
+    user: User
+  }>('/api/users/me')
+
+  return result.data
+}
+
+async function AuthButton() {
+  const data = await getMe()
+
+  if (data && data.user) {
+    return (
+      <Button variant={'outline'}>
+        <UserCircle />
+        <Link href="/home">Olá, {data.user.name.split(' ')[0]}</Link>
+      </Button>
+    )
+  }
+
+  return (
+    <Button variant={'outline'}>
+      <UserCircle />
+      <Link href="/auth/sign-in">Entrar</Link>
+    </Button>
   )
 }

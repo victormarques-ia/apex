@@ -1,4 +1,6 @@
 import type { CollectionConfig } from 'payload'
+import { NutritionistApi } from '@/api/nutritionist.api'
+
 
 export const Nutritionists: CollectionConfig = {
   slug: 'nutritionists',
@@ -23,4 +25,5 @@ export const Nutritionists: CollectionConfig = {
       required: false,
     },
   ],
+  endpoints: NutritionistApi,
 }

@@ -16,7 +16,10 @@ import {
 } from '@/components/ui/form'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { registerAthleteAction, createUserAction, registerNutritionistAction } from '../actions/register.action'
+import {
+  createUserAction,
+  registerNutritionistAction,
+} from '../actions/register.action'
 import RegisterLayout from '../components/register-layout'
 
 // Zod validation schema aligned with server actions
@@ -52,16 +55,22 @@ export default function RegisterNutritionistPage() {
       const userFormData = new FormData()
       userFormData.append('name', data.name)
       userFormData.append('email', data.email)
+      userFormData.append('role', 'nutritionist')
 
       const userResult = await createUserAction(null, userFormData)
+      console.log('User creation result:', userResult)
 
-      // Handle user creation result
-      if (!userResult || !('data' in userResult) || !userResult.data) {
+      if (!userResult || userResult.error) {
         throw new Error(userResult?.error || 'Erro ao criar usuário')
       }
 
-      // Extract user ID and check if user already existed
+      // Get user data
       const userData = userResult.data
+      if (!userData) {
+        throw new Error('Dados do usuário não retornados')
+      }
+
+      // Extract user ID and check if user already existed
       const userId = userData.id
       const isExistingUser = userData.isExistingUser
 
@@ -74,10 +83,13 @@ export default function RegisterNutritionistPage() {
       // Step 2: Create nutritionist profile
       const nutritionistFormData = new FormData()
       nutritionistFormData.append('userId', userId.toString())
-      nutritionistFormData.append('licenseNumber', data.license_number || '')
-      nutritionistFormData.append('specialization', data.specialization || '')
+
+      // Add all optional fields
+      if (data.license_number) nutritionistFormData.append('licenseNumber', data.license_number)
+      if (data.specialization) nutritionistFormData.append('specialization', data.specialization)
 
       const nutritionistResult = await registerNutritionistAction(null, nutritionistFormData)
+      console.log('Nutritionist registration result:', nutritionistResult)
 
       // Handle nutritionist creation result
       if (!nutritionistResult || !('data' in nutritionistResult) || !nutritionistResult.data) {
@@ -90,7 +102,15 @@ export default function RegisterNutritionistPage() {
       router.push('/agency/register/nutritionist')
     } catch (err) {
       console.error('Registration error:', err)
-      toast.error(err instanceof Error ? err.message : 'Ocorreu um erro inesperado')
+
+      // Special handling for athlete already exists error
+      const errorMsg = err instanceof Error ? err.message : 'Ocorreu um erro inesperado'
+
+      if (errorMsg.includes('já possui um perfil de nutricionista')) {
+        toast.error('Este usuário já possui um perfil de nutricionista cadastrado')
+      } else {
+        toast.error(errorMsg)
+      }
     } finally {
       setIsLoading(false)
     }

@@ -6,6 +6,16 @@ import Link from 'next/link'
 import { SolutionCard } from './components/solution-card'
 import { FeatureItem } from './components/feature-item'
 import { TestimonialCard } from './components/testimonial-card'
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetTitle,
+  SheetTrigger,
+} from '@/components/ui/sheet'
+import { Menu, Play, UserCircle } from 'lucide-react'
+import { fetchFromApi } from '@/app/utils/fetch-from-api'
+import { User } from '@/payload-types'
 
 export default function LandingPage() {
   const solutions = [
@@ -89,9 +99,8 @@ export default function LandingPage() {
         <link rel="icon" href="/favicon.ico" />
       </Head>
 
-      {/* Header */}
-      <header className="bg-white py-5 shadow-sm container px-4 md:px-10">
-        <div className=" flex items-center">
+      <header className="fixed top-0 left-0 w-full bg-white py-5 shadow-sm z-50 container px-4 md:px-10">
+        <div className="flex items-center justify-between">
           <div className="flex items-center">
             <Image
               src="/assets/logo-name.svg"
@@ -101,30 +110,82 @@ export default function LandingPage() {
               className="w-[86px] h-[32px] md:w-[138px] md:h-[52px]"
               priority
             />
+            <div className="w-[1px] min-h-10 bg-gray-300 mx-6 hidden md:block" />
+            <nav className="hidden md:flex space-x-6 text-sm font-medium">
+              <a href="#about" className="text-gray-700 hover:text-primary hover:underline">
+                Sobre
+              </a>
+              <a href="#services" className="text-gray-700 hover:text-primary hover:underline">
+                Soluções
+              </a>
+              <a href="#testimonials" className="text-gray-700 hover:text-primary hover:underline">
+                Depoimentos
+              </a>
+              <a href="#contact" className="text-gray-700 hover:text-primary hover:underline">
+                Contato
+              </a>
+            </nav>
           </div>
-          <div className="w-[1px] min-h-10 bg-gray-300 mx-6" />
-          <nav className="hidden md:flex space-x-6 text-sm font-medium">
-            <a href="#" className="text-gray-700 hover:text-primary hover:underline">
-              Home
-            </a>
-            <a href="#" className="text-gray-700 hover:text-primary hover:underline">
-              Descubra
-            </a>
-            <a href="#" className="text-gray-700 hover:text-primary hover:underline">
-              Planos
-            </a>
-            <a href="#" className="text-gray-700 hover:text-primary hover:underline">
-              Sobre nós
-            </a>
-            <a href="#" className="text-gray-700 hover:text-primary hover:underline">
-              Contato
-            </a>
-          </nav>
+          <div className="hidden md:flex">
+            <AuthButton />
+          </div>
+
+          <div className="md:hidden">
+            <Sheet>
+              <SheetTrigger asChild>
+                <Button variant="link" size="icon" className="h-12 w-12">
+                  <Menu className="h-12 w-12" />
+                  <span className="sr-only">Toggle Menu</span>
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="right" className="w-[250px] sm:w-[300px] flex flex-col h-full">
+                <SheetTitle>
+                  <Image
+                    src="/assets/logo-name.svg"
+                    width={138}
+                    height={52}
+                    alt="logo"
+                    className="w-[86px] h-[32px] md:w-[138px] md:h-[52px]"
+                    priority
+                  />
+                </SheetTitle>
+                <SheetDescription></SheetDescription>
+                <nav className="flex flex-col space-y-4 mt-8 text-lg">
+                  <a
+                    href="#about"
+                    className="text-gray-700 hover:text-primary hover:underline py-2"
+                  >
+                    Sobre
+                  </a>
+                  <a
+                    href="#services"
+                    className="text-gray-700 hover:text-primary hover:underline py-2"
+                  >
+                    Soluções
+                  </a>
+                  <a
+                    href="#testimonials"
+                    className="text-gray-700 hover:text-primary hover:underline py-2"
+                  >
+                    Depoimentos
+                  </a>
+                  <a
+                    href="#contact"
+                    className="text-gray-700 hover:text-primary hover:underline py-2"
+                  >
+                    Contato
+                  </a>
+                </nav>
+                <div className="mt-auto mb-4">
+                  <AuthButton />
+                </div>
+              </SheetContent>
+            </Sheet>
+          </div>
         </div>
-        {/* <div>login</div> */}
       </header>
 
-      <main className="flex-grow">
+      <main className="pt-20 flex-grow">
         {/* Hero Section */}
         <section className="relative h-[320px] md:h-[500px]">
           <div className="absolute inset-0 opacity-95">
@@ -154,7 +215,7 @@ export default function LandingPage() {
         </section>
 
         {/* Logo and Introduction */}
-        <section className="py-8 md:py-16 bg-gray-50">
+        <section id="about" className="py-8 md:py-16 bg-gray-50">
           <div className="flex flex-col md:flex-row items-center justify-center gap-10 md:gap-20 mx-4 md:mx-10 max-w-screen-lg">
             <Image
               src="/assets/logo.svg"
@@ -177,7 +238,7 @@ export default function LandingPage() {
         </section>
 
         {/* Solutions Section */}
-        <section className="py-12 bg-white">
+        <section id="services" className="py-12 bg-white">
           <div className="container mx-auto px-4 md:px-10 max-w-screen-lg">
             <h2 className="text-center text-2xl text-primary font-medium md:text-3xl mb-8">
               Soluções exclusivas para sua assessoria
@@ -216,33 +277,14 @@ export default function LandingPage() {
 
             <div className="max-w-3xl mx-auto bg-gray-100 rounded-lg aspect-video flex items-center justify-center">
               <button className="w-16 h-16 rounded-full bg-white flex items-center justify-center shadow-md">
-                <svg
-                  className="w-8 h-8 text-gray-400"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"
-                  />
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                  />
-                </svg>
+                <Play className="w-8 h-8 text-primary" />
               </button>
             </div>
           </div>
         </section>
 
         {/* Testimonials Section */}
-        <section className="py-12 bg-white">
+        <section id="testimonials" className="py-12 bg-white">
           <div className="container mx-auto px-4 md:px-10 max-w-screen-lg">
             <h2 className="text-center text-accent mb-2 text-xl md:text-2xl">
               Resultados que fazem a diferença!
@@ -302,7 +344,7 @@ export default function LandingPage() {
         </section>
       </main>
 
-      <footer className="bg-gray-100 py-12">
+      <footer id="contact" className="bg-gray-100 py-12">
         <div className="container mx-auto px-4 md:px-10">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
             <div>
@@ -395,5 +437,33 @@ export default function LandingPage() {
         </div>
       </footer>
     </div>
+  )
+}
+
+const getMe = async () => {
+  const result = await fetchFromApi<{
+    user: User
+  }>('/api/users/me')
+
+  return result.data
+}
+
+async function AuthButton() {
+  const data = await getMe()
+
+  if (data && data.user) {
+    return (
+      <Button variant={'outline'}>
+        <UserCircle />
+        <Link href="/home">Olá, {data.user.name.split(' ')[0]}</Link>
+      </Button>
+    )
+  }
+
+  return (
+    <Button variant={'outline'}>
+      <UserCircle />
+      <Link href="/auth/sign-in">Entrar</Link>
+    </Button>
   )
 }

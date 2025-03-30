@@ -19,7 +19,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { registerAthleteAction, createUserAction } from '../actions/register.action'
 import RegisterLayout from '../components/register-layout'
 
-// Zod validation schema aligned with server actions
+// Zod validation schema
 const schema = z.object({
   name: z.string().min(2, { message: 'Nome deve ter pelo menos 2 caracteres' }),
   email: z.string().email({ message: 'Email inválido' }),
@@ -48,7 +48,6 @@ export default function RegisterAthletePage() {
   const router = useRouter()
   const [isLoading, setIsLoading] = useState(false)
 
-  // Use react-hook-form with zod resolver
   const form = useForm<FormData>({
     resolver: zodResolver(schema),
     defaultValues: {
@@ -74,16 +73,21 @@ export default function RegisterAthletePage() {
       const userFormData = new FormData()
       userFormData.append('name', data.name)
       userFormData.append('email', data.email)
+      userFormData.append('role', 'athlete')
 
       const userResult = await createUserAction(null, userFormData)
+      console.log('User creation result:', userResult)
 
-      // Handle user creation result
-      if (!userResult || !('data' in userResult) || !userResult.data) {
+      if (!userResult || userResult.error) {
         throw new Error(userResult?.error || 'Erro ao criar usuário')
       }
 
-      // Extract user ID and check if user already existed
+      // Get user data
       const userData = userResult.data
+      if (!userData) {
+        throw new Error('Dados do usuário não retornados')
+      }
+
       const userId = userData.id
       const isExistingUser = userData.isExistingUser
 
@@ -96,47 +100,60 @@ export default function RegisterAthletePage() {
       // Step 2: Create athlete profile
       const athleteFormData = new FormData()
       athleteFormData.append('userId', userId.toString())
-      athleteFormData.append('weight', data.weight || '')
-      athleteFormData.append('height', data.height || '')
-      athleteFormData.append('birthDate', data.birthDate || '')
-      athleteFormData.append('gender', data.gender || '')
-      athleteFormData.append('nutritionalHabits', data.nutritionalHabits || '')
-      athleteFormData.append('physicalActivityHabits', data.physicalActivityHabits || '')
-      athleteFormData.append('objectives', data.objectives || '')
-      athleteFormData.append('trainerEmail', data.trainerEmail || '')
-      athleteFormData.append('nutritionistEmail', data.nutritionistEmail || '')
+
+      // Add all optional fields
+      if (data.weight) athleteFormData.append('weight', data.weight)
+      if (data.height) athleteFormData.append('height', data.height)
+      if (data.birthDate) athleteFormData.append('birthDate', data.birthDate)
+      if (data.gender) athleteFormData.append('gender', data.gender)
+      if (data.nutritionalHabits)
+        athleteFormData.append('nutritionalHabits', data.nutritionalHabits)
+      if (data.physicalActivityHabits)
+        athleteFormData.append('physicalActivityHabits', data.physicalActivityHabits)
+      if (data.objectives) athleteFormData.append('objectives', data.objectives)
+      if (data.trainerEmail) athleteFormData.append('trainerEmail', data.trainerEmail)
+      if (data.nutritionistEmail)
+        athleteFormData.append('nutritionistEmail', data.nutritionistEmail)
 
       const athleteResult = await registerAthleteAction(null, athleteFormData)
+      console.log('Athlete registration result:', athleteResult)
 
-      // Handle athlete creation result
-      if (!athleteResult || !('data' in athleteResult) || !athleteResult.data) {
-        throw new Error(athleteResult?.error || 'Erro ao registrar perfil do atleta')
+      if (!athleteResult || athleteResult.error) {
+        throw new Error(athleteResult.error || 'Erro ao registrar perfil do atleta')
       }
 
-      // Check if relationships were created
-      const warnings = []
-      if (data.trainerEmail && !athleteResult.data.trainerRelationship) {
-        warnings.push(
-          `Treinador com email ${data.trainerEmail} não encontrado ou não está disponível para esta agência`,
-        )
+      // Handle relationship warnings if needed
+      if (athleteResult.data) {
+        // Check trainer relationship
+        if (!athleteResult.data.trainerRelationship) {
+          toast.warning(
+            `Treinador com email ${data.trainerEmail} não encontrado ou não está disponível para esta agência`,
+          )
+        }
+
+        // Check nutritionist relationship
+        if (!athleteResult.data.nutritionistRelationship) {
+          toast.warning(
+            `Nutricionista com email ${data.nutritionistEmail} não encontrado ou não está disponível para esta agência`,
+          )
+        }
       }
 
-      if (data.nutritionistEmail && !athleteResult.data.nutritionistRelationship) {
-        warnings.push(
-          `Nutricionista com email ${data.nutritionistEmail} não encontrado ou não está disponível para esta agência`,
-        )
-      }
-
-      // Show warnings if any
-      warnings.forEach((warning) => toast.warning(warning))
-
-      // Show success message and redirect
+      // Success and redirect
       toast.success('Perfil do atleta registrado com sucesso')
       form.reset()
       router.push('/agency/register/athlete')
     } catch (err) {
       console.error('Registration error:', err)
-      toast.error(err instanceof Error ? err.message : 'Ocorreu um erro inesperado')
+
+      // Special handling for athlete already exists error
+      const errorMsg = err instanceof Error ? err.message : 'Ocorreu um erro inesperado'
+
+      if (errorMsg.includes('já possui um perfil de atleta')) {
+        toast.error('Este usuário já possui um perfil de atleta cadastrado')
+      } else {
+        toast.error(errorMsg)
+      }
     } finally {
       setIsLoading(false)
     }
@@ -150,6 +167,7 @@ export default function RegisterAthletePage() {
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
+            {/* Form fields unchanged */}
             <FormField
               control={form.control}
               name="name"

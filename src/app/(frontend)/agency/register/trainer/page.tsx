@@ -52,6 +52,7 @@ export default function RegisterTrainerPage() {
       const userFormData = new FormData()
       userFormData.append('name', data.name)
       userFormData.append('email', data.email)
+      userFormData.append('role', 'trainer')
 
       const userResult = await createUserAction(null, userFormData)
 
@@ -60,8 +61,13 @@ export default function RegisterTrainerPage() {
         throw new Error(userResult?.error || 'Erro ao criar usuário')
       }
 
-      // Extract user ID and check if user already existed
+      // Get user data
       const userData = userResult.data
+      if (!userData) {
+        throw new Error('Dados do usuário não retornados')
+      }
+
+      // Extract user ID and check if user already existed
       const userId = userData.id
       const isExistingUser = userData.isExistingUser
 
@@ -74,10 +80,11 @@ export default function RegisterTrainerPage() {
       // Step 2: Create trainer profile
       const trainerFormData = new FormData()
       trainerFormData.append('userId', userId.toString())
-      trainerFormData.append('certification', data.certification || '')
-      trainerFormData.append('specialization', data.specialization || '')
+      if (data.certification) trainerFormData.append('certification', data.certification)
+      if (data.specialization) trainerFormData.append('specialization', data.specialization)
 
       const trainerResult = await registerTrainerAction(null, trainerFormData)
+      console.log('Nutritionist registration result:', trainerResult)
 
       // Handle trainer creation result
       if (!trainerResult || !('data' in trainerResult) || !trainerResult.data) {
@@ -90,7 +97,15 @@ export default function RegisterTrainerPage() {
       router.push('/agency/register/trainer')
     } catch (err) {
       console.error('Registration error:', err)
-      toast.error(err instanceof Error ? err.message : 'Ocorreu um erro inesperado')
+
+      // Special handling for athlete already exists error
+      const errorMsg = err instanceof Error ? err.message : 'Ocorreu um erro inesperado'
+
+      if (errorMsg.includes('já possui um perfil de treinador')) {
+        toast.error('Este usuário já possui um perfil de treinador cadastrado')
+      } else {
+        toast.error(errorMsg)
+      }
     } finally {
       setIsLoading(false)
     }

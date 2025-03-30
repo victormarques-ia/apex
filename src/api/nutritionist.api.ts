@@ -31,16 +31,49 @@ export const NutritionistApi: Endpoint[] = [
     handler: async (req: PayloadRequest) => {
       try {
         const nutritionistId = await getLoggedInNutritionistId(req);
+        const name = req.query.name as string || "";
+        const sortOrder = req.query.sortOrder as string || "asc";
+        // Você pode ordenar por nome, data da ultima atualizacao e meta.
+        // Exemplo: athlete.user.name, athlete.updatedAt, athlete.goal
+        const sortFields = [ 'athlete.user.name', 'athlete.updatedAt', 'athlete.goal' ];
+        const sortField = req.query.sortField as number || 0;
+        const goal = req.query.goal as string || "";
 
-        // Busca todos os relacionamentos nutricionista-atleta para este nutricionista
+        // /api/nutritionists/my-athletes?name=renata
+        // teste por ordem ascendente de nome
+        // /api/nutritionists/my-athletes?name=renata&sortOrder=desc
+        // teste por ordem ascendente de data de ultima atualizacao
+        // /api/nutritionists/my-athletes?sortOrder=asc&sortField=1
+        // teste por ordem ascendente de meta
+        // /api/nutritionists/my-athletes?sortOrder=asc&sortField=2
+        // api/nutritionists/my-athletes?goal=emagrecimento
+
         const nutritionistAthletes = await req.payload.find({
           collection: 'nutritionist-athletes',
           where: {
-            nutritionist: {
-              equals: nutritionistId,
-            },
+            and: [
+              {
+                nutritionist: {
+                  equals: nutritionistId,
+                }
+              },
+              ...(name.trim() ? [{
+                'athlete.user.name': {
+                  like: name,
+                }
+              }] : []),
+              ...(goal.trim() ? [{
+                'athlete.goal': {
+                  like: goal,
+                }
+              }] : [])
+            ]
           },
-          depth: 2, // Inclui dados relacionados, como informações completas dos atletas
+          depth: 2,
+          sort: sortOrder.toLowerCase() === "desc" ? 
+            `-${sortFields[sortField] || sortFields[0]}` : 
+            (sortFields[sortField] || sortFields[0]),
+          limit: 100,
         });
 
         // Extrai apenas os perfis de atletas da lista de relacionamentos

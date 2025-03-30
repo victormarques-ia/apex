@@ -275,4 +275,227 @@ export const AgencyApi: Endpoint[] = [
       }
     },
   },
+  {
+    method: 'post',
+    path: '/register-nutritionist',
+    handler: async (req: PayloadRequest) => {
+      try {
+        // Authentication and authorization checks
+        console.log('Registering nutritionist - request by user:', req.user?.id)
+        if (!req.user) {
+          return Response.json(
+            { errors: [{ message: 'Usuário não autenticado' }] },
+            { status: 401 },
+          )
+        }
+
+        // Verify the user is an agency
+        const userResult = await req.payload.findByID({
+          collection: 'users',
+          id: req.user.id,
+        })
+
+        if (!userResult || userResult.role !== 'agency') {
+          return Response.json(
+            { errors: [{ message: 'Apenas agências podem registrar nutricionistas' }] },
+            { status: 403 },
+          )
+        }
+
+        // Find the agency profile
+        const agencyProfiles = await req.payload.find({
+          collection: 'agencies',
+          where: { user: { equals: req.user.id } },
+        })
+
+        if (!agencyProfiles.docs || agencyProfiles.docs.length === 0) {
+          return Response.json(
+            { errors: [{ message: 'Perfil de agência não encontrado' }] },
+            { status: 404 },
+          )
+        }
+
+        // Get the agency ID
+        const agencyId = agencyProfiles.docs[0].id
+        console.log('Using agency ID:', agencyId)
+
+        // Parse request body
+        const data = await req.json?.()
+        if (!data) {
+          return Response.json(
+            { errors: [{ message: 'Corpo da requisição inválido' }] },
+            { status: 400 },
+          )
+        }
+
+        // Validate required fields
+        if (!data.userId) {
+          return Response.json(
+            { errors: [{ message: 'ID do usuário é obrigatório' }] },
+            { status: 400 },
+          )
+        }
+
+        const userId = parseInt(String(data.userId), 10)
+        console.log('Attempting to create nutritionist profile for user ID:', userId)
+
+        // IMPORTANT: Check if this user already has an nutritionist profile
+        const existingNutritionistProfiles = await req.payload.find({
+          collection: 'nutritionists',
+          where: { user: { equals: userId } },
+        })
+
+        if (existingNutritionistProfiles.docs && existingNutritionistProfiles.docs.length > 0) {
+          console.log(
+            'User already has an nutritionist profile:',
+            existingNutritionistProfiles.docs[0].id,
+          )
+          return Response.json(
+            {
+              errors: [{ message: 'Este usuário já possui um perfil de nutricionista cadastrado' }],
+            },
+            { status: 409 }, // Conflict status code
+          )
+        }
+
+        // Create nutritionist profile only if no existing profile was found
+        const nutritionistData = {
+          agency: agencyId,
+          user: userId,
+          license_number: data.license_number || null,
+          specialization: data.specialization || null,
+        }
+
+        const nutritionistProfile = await req.payload.create({
+          collection: 'nutritionists',
+          data: nutritionistData,
+        })
+
+        console.log('Created nutritionist profile with ID:', nutritionistProfile.id)
+
+        // Return response with profile and relationships
+        return Response.json({
+          data: {
+            profile: nutritionistProfile,
+          },
+        })
+      } catch (error) {
+        console.error('[AgencyApi][register-nutritionist]:', error)
+        const errorMessage =
+          error instanceof Error ? error.message : 'Erro inesperado ao registrar nutricionista'
+        return Response.json({ errors: [{ message: errorMessage }] }, { status: 500 })
+      }
+    },
+  },{
+    method: 'post',
+    path: '/register-trainer',
+    handler: async (req: PayloadRequest) => {
+      try {
+        // Authentication and authorization checks
+        console.log('Registering trainer - request by user:', req.user?.id)
+        if (!req.user) {
+          return Response.json(
+            { errors: [{ message: 'Usuário não autenticado' }] },
+            { status: 401 },
+          )
+        }
+
+        // Verify the user is an agency
+        const userResult = await req.payload.findByID({
+          collection: 'users',
+          id: req.user.id,
+        })
+
+        if (!userResult || userResult.role !== 'agency') {
+          return Response.json(
+            { errors: [{ message: 'Apenas agências podem registrar treinadors' }] },
+            { status: 403 },
+          )
+        }
+
+        // Find the agency profile
+        const agencyProfiles = await req.payload.find({
+          collection: 'agencies',
+          where: { user: { equals: req.user.id } },
+        })
+
+        if (!agencyProfiles.docs || agencyProfiles.docs.length === 0) {
+          return Response.json(
+            { errors: [{ message: 'Perfil de agência não encontrado' }] },
+            { status: 404 },
+          )
+        }
+
+        // Get the agency ID
+        const agencyId = agencyProfiles.docs[0].id
+        console.log('Using agency ID:', agencyId)
+
+        // Parse request body
+        const data = await req.json?.()
+        if (!data) {
+          return Response.json(
+            { errors: [{ message: 'Corpo da requisição inválido' }] },
+            { status: 400 },
+          )
+        }
+
+        // Validate required fields
+        if (!data.userId) {
+          return Response.json(
+            { errors: [{ message: 'ID do usuário é obrigatório' }] },
+            { status: 400 },
+          )
+        }
+
+        const userId = parseInt(String(data.userId), 10)
+        console.log('Attempting to create trainer profile for user ID:', userId)
+
+        // IMPORTANT: Check if this user already has an trainer profile
+        const existingTrainerProfiles = await req.payload.find({
+          collection: 'trainers',
+          where: { user: { equals: userId } },
+        })
+
+        if (existingTrainerProfiles.docs && existingTrainerProfiles.docs.length > 0) {
+          console.log(
+            'User already has an trainer profile:',
+            existingTrainerProfiles.docs[0].id,
+          )
+          return Response.json(
+            {
+              errors: [{ message: 'Este usuário já possui um perfil de treinador cadastrado' }],
+            },
+            { status: 409 }, // Conflict status code
+          )
+        }
+
+        // Create trainer profile only if no existing profile was found
+        const trainerData = {
+          agency: agencyId,
+          user: userId,
+          license_number: data.license_number || null,
+          specialization: data.specialization || null,
+        }
+
+        const trainerProfile = await req.payload.create({
+          collection: 'trainers',
+          data: trainerData,
+        })
+
+        console.log('Created trainer profile with ID:', trainerProfile.id)
+
+        // Return response with profile and relationships
+        return Response.json({
+          data: {
+            profile: trainerProfile,
+          },
+        })
+      } catch (error) {
+        console.error('[AgencyApi][register-trainer]:', error)
+        const errorMessage =
+          error instanceof Error ? error.message : 'Erro inesperado ao registrar treinador'
+        return Response.json({ errors: [{ message: errorMessage }] }, { status: 500 })
+      }
+    },
+  },
 ]

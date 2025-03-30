@@ -3,7 +3,6 @@
 import { actionHandlerWithValidation } from '@/app/utils/action-handle-with-validation'
 import { fetchFromApi } from '@/app/utils/fetch-from-api'
 import { generateRandomString } from 'node_modules/@payloadcms/payload-cloud/dist/plugin'
-import { password } from 'node_modules/payload/dist/fields/validations'
 
 // Define types for API responses
 export interface CreateUserResponse {
@@ -13,13 +12,13 @@ export interface CreateUserResponse {
   isExistingUser: boolean
 }
 
-export interface AthleteRegistrationResponse {
+export interface RegistrationResponse {
   id: number
   [key: string]: any
 }
 
 export interface RegisterAthleteResponseData {
-  profile: AthleteRegistrationResponse
+  profile: RegistrationResponse
   trainerRelationship: boolean
   nutritionistRelationship: boolean
 }
@@ -196,6 +195,145 @@ export async function registerAthleteAction(_state: unknown, formData: FormData)
           success: false,
           error: errorMessage,
           message: 'Falha ao registrar perfil do atleta',
+        }
+      },
+    },
+  )
+}
+
+export async function registerNutritionistAction(_state: unknown, formData: FormData) {
+  return actionHandlerWithValidation(
+    formData,
+    async (data) => {
+      // Validate required field
+      if (!data.userId) {
+        throw new Error('ID do usuário é obrigatório')
+      }
+
+      try {
+        // Call the API endpoint directly to handle nutritionist registration
+        const result = await fetchFromApi<RegistrationResponse>(
+          '/api/agencies/register-nutritionist',
+          {
+            method: 'POST',
+            body: JSON.stringify({
+              userId: data.userId,
+              license_number: data.license_number || null,
+              specialization: data.specialization || null,
+            }),
+          },
+        )
+
+        console.log('Nutritionist registration result:', result)
+
+        if (!result.data) {
+          // Check for specific error related to duplicate nutritionist profile
+          if (
+            result.error?.messages?.some((msg) =>
+              msg.includes('já possui um perfil de nutricionista'),
+            )
+          ) {
+            throw new Error('Este usuário já possui um perfil de nutricionista cadastrado')
+          }
+          throw new Error(
+            result.error?.messages?.[0] || 'Erro ao registrar perfil de nutricionista',
+          )
+        }
+
+        return result.data
+      } catch (error) {
+        console.error('Error during nutritionist registration:', error)
+        throw new Error(
+          typeof error === 'object' && error !== null && 'message' in error
+            ? String((error as any).message)
+            : 'Erro ao registrar nutricionista',
+        )
+      }
+    },
+    {
+      onSuccess: function (data) {
+        return {
+          success: true,
+          data,
+          message: 'Perfil do nutricionista registrado com sucesso',
+        }
+      },
+      onFailure: function (error: unknown) {
+        let errorMessage = 'Erro ao registrar perfil do nutricionista'
+        if (typeof error === 'object' && error !== null) {
+          // @ts-ignore
+          errorMessage = error.message || errorMessage
+        }
+        return {
+          success: false,
+          error: errorMessage,
+          message: 'Falha ao registrar perfil do nutricionista',
+        }
+      },
+    },
+  )
+}
+
+export async function registerTrainerAction(_state: unknown, formData: FormData) {
+  return actionHandlerWithValidation(
+    formData,
+    async (data) => {
+      // Validate required field
+      if (!data.userId) {
+        throw new Error('ID do usuário é obrigatório')
+      }
+
+      try {
+        // Call the API endpoint directly to handle trainer registration
+        const result = await fetchFromApi<RegistrationResponse>('/api/agencies/register-trainer', {
+          method: 'POST',
+          body: JSON.stringify({
+            userId: data.userId,
+            license_number: data.license_number || null,
+            specialization: data.specialization || null,
+          }),
+        })
+
+        console.log('Trainer registration result:', result)
+
+        if (!result.data) {
+          // Check for specific error related to duplicate trainer profile
+          if (
+            result.error?.messages?.some((msg) => msg.includes('já possui um perfil de treinador'))
+          ) {
+            throw new Error('Este usuário já possui um perfil de treinador cadastrado')
+          }
+          throw new Error(result.error?.messages?.[0] || 'Erro ao registrar perfil de treinador')
+        }
+
+        return result.data
+      } catch (error) {
+        console.error('Error during trainer registration:', error)
+        throw new Error(
+          typeof error === 'object' && error !== null && 'message' in error
+            ? String((error as any).message)
+            : 'Erro ao registrar treinador',
+        )
+      }
+    },
+    {
+      onSuccess: function (data) {
+        return {
+          success: true,
+          data,
+          message: 'Perfil do treinador registrado com sucesso',
+        }
+      },
+      onFailure: function (error: unknown) {
+        let errorMessage = 'Erro ao registrar perfil do treinador'
+        if (typeof error === 'object' && error !== null) {
+          // @ts-ignore
+          errorMessage = error.message || errorMessage
+        }
+        return {
+          success: false,
+          error: errorMessage,
+          message: 'Falha ao registrar perfil do treinador',
         }
       },
     },

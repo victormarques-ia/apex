@@ -12,6 +12,7 @@ import {
   SelectValue 
 } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
+import NutritionDashboard from './components/NutritionDashboard';
 
 // Define the main tabs
 const TABS = {
@@ -157,11 +158,8 @@ export default function NutritionistOverviewPage() {
         <Card>
           <CardContent className="p-6">
             <TabsContent value={TABS.OVERVIEW} className="mt-0">
-              {/* Overview component will be placed here */}
               <div className="min-h-[600px]">
-                <h2 className="text-xl font-semibold mb-4">Overview</h2>
-                <p>Conteúdo do overview para o atleta selecionado. ID: {selectedAthleteId}</p>
-                {/* Overview component will be loaded here */}
+                {selectedAthleteId && <NutritionDashboard athleteId={selectedAthleteId} />}
               </div>
             </TabsContent>
 

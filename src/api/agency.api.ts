@@ -1,47 +1,58 @@
 import { Endpoint, PayloadRequest } from 'payload'
 
+async function getLoggedInAgency(req: PayloadRequest) {
+  // Check if user is authenticated
+  if (!req.user) {
+    return Response.json(
+      {
+        errors: [{ message: 'Usuário não autenticado' }],
+      },
+      { status: 401 },
+    )
+  }
+
+  const authenticatedUserId = req.user.id
+
+  // Find the agency profile associated with the authenticated user
+  const agencyProfiles = await req.payload.find({
+    collection: 'agencies',
+    where: {
+      user: {
+        equals: authenticatedUserId,
+      },
+    },
+    depth: 2, // Include related fields
+  })
+
+  // Check if agency profile exists
+  if (!agencyProfiles.docs || agencyProfiles.docs.length === 0) {
+    return Response.json(
+      {
+        errors: [{ message: 'Perfil de agência não encontrado para este usuário' }],
+      },
+      { status: 404 },
+    )
+  }
+
+  return agencyProfiles.docs[0]
+}
+
 export const AgencyApi: Endpoint[] = [
   {
     method: 'get',
     path: '/me',
     handler: async (req: PayloadRequest) => {
       try {
-        // Check if user is authenticated
-        if (!req.user) {
-          return Response.json(
-            {
-              errors: [{ message: 'Usuário não autenticado' }],
-            },
-            { status: 401 },
-          )
+        const result = await getLoggedInAgency(req)
+
+        // Check if result is a Response object (which would contain errors)
+        if (result instanceof Response) {
+          return result
         }
 
-        const authenticatedUserId = req.user.id
-
-        // Find the agency profile associated with the authenticated user
-        const agencyProfiles = await req.payload.find({
-          collection: 'agencies',
-          where: {
-            user: {
-              equals: authenticatedUserId,
-            },
-          },
-          depth: 2, // Include related fields
-        })
-
-        // Check if agency profile exists
-        if (!agencyProfiles.docs || agencyProfiles.docs.length === 0) {
-          return Response.json(
-            {
-              errors: [{ message: 'Perfil de agência não encontrado para este usuário' }],
-            },
-            { status: 404 },
-          )
-        }
-
-        // Return the first agency profile found
+        // Otherwise, return the result inside data
         return Response.json({
-          data: agencyProfiles.docs[0],
+          data: result,
         })
       } catch (error) {
         console.error('[AgencyApi][me]:', error)
@@ -371,6 +382,17 @@ export const AgencyApi: Endpoint[] = [
           data: nutritionistData,
         })
 
+        // Create agency-professional relationship
+        await req.payload.create({
+          collection: 'agency-professionals',
+          data: {
+            agency: agencyId,
+            professional: userId,
+            role: 'nutritionist',
+          },
+        })
+        console.log('Created agency relationship')
+
         console.log('Created nutritionist profile with ID:', nutritionistProfile.id)
 
         // Return response with profile and relationships
@@ -386,7 +408,8 @@ export const AgencyApi: Endpoint[] = [
         return Response.json({ errors: [{ message: errorMessage }] }, { status: 500 })
       }
     },
-  },{
+  },
+  {
     method: 'post',
     path: '/register-trainer',
     handler: async (req: PayloadRequest) => {
@@ -457,10 +480,7 @@ export const AgencyApi: Endpoint[] = [
         })
 
         if (existingTrainerProfiles.docs && existingTrainerProfiles.docs.length > 0) {
-          console.log(
-            'User already has an trainer profile:',
-            existingTrainerProfiles.docs[0].id,
-          )
+          console.log('User already has an trainer profile:', existingTrainerProfiles.docs[0].id)
           return Response.json(
             {
               errors: [{ message: 'Este usuário já possui um perfil de treinador cadastrado' }],
@@ -482,6 +502,17 @@ export const AgencyApi: Endpoint[] = [
           data: trainerData,
         })
 
+        // Create agency-professional relationship
+        await req.payload.create({
+          collection: 'agency-professionals',
+          data: {
+            agency: agencyId,
+            professional: userId,
+            role: 'trainer',
+          },
+        })
+        console.log('Created agency relationship')
+
         console.log('Created trainer profile with ID:', trainerProfile.id)
 
         // Return response with profile and relationships
@@ -495,6 +526,124 @@ export const AgencyApi: Endpoint[] = [
         const errorMessage =
           error instanceof Error ? error.message : 'Erro inesperado ao registrar treinador'
         return Response.json({ errors: [{ message: errorMessage }] }, { status: 500 })
+      }
+    },
+  },
+  {
+    method: 'get',
+    path: '/my-nutritionists',
+    handler: async (req: PayloadRequest) => {
+      try {
+        const response = await getLoggedInAgency(req)
+        if (response instanceof Response) {
+          return response
+        }
+        console.log("teste", response)
+        const agencyId = response.id
+        const name = (req.query.name as string) || ''
+        const sortOrder = (req.query.sortOrder as string) || 'asc'
+        // Você pode ordenar por nome, data da ultima atualizacao e meta.
+        // Exemplo: nutritionist.user.name, nutritionist.updatedAt, nutritionist.specialization
+        const sortFields = [
+          'nutritionist.user.name',
+          'nutritionist.updatedAt',
+          'nutritionist.specialization',
+        ]
+        const sortField = (req.query.sortField as number) || 0
+        const specialization = (req.query.specialization as string) || ''
+
+        // /api/agency/my-nutritionists?name=renata
+        // teste por ordem ascendente de nome
+        // /api/agency/my-nutritionists?name=renata&sortOrder=desc
+        // teste por ordem ascendente de data de ultima atualizacao
+        // /api/agency/my-nutritionists?sortOrder=asc&sortField=1
+        // teste por ordem ascendente de meta
+        // /api/agency/my-nutritionists?sortOrder=asc&sortField=2
+        // api/agency/my-nutritionists?goal=emagrecimento
+
+        const agenciesNutritionists = await req.payload.find({
+          collection: 'agency-professionals',
+          where: {
+            and: [
+              {
+                agency: {
+                  equals: agencyId,
+                },
+              }, 
+              {
+                role: {
+                  equals: 'nutritionist',
+                },
+              },
+              ...(name.trim() ? [{
+                'professional.name': {
+                  like: name,
+                }
+              }] : [])
+            ],
+          },
+          depth: 2,
+          sort:
+            sortOrder.toLowerCase() === 'desc'
+              ? `-${sortFields[sortField] || sortFields[0]}`
+              : sortFields[sortField] || sortFields[0],
+          limit: 100,
+        })
+
+        const professionals = agenciesNutritionists.docs.map((relation) => relation.professional)
+
+        console.log("professionals", professionals)
+
+        const nutritionists = await req.payload.find({
+          collection: 'nutritionists',
+          where: {
+            and: [
+              {
+                user: {
+                  in: professionals.map(professional => professional.id),
+                },
+              },
+              ...(specialization.trim()
+                ? [
+                    {
+                      specialization: {
+                        like: specialization,
+                      },
+                    },
+                  ]
+                : []),
+            ],
+          },
+        })
+        if(professionals.length === 0){
+          return Response.json({
+            data: {
+              total: 0,
+              nutritionists: [],
+              professionals: professionals,
+            },
+          })
+        }
+
+        const nutris = nutritionists.docs
+
+        console.log('[Nutritionists]', nutris)
+
+        return Response.json({
+          data: {
+            total: nutritionists.totalDocs,
+            nutritionists: nutris,
+            professionals: professionals,
+          },
+        })
+      } catch (error) {
+        console.log('[AgencyApi][nutritionists]:', error)
+        return Response.json(
+          {
+            errors: [{ message: 'Erro inesperado ao buscar nutricionista' }],
+          },
+          { status: 500 },
+        )
       }
     },
   },

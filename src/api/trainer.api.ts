@@ -68,47 +68,67 @@ export const TrainerApi: Endpoint[] = [
         if(idTrainer == undefined){
           throw new Error();
         }
-        
-        let nameQuery = req.query.name as string | undefined;
-        let genderQuery = req.query.gender as string | undefined;
-        
-        nameQuery = nameQuery != undefined ? nameQuery.toLowerCase() : undefined;
-        genderQuery = genderQuery != undefined ? genderQuery.toLowerCase() : undefined;
-        
-        const limit = req.query.limit ? parseInt(req.query.limit as string, 10) : 10;
-        const page = req.query.page ? parseInt(req.query.page as string, 10) : undefined;
-        
-        // Validate limit parameter
-        const validLimit = isNaN(limit) || limit < 1 || limit > 100 ? 10 : limit;
 
-        // Search for athletes that match the query
-        const trainerAthletResults = await req.payload.find({
+        const name = req.query.name as string || "";
+        const sortOrder = req.query.sortOrder as string || "asc";
+        // Você pode ordenar por nome, data da ultima atualizacao e meta.
+        // Exemplo: athlete.user.name, athlete.updatedAt, athlete.goal
+        const sortFields = [ 'athlete.user.name', 'athlete.updatedAt', 'athlete.goal' ];
+        const sortField = req.query.sortField as number || 0;
+        const goal = req.query.goal as string || "";
+
+        // /api/trainer/my-athletes?name=renata
+        // teste por ordem ascendente de nome
+        // /api/trainer/my-athletes?name=renata&sortOrder=desc
+        // teste por ordem ascendente de data de ultima atualizacao
+        // /api/trainer/my-athletes?sortOrder=asc&sortField=1
+        // teste por ordem ascendente de meta
+        // /api/trainer/my-athletes?sortOrder=asc&sortField=2
+        // api/trainer/my-athletes?goal=emagrecimento
+
+        const trainerAthletes = await req.payload.find({
           collection: 'trainer-athletes',
           where: {
-            trainer: {
-              equals: idTrainer,
-            },
+            and: [
+              {
+                trainer: {
+                  equals: idTrainer,
+                }
+              },
+              ...(name.trim() ? [{
+                'athlete.user.name': {
+                  like: name,
+                }
+              }] : []),
+              ...(goal.trim() ? [{
+                'athlete.goal': {
+                  like: goal,
+                }
+              }] : [])
+            ]
           },
-          limit: validLimit,
-          page, // PayloadCMS handles pagination
-          sort: 'trainer', // Sort by trainer
+          depth: 2,
+          sort: sortOrder.toLowerCase() === "desc" ? 
+            `-${sortFields[sortField] || sortFields[0]}` : 
+            (sortFields[sortField] || sortFields[0]),
+          limit: 100,
         });
 
-        let athletes: any[] = trainerAthletResults.docs.map(e => e.athlete);
-        
-        athletes = athletes.filter(e => {
-          if(nameQuery && !(e.user.name as string).toLowerCase().includes(nameQuery)) return false;
-          if(genderQuery && !(e.gender as string).toLowerCase().includes(genderQuery)) return false;
-          return true;
+        // Extrai apenas os perfis de atletas da lista de relacionamentos
+        const athletes = trainerAthletes.docs.map(relation => relation.athlete);
+
+        return Response.json({
+          data: {
+            total: trainerAthletes.totalDocs,
+            athletes: athletes,
+          },
         });
-        
-        return Response.json(athletes);
 
       } catch (error) {
-        console.error('[FoodApi][search]:', error);
+        console.error('[TrainerApi][search]:', error);
         return Response.json(
           {
-            errors: [{ message: 'Erro inesperado ao pesquisar alimentos' }],
+            errors: [{ message: 'Erro inesperado ao pesquisar pacientes do treinador' }],
           },
           { status: 500 }
         );

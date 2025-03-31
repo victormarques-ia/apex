@@ -26,6 +26,7 @@ async function getLoggedInNutritionistId(req: PayloadRequest) {
 
 export const NutritionistApi: Endpoint[] = [
   {
+    // listar todos os pacientes daquele nutricionista
     method: 'get',
     path: '/my-athletes',
     handler: async (req: PayloadRequest) => {
@@ -98,6 +99,7 @@ export const NutritionistApi: Endpoint[] = [
     },
   },
   {
+    // escolhendo apenas um paciente para ver mais detalhes sobre
     method: 'get',
     path: '/my-athletes/:id',
     handler: async (req: PayloadRequest) => {
@@ -142,4 +144,104 @@ export const NutritionistApi: Endpoint[] = [
       }
     },
   },
+  {
+    //retorna todos os planos alimentares daquele atleta com aquele nutricionista
+    method: 'get',
+    path: '/diet-plans', 
+    handler: async (req: PayloadRequest) => {
+      try {
+        const nutritionistId = await getLoggedInNutritionistId(req);
+        const  { athleteId }  = req.query;
+
+        console.log("Id do atleta:" , athleteId);
+        console.log("Id do nutri:", nutritionistId);
+
+        if (!athleteId) {
+          return Response.json(
+            {
+            errors: [{ message: 'Id do atleta é necessário' }]
+            },
+            { status: 400}
+        );
+        }
+
+        const dietPlans = await req.payload.find({
+          collection: 'diet-plans',
+          where: {
+            'nutritionist': {
+              equals: nutritionistId,
+            },
+            'athlete.id': {
+              equals: athleteId,
+            }
+          },
+          sort: '-startDate',
+          depth: 1,
+        });
+
+        console.log("Planos alimentares: ", dietPlans);
+
+        return Response.json({
+          data: {
+            total: dietPlans.totalDocs,
+            dietPlans: dietPlans.docs,
+          }
+        });
+
+      } catch (error) {
+        console.error('[NutritionistApi][dietPlans]:', error);
+        return Response.json({
+          errors: [{ message: 'Erro inesperado ao buscar plano alimentar.' }]
+        })
+      }
+    },
+  },
+  {
+    method: 'get',
+    path: '/diet-plan-days',
+    handler: async (req) => {
+      try {
+        const { athleteId } = req.query;
+        if (!athleteId) throw new Error('Athlete ID required');
+  
+        const days = await req.payload.find({
+          collection: 'diet-plan-days',
+          where: {
+            'diet_plan.athlete.id': { equals: athleteId }
+          },
+          depth: 1
+        });
+  
+        return Response.json(days);
+      } catch (error) {
+        return Response.json({
+          errors: [{ message: 'Erro inesperado ao buscar dia do plano alimentar.' }]
+        })
+      }
+    }
+  },
+  {
+    method: 'get',
+    path: '/meals',
+    handler: async (req) => {
+      try {
+        const { athleteId } = req.query;
+        if (!athleteId) throw new Error('Athlete ID required');
+  
+        const meals = await req.payload.find({
+          collection: 'meal',
+          where: {
+            'diet_plan_day.diet_plan.athlete.id': { equals: athleteId }
+          },
+          depth: 2
+        });
+  
+        return Response.json(meals);
+      } catch (error) {
+        return Response.json({
+          errors: [{ message: 'Erro inesperado ao buscar as refeições.' }]
+        })
+      }
+    }
+  }
 ];

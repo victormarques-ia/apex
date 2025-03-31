@@ -97,4 +97,49 @@ export const NutritionistApi: Endpoint[] = [
       }
     },
   },
+  {
+    method: 'get',
+    path: '/my-athletes/:id',
+    handler: async (req: PayloadRequest) => {
+      try {
+        const nutritionistId = await getLoggedInNutritionistId(req);
+        const athleteId = req.routeParams?.id;
+
+        const {from, to} = req.query;
+
+        // Fetch the diet-plan
+        const Meals = await req.payload.find({
+          collection: 'meal',
+          where: {
+            and: [
+              {
+                "diet_plan_day.diet_plan.athlete": {
+                  equals: athleteId,
+                },
+              },
+              {
+                "diet_plan_day.diet_plan.nutritionist": {
+                  equals: nutritionistId,
+                },
+              }
+            ],
+          },
+          depth: 2,
+          limit: 50,
+        });
+
+        return Response.json({
+          data: Meals,
+        });
+      } catch (error) {
+        console.error('[NutritionistApi][athleteById]:', error);
+        return Response.json(
+          {
+            errors: [{ message: 'Erro inesperado ao buscar o atleta' }],
+          },
+          { status: 500 }
+        );
+      }
+    },
+  },
 ];

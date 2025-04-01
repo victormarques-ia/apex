@@ -6,12 +6,11 @@ import { Input } from '@/components/ui/input'
 import { getNutritionistList } from './actions/agency.action'
 import { Search, Filter, ChevronLeft, ChevronRight, MoreHorizontal } from 'lucide-react'
 
-
 export default function PacientListPage() {
   // State variables
-  const [nutritionists, setNutritionists] = useState([])
+  const [nutritionists, setNutritionists] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
+  const [error, setError] = useState<string>("")
 
   // Pagination
   const [page, setPage] = useState(1)
@@ -20,14 +19,13 @@ export default function PacientListPage() {
 
   // Filtering and sorting
   const [searchQuery, setSearchQuery] = useState('')
-  const [sortField, setSortField] = useState(0) // 0 for name, 1 for date, 2 for goal
+  const [sortField, setSortField] = useState(0) // 0 for name, 1 for date, 2 for specialization
   const [sortOrder, setSortOrder] = useState('asc')
-  const [goal, setGoal] = useState('')
 
   // Load data when filter params change
   useEffect(() => {
     fetchData()
-  }, [page, limit, sortField, sortOrder, goal])
+  }, [page, limit, sortField, sortOrder])
 
   // Debounce search input
   useEffect(() => {
@@ -39,14 +37,6 @@ export default function PacientListPage() {
 
     return () => clearTimeout(timer)
   }, [searchQuery])
-
-  // Setup form state
-  const [state, formAction] = useActionState(getNutritionistList, {
-    success: false,
-    data: null,
-    error: null,
-    message: '',
-  })
 
   // Fetch data from API
   const fetchData = async () => {
@@ -68,18 +58,14 @@ export default function PacientListPage() {
         formData.append('sortOrder', sortOrder)
       }
 
-      if (goal) {
-        formData.append('goal', goal)
-      }
-
-      const result = await getNutritionistList(state, formData)
+      const result = await getNutritionistList(formData)
     
       console.log('Resultado: ', result.data.professionals)
       if (result.data?.nutritionists && result.data.nutritionists?.length > 0) {
         setNutritionists(result.data.nutritionists)
         const total = result.data.total || result.data.nutricionists.length
         setTotalPages(Math.ceil(total / limit))
-        setError(null)
+        setError("")
       } else {
         setNutritionists([])
       }
@@ -102,19 +88,10 @@ export default function PacientListPage() {
   }
 
   // Format date as DD/MM/YYYY
-  const formatDate = (dateString) => {
+  const formatDate = (dateString : string) => {
     if (!dateString) return '-'
     const date = new Date(dateString)
     return date.toLocaleDateString('pt-BR')
-  }
-
-  // Reset all filters
-  const resetFilters = () => {
-    setSearchQuery('')
-    setSortField(0)
-    setSortOrder('asc')
-    setGoal('')
-    setPage(1)
   }
 
   return (
@@ -154,7 +131,7 @@ export default function PacientListPage() {
         <div className="flex justify-center items-center h-64">
           <div className="animate-spin h-8 w-8 border-4 border-blue-500 rounded-full border-t-transparent"></div>
         </div>
-      ) : error ? (
+      ) : error != "" ? (
         <div className="p-4 bg-red-100 text-red-700 rounded">
           <p>Erro: {error}</p>
           <Button variant="outline" className="mt-2" onClick={fetchData}>
@@ -212,15 +189,15 @@ export default function PacientListPage() {
                       </td>
                     </tr>
                   ) : (
-                    nutritionists.map((patient) => (
-                      <tr key={patient.id} className="border-b hover:bg-gray-50">
+                    nutritionists.map((nutri) => (
+                      <tr key={nutri.id} className="border-b hover:bg-gray-50">
                         <td className="py-4 px-4">
                           <div className="font-medium">
-                            {patient.user?.name || 'Nome não disponível'}
+                            {nutri.user?.name || 'Nome não disponível'}
                           </div>
                         </td>
-                        <td className="py-4 px-4 text-gray-600">{formatDate(patient.createdAt)}</td>
-                        <td className="py-4 px-4 text-gray-600">{patient.specialization || '-'}</td>
+                        <td className="py-4 px-4 text-gray-600">{formatDate(nutri.createdAt)}</td>
+                        <td className="py-4 px-4 text-gray-600">{nutri.specialization || '-'}</td>
                         <td className="py-4 px-4 text-right">
                           <Button variant="ghost" size="sm">
                             <MoreHorizontal className="h-5 w-5 text-gray-400" />

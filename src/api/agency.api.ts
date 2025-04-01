@@ -538,28 +538,18 @@ export const AgencyApi: Endpoint[] = [
         if (response instanceof Response) {
           return response
         }
-        console.log("teste", response)
         const agencyId = response.id
         const name = (req.query.name as string) || ''
         const sortOrder = (req.query.sortOrder as string) || 'asc'
         // Você pode ordenar por nome, data da ultima atualizacao e meta.
-        // Exemplo: nutritionist.user.name, nutritionist.updatedAt, nutritionist.specialization
+        // Exemplo: user.name, updatedAt, specialization
         const sortFields = [
-          'nutritionist.user.name',
-          'nutritionist.updatedAt',
-          'nutritionist.specialization',
+          'user.name',
+          'createdAt',
+          'specialization',
         ]
         const sortField = (req.query.sortField as number) || 0
         const specialization = (req.query.specialization as string) || ''
-
-        // /api/agency/my-nutritionists?name=renata
-        // teste por ordem ascendente de nome
-        // /api/agency/my-nutritionists?name=renata&sortOrder=desc
-        // teste por ordem ascendente de data de ultima atualizacao
-        // /api/agency/my-nutritionists?sortOrder=asc&sortField=1
-        // teste por ordem ascendente de meta
-        // /api/agency/my-nutritionists?sortOrder=asc&sortField=2
-        // api/agency/my-nutritionists?goal=emagrecimento
 
         const agenciesNutritionists = await req.payload.find({
           collection: 'agency-professionals',
@@ -569,17 +559,21 @@ export const AgencyApi: Endpoint[] = [
                 agency: {
                   equals: agencyId,
                 },
-              }, 
+              },
               {
                 role: {
                   equals: 'nutritionist',
                 },
               },
-              ...(name.trim() ? [{
-                'professional.name': {
-                  like: name,
-                }
-              }] : [])
+              ...(name.trim()
+                ? [
+                    {
+                      'professional.name': {
+                        like: name,
+                      },
+                    },
+                  ]
+                : []),
             ],
           },
           depth: 2,
@@ -592,7 +586,7 @@ export const AgencyApi: Endpoint[] = [
 
         const professionals = agenciesNutritionists.docs.map((relation) => relation.professional)
 
-        console.log("professionals", professionals)
+        console.log('professionals', professionals)
 
         const nutritionists = await req.payload.find({
           collection: 'nutritionists',
@@ -600,7 +594,7 @@ export const AgencyApi: Endpoint[] = [
             and: [
               {
                 user: {
-                  in: professionals.map(professional => professional.id),
+                  in: professionals.map((professional) => professional.id),
                 },
               },
               ...(specialization.trim()
@@ -614,8 +608,14 @@ export const AgencyApi: Endpoint[] = [
                 : []),
             ],
           },
+          depth: 2,
+          sort:
+            sortOrder.toLowerCase() === 'desc'
+              ? `-${sortFields[sortField] || sortFields[0]}`
+              : sortFields[sortField] || sortFields[0],
+          limit: 100,
         })
-        if(professionals.length === 0){
+        if (professionals.length === 0) {
           return Response.json({
             data: {
               total: 0,

@@ -4,7 +4,7 @@ import { actionHandlerWithValidation } from '@/app/utils/action-handle-with-vali
 import { fetchFromApi } from '@/app/utils/fetch-from-api'
 
 // Action to get the nutritionist list
-export async function getNutritionistList(_state: unknown, formData: FormData) {
+export async function getNutritionistList(formData: FormData) {
     return actionHandlerWithValidation(
       formData,
       async (data) => {

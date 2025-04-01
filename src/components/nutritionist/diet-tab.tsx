@@ -6,11 +6,13 @@ import { Calendar } from '@/components/ui/calendar';
 import { format, isSameDay, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Button } from '@/components/ui/button';
-import { fetchFromApi } from '@/app/utils/fetch-from-api';
+import { clientFetch } from '@/app/utils/client-fetch';
+import { getMealHistoryAction } from '@/app/(frontend)/nutrition/actions/meals.action';
 
 export function DietTabContent({ athleteId }) {
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [meals, setMeals] = useState([]);
+  const [mealsHistory, setMealsHistory] = useState(null);
   const [dietDays, setDietDays] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -19,23 +21,59 @@ export function DietTabContent({ athleteId }) {
       try {
         setLoading(true);
 
-        // buscar todos os planos alimentares para aquele atleta
-        const dietPlansResponse = await fetchFromApi('/api/nutritionist/diet-plans?=${athleteId}');
-        if (!dietPlansResponse.data)
-          throw new Error('Esse atleta não possui nenhum plano alimentar');
+        // Fetch meals history directly - only API call needed
+        const formData = new FormData();
+        formData.append('athleteId', athleteId);
         
+        const today = new Date();
+        const oneMonthAgo = new Date();
+        oneMonthAgo.setMonth(today.getMonth() - 1);
         
-        // 1. Buscar dias de plano de dieta
-        const daysResponse = await fetch(`/api/diet-plan-days?athleteId=${athleteId}`);
-        if (!daysResponse.ok) throw new Error('Failed to fetch diet days');
-        const daysData = await daysResponse.json();
-        setDietDays(daysData.docs || []);
+        formData.append('from', oneMonthAgo.toISOString().split('T')[0]);
+        formData.append('to', today.toISOString().split('T')[0]);
+        
+        const mealsResponse = await getMealHistoryAction(null, formData);
+        
+        console.log(mealsResponse);
 
-        // 2. Buscar refeições
-        const mealsResponse = await fetch(`/api/meals?athleteId=${athleteId}`);
-        if (!mealsResponse.ok) throw new Error('Failed to fetch meals');
-        const mealsData = await mealsResponse.json();
-        setMeals(mealsData.docs || []);
+        // Store the complete meal history response
+        if (mealsResponse.data) {
+          setMealsHistory(mealsResponse.data);
+          
+          // Extract all unique meals for any other operations that need the flat list
+          if (mealsResponse.data.history) {
+            const allMeals = Object.values(mealsResponse.data.history)
+              .flatMap(dayData => dayData.meals || []);
+            
+            // Get unique meals by ID to avoid duplicates in the flat list
+            const uniqueMeals = [];
+            const mealIds = new Set();
+            
+            allMeals.forEach(meal => {
+              if (!mealIds.has(meal.id)) {
+                mealIds.add(meal.id);
+                uniqueMeals.push(meal);
+              }
+            });
+            
+            setMeals(uniqueMeals);
+          } else {
+            setMeals([]);
+          }
+          
+          // Extract dates that have meals directly from the response
+          if (mealsResponse.data.dateRange) {
+            setDietDays(mealsResponse.data.dateRange.map(dateStr => ({
+              date: dateStr
+            })));
+          } else {
+            setDietDays([]);
+          }
+        } else {
+          setMealsHistory(null);
+          setMeals([]);
+          setDietDays([]);
+        }
 
       } catch (error) {
         console.error('Error:', error);
@@ -50,21 +88,13 @@ export function DietTabContent({ athleteId }) {
   const getMealsForDate = (date) => {
     const dateStr = date.toISOString().split('T')[0];
     
-    // Encontrar o dia correspondente
-    const day = dietDays.find(d => {
-      const dayDate = new Date(d.date).toISOString().split('T')[0];
-      return dayDate === dateStr;
-    });
-
-    if (!day) return [];
-
-    // Filtrar refeições para este dia
-    return meals.filter(meal => {
-      if (typeof meal.diet_plan_day === 'string') {
-        return meal.diet_plan_day === day.id;
-      }
-      return meal.diet_plan_day?.id === day.id;
-    });
+    // Get all meals for this exact date from our original history response
+    // This is safer than filtering the flattened meals array
+    if (mealsHistory && mealsHistory.history && mealsHistory.history[dateStr]) {
+      return mealsHistory.history[dateStr].meals || [];
+    }
+    
+    return [];
   };
 
   const groupMealsByType = () => {
@@ -72,10 +102,11 @@ export function DietTabContent({ athleteId }) {
     const grouped = {};
 
     mealsForDate.forEach(meal => {
-      if (!grouped[meal.meal_type]) {
-        grouped[meal.meal_type] = [];
+      // Use mealType instead of meal_type
+      if (!grouped[meal.mealType]) {
+        grouped[meal.mealType] = [];
       }
-      grouped[meal.meal_type].push(meal);
+      grouped[meal.mealType].push(meal);
     });
 
     return grouped;
@@ -108,6 +139,8 @@ export function DietTabContent({ athleteId }) {
   }
 
   const groupedMeals = groupMealsByType();
+  
+  // Dates with meals come directly from the API's dateRange
   const datesWithMeals = dietDays.map(day => new Date(day.date));
 
   return (
@@ -152,21 +185,50 @@ export function DietTabContent({ athleteId }) {
                   <h3 className="font-medium mb-2">{translateMealType(mealType)}</h3>
                   <ul className="space-y-2">
                     {meals.map(meal => (
-                      <li key={meal.id} className="bg-gray-50 p-3 rounded-md">
+                      <li 
+                        key={meal.id} 
+                        className={`${meal.isRepeated ? 'bg-gray-50' : 'bg-blue-50'} p-3 rounded-md`}
+                      >
                         <div className="flex justify-between items-start">
-                          <span className="font-medium capitalize">
-                            {meal.meal_type.replace('_', ' ')}
-                          </span>
-                          {meal.scheduled_time && (
+                          <div>
+                            <span className="font-medium capitalize">
+                              {meal.mealType.replace('_', ' ')}
+                            </span>
+                            {meal.isRepeated && (
+                              <span className="ml-2 text-xs bg-gray-200 px-1.5 py-0.5 rounded-full">
+                                Repetida
+                              </span>
+                            )}
+                          </div>
+                          {meal.scheduledTime && (
                             <span className="text-xs text-muted-foreground">
-                              {formatTime(meal.scheduled_time)}
+                              {formatTime(meal.scheduledTime)}
                             </span>
                           )}
                         </div>
-                        {meal.order_index && (
-                          <p className="text-sm text-muted-foreground mt-1">
-                            Ordem: {meal.order_index}
-                          </p>
+                        
+                        <div className="flex flex-wrap gap-2 mt-1 text-xs text-muted-foreground">
+                          {meal.orderIndex && (
+                            <span>Ordem: {meal.orderIndex}</span>
+                          )}
+                          {meal.isRepeated && meal.originalDate && (
+                            <span>Original: {new Date(meal.originalDate).toLocaleDateString()}</span>
+                          )}
+                        </div>
+                        
+                        {/* Add food items information */}
+                        {meal.foods && meal.foods.length > 0 && (
+                          <div className="mt-2 text-sm">
+                            <p className="text-xs font-medium mb-1">Alimentos:</p>
+                            <ul className="space-y-1 pl-2">
+                              {meal.foods.map(foodItem => (
+                                <li key={foodItem.id} className="flex justify-between">
+                                  <span>{foodItem.food.name}</span>
+                                  <span className="text-muted-foreground">{foodItem.quantity}g</span>
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
                         )}
                       </li>
                     ))}

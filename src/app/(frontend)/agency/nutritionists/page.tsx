@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input'
 import { getNutritionistList } from './actions/agency.action'
 import { Search, Filter, ChevronLeft, ChevronRight, MoreHorizontal } from 'lucide-react'
 
-export default function PacientListPage() {
+export default function NutritionistListPage() {
   // State variables
   const [nutritionists, setNutritionists] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
@@ -185,7 +185,7 @@ export default function PacientListPage() {
                   {nutritionists?.length === 0 ? (
                     <tr>
                       <td colSpan={4} className="text-center py-6 text-gray-500">
-                        Nenhum paciente encontrado
+                        Nenhum nutricionista encontrado
                       </td>
                     </tr>
                   ) : (
@@ -213,7 +213,7 @@ export default function PacientListPage() {
             {/* Pagination */}
             <div className="flex items-center justify-between px-4 py-4 border-t">
               <div className="text-sm text-gray-500">
-                Pacientes por página
+                Nutricionistas por página
                 <select
                   className="ml-2 border rounded px-2 py-1"
                   value={limit}

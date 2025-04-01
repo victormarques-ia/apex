@@ -70,7 +70,7 @@ export default function PacientListPage() {
         setNutritionists([])
       }
     } catch (err) {
-      setError('Erro inesperado ao buscar pacientes')
+      setError('Erro inesperado ao buscar nutricionistas')
       console.error(err)
       setNutritionists([])
     } finally {
@@ -97,7 +97,7 @@ export default function PacientListPage() {
   return (
     <div className="container mx-auto p-4">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">Pacientes</h1>
+        <h1 className="text-2xl font-bold">Nutricionistas</h1>
 
         <Button
           variant="outline"

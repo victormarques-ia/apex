@@ -138,14 +138,6 @@ export function DietPlanForm({
         <div className="space-y-4">
           <div className="flex justify-between items-center">
             <h3 className="text-lg font-medium">Dia do Plano Alimentar</h3>
-            <Button 
-              variant="destructive" 
-              size="sm" 
-              onClick={handleDeleteDietPlanDay}
-              disabled={loading}
-            >
-              <TrashIcon className="h-4 w-4 mr-1" /> Excluir
-            </Button>
           </div>
           
           <div className="grid grid-cols-2 gap-4">

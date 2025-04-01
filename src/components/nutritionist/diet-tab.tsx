@@ -6,6 +6,7 @@ import { Calendar } from '@/components/ui/calendar';
 import { format, isSameDay, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Button } from '@/components/ui/button';
+import { fetchFromApi } from '@/app/utils/fetch-from-api';
 
 export function DietTabContent({ athleteId }) {
   const [selectedDate, setSelectedDate] = useState(new Date());
@@ -17,6 +18,12 @@ export function DietTabContent({ athleteId }) {
     const fetchData = async () => {
       try {
         setLoading(true);
+
+        // buscar todos os planos alimentares para aquele atleta
+        const dietPlansResponse = await fetchFromApi('/api/nutritionist/diet-plans?=${athleteId}');
+        if (!dietPlansResponse.data)
+          throw new Error('Esse atleta não possui nenhum plano alimentar');
+        
         
         // 1. Buscar dias de plano de dieta
         const daysResponse = await fetch(`/api/diet-plan-days?athleteId=${athleteId}`);

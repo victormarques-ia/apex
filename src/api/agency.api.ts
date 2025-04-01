@@ -620,20 +620,14 @@ export const AgencyApi: Endpoint[] = [
             data: {
               total: 0,
               nutritionists: [],
-              professionals: professionals,
             },
           })
         }
 
-        const nutris = nutritionists.docs
-
-        console.log('[Nutritionists]', nutris)
-
         return Response.json({
           data: {
             total: nutritionists.totalDocs,
-            nutritionists: nutris,
-            professionals: professionals,
+            nutritionists: nutritionists.docs,
           },
         })
       } catch (error) {
@@ -641,6 +635,205 @@ export const AgencyApi: Endpoint[] = [
         return Response.json(
           {
             errors: [{ message: 'Erro inesperado ao buscar nutricionista' }],
+          },
+          { status: 500 },
+        )
+      }
+    },
+  },
+  {
+    method: 'get',
+    path: '/my-trainers',
+    handler: async (req: PayloadRequest) => {
+      try {
+        const response = await getLoggedInAgency(req)
+        if (response instanceof Response) {
+          return response
+        }
+        const agencyId = response.id
+        const name = (req.query.name as string) || ''
+        const sortOrder = (req.query.sortOrder as string) || 'asc'
+        // Você pode ordenar por nome, data da ultima atualizacao e meta.
+        // Exemplo: user.name, updatedAt, specialization
+        const sortFields = [
+          'user.name',
+          'createdAt',
+          'specialization',
+        ]
+        const sortField = (req.query.sortField as number) || 0
+        const specialization = (req.query.specialization as string) || ''
+
+        const agenciesNutritionists = await req.payload.find({
+          collection: 'agency-professionals',
+          where: {
+            and: [
+              {
+                agency: {
+                  equals: agencyId,
+                },
+              },
+              {
+                role: {
+                  equals: 'trainer',
+                },
+              },
+              ...(name.trim()
+                ? [
+                    {
+                      'professional.name': {
+                        like: name,
+                      },
+                    },
+                  ]
+                : []),
+            ],
+          },
+          depth: 2,
+          sort:
+            sortOrder.toLowerCase() === 'desc'
+              ? `-${sortFields[sortField] || sortFields[0]}`
+              : sortFields[sortField] || sortFields[0],
+          limit: 100,
+        })
+
+        const professionals = agenciesNutritionists.docs.map((relation) => relation.professional)
+
+        const trainers = await req.payload.find({
+          collection: 'trainers',
+          where: {
+            and: [
+              {
+                user: {
+                  in: professionals.map((professional) => professional.id),
+                },
+              },
+              ...(specialization.trim()
+                ? [
+                    {
+                      specialization: {
+                        like: specialization,
+                      },
+                    },
+                  ]
+                : []),
+            ],
+          },
+          depth: 2,
+          sort:
+            sortOrder.toLowerCase() === 'desc'
+              ? `-${sortFields[sortField] || sortFields[0]}`
+              : sortFields[sortField] || sortFields[0],
+          limit: 100,
+        })
+        if (professionals.length === 0) {
+          return Response.json({
+            data: {
+              total: 0,
+              trainers: [],
+            },
+          })
+        }
+
+        console.log('[Trainers]', trainers.docs)
+
+        return Response.json({
+          data: {
+            total: trainers.totalDocs,
+            trainers: trainers.docs,
+          },
+        })
+      } catch (error) {
+        console.log('[AgencyApi][Trainers]:', error)
+        return Response.json(
+          {
+            errors: [{ message: 'Erro inesperado ao buscar treinadores' }],
+          },
+          { status: 500 },
+        )
+      }
+    },
+  },
+  {
+    method: 'get',
+    path: '/my-athletes',
+    handler: async (req: PayloadRequest) => {
+      try {
+        const response = await getLoggedInAgency(req)
+        if (response instanceof Response) {
+          return response
+        }
+        const agencyId = response.id
+        const name = (req.query.name as string) || ''
+        const sortOrder = (req.query.sortOrder as string) || 'asc'
+        // Você pode ordenar por nome, data da ultima atualizacao e meta.
+        // Exemplo: user.name, createdAt, gender
+        const sortFields = [
+          'user.name',
+          'createdAt',
+          'gender',
+        ]
+        const sortField = (req.query.sortField as number) || 0
+        const gender = (req.query.gender as string) || ''
+
+        const athletesProfiles = await req.payload.find({
+          collection: 'athlete-profiles',
+          where: {
+            and: [
+              {
+                agency: {
+                  equals: agencyId,
+                },
+              },
+              ...(name.trim()
+                ? [
+                    {
+                      'user.name': {
+                        like: name,
+                      },
+                    },
+                  ]
+                : []),
+              ...(gender.trim()
+              ? [
+                  {
+                    'gender': {
+                      like: gender,
+                    },
+                  },
+                ]
+              : []),
+            ],
+          },
+          depth: 2,
+          sort:
+            sortOrder.toLowerCase() === 'desc'
+              ? `-${sortFields[sortField] || sortFields[0]}`
+              : sortFields[sortField] || sortFields[0],
+          limit: 100,
+        })
+
+        const athletes = athletesProfiles.docs
+
+        if (athletes.length === 0) {
+          return Response.json({
+            data: {
+              total: 0,
+              athletes: []
+            },
+          })
+        }
+
+        return Response.json({
+          data: {
+            total: athletesProfiles.totalDocs,
+            athletes: athletes
+          },
+        })
+      } catch (error) {
+        console.log('[AgencyApi][Athletes]:', error)
+        return Response.json(
+          {
+            errors: [{ message: 'Erro inesperado ao buscar atletas' }],
           },
           { status: 500 },
         )

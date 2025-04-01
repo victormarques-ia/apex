@@ -3,12 +3,12 @@
 import { useState, useEffect, useActionState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { getNutritionistList } from './actions/agency.action'
+import { getAthletesList } from './actions/agency_athletes.action'
 import { Search, Filter, ChevronLeft, ChevronRight, MoreHorizontal } from 'lucide-react'
 
-export default function NutritionistListPage() {
+export default function AthletesListPage() {
   // State variables
-  const [nutritionists, setNutritionists] = useState<any[]>([])
+  const [athletes, setAthletes] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string>("")
 
@@ -19,7 +19,7 @@ export default function NutritionistListPage() {
 
   // Filtering and sorting
   const [searchQuery, setSearchQuery] = useState('')
-  const [sortField, setSortField] = useState(0) // 0 for name, 1 for date, 2 for specialization
+  const [sortField, setSortField] = useState(0) // 0 for name, 1 for date, 2 for gender
   const [sortOrder, setSortOrder] = useState('asc')
 
   // Load data when filter params change
@@ -58,20 +58,20 @@ export default function NutritionistListPage() {
         formData.append('sortOrder', sortOrder)
       }
 
-      const result = await getNutritionistList(formData)
+      const result = await getAthletesList(formData)
     
-      if (result.data?.nutritionists && result.data.nutritionists?.length > 0) {
-        setNutritionists(result.data.nutritionists)
-        const total = result.data.total || result.data.nutricionists.length
+      if (result.data?.athletes && result.data.athletes?.length > 0) {
+        setAthletes(result.data.athletes)
+        const total = result.data.total || result.data.athletes.length
         setTotalPages(Math.ceil(total / limit))
         setError("")
       } else {
-        setNutritionists([])
+        setAthletes([])
       }
     } catch (err) {
-      setError('Erro inesperado ao buscar nutricionistas')
+      setError('Erro inesperado ao buscar atletas')
       console.error(err)
-      setNutritionists([])
+      setAthletes([])
     } finally {
       setLoading(false)
     }
@@ -96,7 +96,7 @@ export default function NutritionistListPage() {
   return (
     <div className="container mx-auto p-4">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">Nutricionistas</h1>
+        <h1 className="text-2xl font-bold">Atletas</h1>
 
         <Button
           variant="outline"
@@ -174,29 +174,29 @@ export default function NutritionistListPage() {
                           setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')
                         }}
                       >
-                        Especialização
+                        Gênero
                       </button>
                     </th>
                     <th className="text-right py-3 px-4 font-medium text-gray-500"></th>
                   </tr>
                 </thead>
                 <tbody>
-                  {nutritionists?.length === 0 ? (
+                  {athletes?.length === 0 ? (
                     <tr>
                       <td colSpan={4} className="text-center py-6 text-gray-500">
-                        Nenhum nutricionista encontrado
+                        Nenhum atleta encontrado
                       </td>
                     </tr>
                   ) : (
-                    nutritionists.map((nutri) => (
-                      <tr key={nutri.id} className="border-b hover:bg-gray-50">
+                    athletes.map((athlete) => (
+                      <tr key={athlete.id} className="border-b hover:bg-gray-50">
                         <td className="py-4 px-4">
                           <div className="font-medium">
-                            {nutri.user?.name || 'Nome não disponível'}
+                            {athlete.user?.name || 'Nome não disponível'}
                           </div>
                         </td>
-                        <td className="py-4 px-4 text-gray-600">{formatDate(nutri.createdAt)}</td>
-                        <td className="py-4 px-4 text-gray-600">{nutri.specialization || '-'}</td>
+                        <td className="py-4 px-4 text-gray-600">{formatDate(athlete.createdAt)}</td>
+                        <td className="py-4 px-4 text-gray-600">{athlete.gender || '-'}</td>
                         <td className="py-4 px-4 text-right">
                           <Button variant="ghost" size="sm">
                             <MoreHorizontal className="h-5 w-5 text-gray-400" />
@@ -212,7 +212,7 @@ export default function NutritionistListPage() {
             {/* Pagination */}
             <div className="flex items-center justify-between px-4 py-4 border-t">
               <div className="text-sm text-gray-500">
-                Nutricionistas por página
+                Atletas por página
                 <select
                   className="ml-2 border rounded px-2 py-1"
                   value={limit}

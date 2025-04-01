@@ -30,7 +30,7 @@ import {
 } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import NutritionDashboard from './components/NutritionDashboard';
-import { DietTabContent } from '@/components/nutritionist/diet-tab';
+import { DietTabContent } from '@/app/(frontend)/nutritionist/components/diet-tab';
 
 // Define the main tabs
 const TABS = {

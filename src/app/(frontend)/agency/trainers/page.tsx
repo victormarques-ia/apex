@@ -60,7 +60,6 @@ export default function TrainersListPage() {
 
       const result = await getTrainersList(formData)
     
-      console.log('Resultado: ', result.data.professionals)
       if (result.data?.trainers && result.data.trainers?.length > 0) {
         setTrainerss(result.data.trainers)
         const total = result.data.total || result.data.trainers.length

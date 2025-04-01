@@ -145,78 +145,143 @@ export const NutritionistApi: Endpoint[] = [
     },
   },
   {
-    //retorna todos os planos alimentares daquele atleta com aquele nutricionista
     method: 'get',
-    path: '/diet-plans', 
-    handler: async (req: PayloadRequest) => {
-      try {
-        const nutritionistId = await getLoggedInNutritionistId(req);
-        const  { athleteId }  = req.query;
-
-        console.log("Id do atleta:" , athleteId);
-        console.log("Id do nutri:", nutritionistId);
-
-        if (!athleteId) {
-          return Response.json(
-            {
-            errors: [{ message: 'Id do atleta é necessário' }]
-            },
-            { status: 400}
-        );
-        }
-
-        const dietPlans = await req.payload.find({
-          collection: 'diet-plans',
-          where: {
-            'nutritionist': {
-              equals: nutritionistId,
-            },
-            'athlete.id': {
-              equals: athleteId,
-            }
-          },
-          sort: '-startDate',
-          depth: 1,
-        });
-
-        console.log("Planos alimentares: ", dietPlans);
-
-        return Response.json({
-          data: {
-            total: dietPlans.totalDocs,
-            dietPlans: dietPlans.docs,
-          }
-        });
-
-      } catch (error) {
-        console.error('[NutritionistApi][dietPlans]:', error);
-        return Response.json({
-          errors: [{ message: 'Erro inesperado ao buscar plano alimentar.' }]
-        })
-      }
-    },
-  },
-  {
-    method: 'get',
-    path: '/diet-plan-days',
+    path: '/diet-plans',
     handler: async (req) => {
       try {
-        const { athleteId } = req.query;
+        const { athleteId, date } = req.query;
+        const nutritionistId = await getLoggedInNutritionistId(req);
+
         if (!athleteId) throw new Error('Athlete ID required');
-  
+        
+        // Basic query to get all diet plan days for this athlete-nutritionist pair
+        const query = {
+          and: [
+            {
+              'diet_plan.athlete.id': { equals: athleteId }
+            },
+            {
+              'diet_plan.nutritionist.id': { equals: nutritionistId }
+            }
+          ]
+        };
+        
+        // If date is provided, filter for recurring diet plan days
+        if (date) {
+          let targetDate = new Date(date as string);
+          
+          // First, get all diet plan days
+          const allDays = await req.payload.find({
+            collection: 'diet-plan-days',
+            where: query,
+            depth: 2,
+            limit: 100, // Increased to ensure we capture all relevant days
+          });
+          
+          // Filter days that apply to the target date based on repeat interval
+          const applicableDays = allDays.docs.filter(day => {
+            const dayDate = new Date(day.date);
+            
+            // If exact date match, always include
+            if (dayDate.toISOString().split('T')[0] === targetDate.toISOString().split('T')[0]) {
+              return true;
+            }
+            
+            // If day has repeat interval and is before target date
+            if (day.repeat_interval_days && dayDate <= targetDate) {
+              // Calculate days between
+              const diffTime = targetDate.getTime() - dayDate.getTime();
+              const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+              
+              // Check if target date falls on a repeat cycle
+              return diffDays % day.repeat_interval_days === 0;
+            }
+            
+            return false;
+          });
+          
+          // If we found applicable days, return them
+          if (applicableDays.length > 0) {
+            return Response.json({
+              docs: applicableDays,
+              totalDocs: applicableDays.length,
+              page: 1,
+              totalPages: 1,
+              limit: applicableDays.length
+            });
+          }
+          
+          // Fallback: If no days found, find a diet plan that covers the target date
+          targetDate = date ? new Date(date as string) : new Date();
+          const targetDateStr = targetDate.toISOString().split('T')[0];
+          
+          const dietPlans = await req.payload.find({
+            collection: 'diet-plans',
+            where: {
+              and: [
+                { athlete: { equals: athleteId } },
+                { nutritionist: { equals: nutritionistId } },
+                { 
+                  start_date: { 
+                    less_than_equal: targetDateStr 
+                  } 
+                },
+                {
+                  or: [
+                    { end_date: { greater_than_equal: targetDateStr } },
+                    { end_date: { exists: false } }
+                  ]
+                }
+              ]
+            },
+            sort: '-createdAt', // Most recent first if multiple match
+            depth: 2,
+            limit: 1
+          });
+          
+          if (dietPlans.docs.length > 0) {
+            // Create synthetic response with diet plan but no diet plan day
+            return Response.json({
+              docs: [{
+                id: null,
+                diet_plan: dietPlans.docs[0],
+                date: null,
+                day_of_week: null,
+                repeat_interval_days: null,
+                updatedAt: null,
+                createdAt: null
+              }],
+              totalDocs: 1,
+              page: 1,
+              totalPages: 1,
+              limit: 1
+            });
+          }
+          
+          // No diet plans found at all
+          return Response.json({
+            docs: [],
+            totalDocs: 0,
+            page: 1,
+            totalPages: 0,
+            limit: 0
+          });
+        }
+        
+        // If no date provided, return all diet plan days
         const days = await req.payload.find({
           collection: 'diet-plan-days',
-          where: {
-            'diet_plan.athlete.id': { equals: athleteId }
-          },
-          depth: 1
+          where: query,
+          depth: 2,
+          limit: 50,
         });
-  
+
         return Response.json(days);
       } catch (error) {
+        console.error('[NutritionistApi][diet-plans]:', error);
         return Response.json({
           errors: [{ message: 'Erro inesperado ao buscar dia do plano alimentar.' }]
-        })
+        }, { status: 500 })
       }
     }
   },

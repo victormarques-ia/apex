@@ -24,12 +24,12 @@ export function MealCard({ meal, onMealUpdated, onMealDeleted }: MealCardProps) 
     try {
       setLoading(true);
       setError(null);
-      
+
       const formData = new FormData();
       formData.append('mealFoodId', mealFoodId);
-      
+
       const response = await removeFoodFromMealAction(null, formData);
-      
+
       if (response.success) {
         if (onMealUpdated) {
           onMealUpdated();
@@ -50,22 +50,22 @@ export function MealCard({ meal, onMealUpdated, onMealDeleted }: MealCardProps) 
     if (!window.confirm('Tem certeza que deseja excluir esta refeição?')) {
       return;
     }
-    
+
     try {
       setLoading(true);
       setError(null);
-      
+
       const formData = new FormData();
       formData.append('mealId', meal.id);
-      
+
       const response = await deleteMealAction(null, formData);
-      
-      if (response.success) {
+
+      if (response.data) {
         if (onMealDeleted) {
           onMealDeleted();
         }
       } else {
-        setError(response.message || 'Erro ao excluir refeição');
+        setError(response.data.message || 'Erro ao excluir refeição');
       }
     } catch (err) {
       setError('Erro ao excluir refeição');
@@ -85,7 +85,7 @@ export function MealCard({ meal, onMealUpdated, onMealDeleted }: MealCardProps) 
       'dinner': 'Jantar',
       'supper': 'Ceia',
       'past-training': 'Pré-treino',
-      'post-training': 'Pós-treino' 
+      'post-training': 'Pós-treino'
     };
     return types[type] || type;
   };
@@ -111,16 +111,16 @@ export function MealCard({ meal, onMealUpdated, onMealDeleted }: MealCardProps) 
     if (!meal.foods || meal.foods.length === 0) {
       return { calories: 0, protein: 0, carbs: 0, fat: 0 };
     }
-    
+
     return meal.foods.reduce((acc, foodItem) => {
       const food = foodItem.food;
       const factor = foodItem.quantity / 100;
-      
+
       acc.calories += (food.calories_per_100g || 0) * factor;
       acc.protein += (food.protein_per_100g || 0) * factor;
       acc.carbs += (food.carbs_per_100g || 0) * factor;
       acc.fat += (food.fat_per_100g || 0) * factor;
-      
+
       return acc;
     }, { calories: 0, protein: 0, carbs: 0, fat: 0 });
   };
@@ -159,7 +159,7 @@ export function MealCard({ meal, onMealUpdated, onMealDeleted }: MealCardProps) 
             {error}
           </div>
         )}
-        
+
         {/* Nutritional summary */}
         <div className="grid grid-cols-4 gap-2 mb-4 text-center">
           <div className="bg-blue-50 p-2 rounded">
@@ -179,11 +179,11 @@ export function MealCard({ meal, onMealUpdated, onMealDeleted }: MealCardProps) 
             <div className="font-medium">{Math.round(nutrients.fat)}g</div>
           </div>
         </div>
-        
+
         {/* Food items */}
         <div className="space-y-2">
           <h4 className="text-sm font-medium mb-2">Alimentos:</h4>
-          
+
           {(!meal.foods || meal.foods.length === 0) ? (
             <p className="text-sm text-gray-500 italic">Nenhum alimento adicionado</p>
           ) : (
@@ -212,8 +212,8 @@ export function MealCard({ meal, onMealUpdated, onMealDeleted }: MealCardProps) 
         </div>
       </CardContent>
       <CardFooter className="bg-gray-50 border-t">
-        <Button 
-          variant="outline" 
+        <Button
+          variant="outline"
           size="sm"
           className="w-full"
           onClick={() => setShowAddFood(true)}

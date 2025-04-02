@@ -10,7 +10,7 @@ export async function searchFoodsAction(_state: unknown, formData: FormData) {
     async (data) => {
       const query = data.q || data.query;
       const limit = data.limit || 10;
-      
+
       if (!query || (query as string).length < 2) {
         console.log('Query is too short, returning empty array');
         return { docs: [] };
@@ -20,14 +20,14 @@ export async function searchFoodsAction(_state: unknown, formData: FormData) {
       const queryParams = new URLSearchParams();
       queryParams.append('q', query as string);
       queryParams.append('limit', limit as string);
-      
+
       const endpoint = `/api/food/search?${queryParams.toString()}`;
 
       // Search for foods
       const result = await fetchFromApi(endpoint, {
         method: 'GET',
       });
-      
+
       if (!result.data) {
         console.error('Food search API error:', result.error);
         throw new Error(result.error?.messages[0] || 'Erro ao pesquisar alimentos');
@@ -60,7 +60,7 @@ export async function getFoodByIdAction(_state: unknown, formData: FormData) {
     formData,
     async (data) => {
       const foodId = data.foodId;
-      
+
       if (!foodId) {
         throw new Error('ID do alimento é obrigatório');
       }
@@ -107,7 +107,7 @@ export async function addFoodAction(_state: unknown, formData: FormData) {
         carbs_per_100g: data.carbs_per_100g ? parseFloat(data.carbs_per_100g as string) : null,
         fat_per_100g: data.fat_per_100g ? parseFloat(data.fat_per_100g as string) : null,
       };
-      
+
       const result = await fetchFromApi('/api/food', {
         method: 'POST',
         body: JSON.stringify(nutritionData),
@@ -145,12 +145,12 @@ export async function listFoodsAction(_state: unknown, formData: FormData) {
     async (data) => {
       const limit = data.limit || 20;
       const page = data.page || 1;
-      
+
       // Build the query parameters
       const queryParams = new URLSearchParams();
       queryParams.append('limit', limit as string);
       queryParams.append('page', page as string);
-      
+
       if (data.sort) {
         queryParams.append('sort', data.sort as string);
       }

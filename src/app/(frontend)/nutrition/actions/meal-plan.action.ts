@@ -93,9 +93,9 @@ export async function addFoodToMealAction(_state: unknown, formData: FormData) {
 
       // Build the meal food data
       const mealFoodData = {
-        meal: mealId,
-        food: foodId,
-        quantity: parseInt(quantity as string),
+        meal: parseInt(mealId as string, 10),
+        food: parseInt(foodId as string, 10),
+        quantity_grams: parseInt(quantity as string),
       }
 
       // Create the meal food

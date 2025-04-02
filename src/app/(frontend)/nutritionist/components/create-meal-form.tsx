@@ -38,10 +38,10 @@ export function CreateMealForm({ athleteId, nutritionistId, date, intervalDays, 
     try {
       setLoading(true);
       setError(null);
-      
+
       // Create meal date-time from selected time or current time
       let mealDateTime = new Date();
-      
+
       if (scheduledTime) {
         const [hours, minutes] = scheduledTime.split(':').map(Number);
         mealDateTime.setHours(hours, minutes, 0, 0);
@@ -54,7 +54,8 @@ export function CreateMealForm({ athleteId, nutritionistId, date, intervalDays, 
       formGetDietPlanDay.append('intervalDays', intervalDays);
 
       const responseGetDietPlanDay = await getAthleteDietPlansAction(null, formGetDietPlanDay);
-      console.log('Response getDietPlanDay: ', responseGetDietPlanDay);
+
+      console.log('Response getDietPlanDay on createMeal: ', responseGetDietPlanDay);
 
       const formData = new FormData();
       formData.append('dietPlanDayId', dietPlanDayId || responseGetDietPlanDay.data.docs[0].id);
@@ -63,8 +64,9 @@ export function CreateMealForm({ athleteId, nutritionistId, date, intervalDays, 
       formData.append('orderIndex', orderIndex.toString());
 
       const response = await createMealAction(null, formData);
+      console.log('Response createMeal: ', response);
 
-      if (response.success) {
+      if (response.data.doc) {
         if (onMealCreated) {
           onMealCreated();
         }
@@ -90,12 +92,12 @@ export function CreateMealForm({ athleteId, nutritionistId, date, intervalDays, 
             {error}
           </div>
         )}
-        
+
         <div className="space-y-4">
           {/* Meal type selection */}
           <div>
             <Label htmlFor="meal-type">Tipo de Refeição</Label>
-            <Select 
+            <Select
               value={mealType}
               onValueChange={setMealType}
             >
@@ -112,7 +114,7 @@ export function CreateMealForm({ athleteId, nutritionistId, date, intervalDays, 
               </SelectContent>
             </Select>
           </div>
-          
+
           {/* Scheduled time */}
           <div>
             <Label htmlFor="scheduled-time">Horário Previsto</Label>
@@ -125,7 +127,7 @@ export function CreateMealForm({ athleteId, nutritionistId, date, intervalDays, 
             />
             <p className="text-xs text-muted-foreground mt-1">Se não especificado, será usado o horário atual</p>
           </div>
-          
+
           {/* Order index */}
           <div>
             <Label htmlFor="order-index">Ordem da Refeição</Label>
@@ -142,14 +144,14 @@ export function CreateMealForm({ athleteId, nutritionistId, date, intervalDays, 
         </div>
       </CardContent>
       <CardFooter className="flex justify-between">
-        <Button 
-          variant="outline" 
+        <Button
+          variant="outline"
           onClick={onCancel}
           disabled={loading}
         >
           Cancelar
         </Button>
-        <Button 
+        <Button
           onClick={handleCreateMeal}
           disabled={loading}
         >

@@ -29,7 +29,7 @@ export function AddFoodToMeal({ mealId, onFoodAdded, onCancel }: AddFoodToMealPr
       setFoods([]);
       return;
     }
-    
+
     searchFoods();
   }, [searchQuery]);
 
@@ -53,25 +53,27 @@ export function AddFoodToMeal({ mealId, onFoodAdded, onCancel }: AddFoodToMealPr
     if (!selectedFood || !mealId) {
       return;
     }
-    
+
     try {
       setLoading(true);
       setError(null);
-      
+
       const formData = new FormData();
       formData.append('mealId', mealId);
       formData.append('foodId', selectedFood.id.toString());
       formData.append('quantity', quantity.toString());
-      
+
       const result = await addFoodToMealAction(null, formData);
-      
-      if (result.success) {
+
+      console.log('Response addFoodToMealAction:', result);
+
+      if (result.data) {
         // Reset form
         setSelectedFood(null);
         setSearchQuery('');
         setQuantity(100);
         setFoods([]);
-        
+
         // Notify parent component
         if (onFoodAdded) {
           onFoodAdded();
@@ -98,7 +100,7 @@ export function AddFoodToMeal({ mealId, onFoodAdded, onCancel }: AddFoodToMealPr
             {error}
           </div>
         )}
-        
+
         <div className="space-y-4">
           {/* Search for foods */}
           <div className="space-y-2">
@@ -113,13 +115,13 @@ export function AddFoodToMeal({ mealId, onFoodAdded, onCancel }: AddFoodToMealPr
               />
               <Search className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
             </div>
-            
+
             {/* Search results */}
             {foods.length > 0 && (
               <div className="mt-2 border rounded max-h-48 overflow-y-auto">
                 {foods.map((food) => (
-                  <div 
-                    key={food.id} 
+                  <div
+                    key={food.id}
                     className={`p-2 hover:bg-gray-100 cursor-pointer ${selectedFood?.id === food.id ? 'bg-blue-50' : ''}`}
                     onClick={() => {
                       setSelectedFood(food);
@@ -136,13 +138,13 @@ export function AddFoodToMeal({ mealId, onFoodAdded, onCancel }: AddFoodToMealPr
               </div>
             )}
           </div>
-          
+
           {/* Selected food and quantity */}
           {selectedFood && (
             <div className="space-y-3">
               <div className="flex justify-between">
                 <Label>Alimento Selecionado:</Label>
-                <button 
+                <button
                   type="button"
                   className="text-gray-400 hover:text-gray-600"
                   onClick={() => {
@@ -159,7 +161,7 @@ export function AddFoodToMeal({ mealId, onFoodAdded, onCancel }: AddFoodToMealPr
                   {selectedFood.calories_per_100g} kcal | P: {selectedFood.protein_per_100g}g | C: {selectedFood.carbs_per_100g}g | G: {selectedFood.fat_per_100g}g
                 </p>
               </div>
-              
+
               <div>
                 <Label htmlFor="quantity">Quantidade (g):</Label>
                 <Input
@@ -175,14 +177,14 @@ export function AddFoodToMeal({ mealId, onFoodAdded, onCancel }: AddFoodToMealPr
         </div>
       </CardContent>
       <CardFooter className="flex justify-between">
-        <Button 
-          variant="outline" 
+        <Button
+          variant="outline"
           onClick={onCancel}
           disabled={loading}
         >
           Cancelar
         </Button>
-        <Button 
+        <Button
           onClick={handleAddFoodToMeal}
           disabled={!selectedFood || loading}
         >

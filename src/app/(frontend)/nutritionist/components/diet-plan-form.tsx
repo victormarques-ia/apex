@@ -188,45 +188,6 @@ export function DietPlanForm({
     }
   };
 
-  // Delete a diet plan
-  const handleDeleteDietPlan = async () => {
-    if (!dietPlan || !dietPlan.id) {
-      setError('Nenhum plano alimentar selecionado');
-      return;
-    }
-
-    // if (!confirm('Tem certeza que deseja excluir este plano alimentar? Todas as refeições associadas serão excluídas.')) {
-    //   return;
-    // }
-
-    try {
-      console.log('Deleting diet plan with ID:', dietPlan);
-      setLoading(true);
-      setError(null);
-
-      const formData = new FormData();
-      formData.append('dietPlanId', dietPlan.id);
-
-      const response = await deleteDietPlanAction(null, formData);
-
-      console.log('Response deleteDietPlanAction:', response);
-
-      if (response.success) {
-        if (onDietPlanDayDeleted) {
-          onDietPlanDayDeleted();
-        }
-      } else {
-        setError(response.message || 'Erro ao excluir plano alimentar');
-      }
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Erro ao excluir plano alimentar';
-      setError(errorMessage);
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const renderDietPlanForm = () => {
     if (isCreatingNewPlan) {
       return (
@@ -331,14 +292,6 @@ export function DietPlanForm({
         <div className="space-y-4">
           <div className="flex justify-between items-center">
             <h3 className="text-lg font-medium">Plano Alimentar</h3>
-            <Button
-              variant="destructive"
-              size="sm"
-              onClick={handleDeleteDietPlan}
-              disabled={loading}
-            >
-              <TrashIcon className="h-4 w-4 mr-1" /> Excluir Plano
-            </Button>
           </div>
 
           <div className="grid grid-cols-2 gap-4">

@@ -152,6 +152,51 @@ export const NutritionistApi: Endpoint[] = [
         const { athleteId, date } = req.query;
         const nutritionistId = await getLoggedInNutritionistId(req);
 
+        // Check if it has a diet plan associated with it
+        const dietPlan = await req.payload.find({
+          collection: 'diet-plans',
+          where: {
+            and: [
+              {
+                athlete: {
+                  equals: athleteId,
+                },
+              },
+              {
+                nutritionist: {
+                  equals: nutritionistId,
+                },
+              },
+            ],
+          },
+          depth: 2,
+        });
+
+        // If no diet plan found, create one
+        console.log(String(dietPlan));
+
+        if (!dietPlan.docs || dietPlan.docs.length === 0) {
+          console.log('No diet plan found, creating one.')
+          const dietPlanData = {
+            athlete: parseInt(String(athleteId), 10),
+            nutritionist: parseInt(String(nutritionistId), 10),
+            start_date: new Date().toDateString(),
+            end_date: new Date(
+              new Date().setFullYear(new Date().getFullYear() + 20),
+            ).toDateString(), // 20 years later
+            total_daily_calories: 0,
+            notes: null,
+          };
+
+          const dietPlan = await req.payload.create({
+            collection: 'diet-plans',
+            data: dietPlanData,
+          })
+        } else {
+          console.log('Diet plan already exists for this athlete-nutritionist pair')
+        }
+
+
         if (!athleteId) throw new Error('Athlete ID required');
         
         // Basic query to get all diet plan days for this athlete-nutritionist pair
@@ -211,72 +256,48 @@ export const NutritionistApi: Endpoint[] = [
             });
           }
           
+        }
+        
+
           // Fallback: If no days found, find a diet plan that covers the target date
-          targetDate = date ? new Date(date as string) : new Date();
-          const targetDateStr = targetDate.toISOString().split('T')[0];
-          
           const dietPlans = await req.payload.find({
             collection: 'diet-plans',
             where: {
               and: [
                 { athlete: { equals: athleteId } },
                 { nutritionist: { equals: nutritionistId } },
-                { 
-                  start_date: { 
-                    less_than_equal: targetDateStr 
-                  } 
-                },
-                {
-                  or: [
-                    { end_date: { greater_than_equal: targetDateStr } },
-                    { end_date: { exists: false } }
-                  ]
-                }
               ]
             },
             sort: '-createdAt', // Most recent first if multiple match
             depth: 2,
             limit: 1
           });
-          
-          if (dietPlans.docs.length > 0) {
-            // Create synthetic response with diet plan but no diet plan day
-            return Response.json({
-              docs: [{
-                id: null,
-                diet_plan: dietPlans.docs[0],
-                date: null,
-                day_of_week: null,
-                repeat_interval_days: null,
-                updatedAt: null,
-                createdAt: null
-              }],
-              totalDocs: 1,
-              page: 1,
-              totalPages: 1,
-              limit: 1
-            });
-          }
-          
-          // No diet plans found at all
-          return Response.json({
-            docs: [],
-            totalDocs: 0,
-            page: 1,
-            totalPages: 0,
-            limit: 0
-          });
-        }
-        
-        // If no date provided, return all diet plan days
+
+        // return diet plan if found
         const days = await req.payload.find({
           collection: 'diet-plan-days',
           where: query,
           depth: 2,
-          limit: 50,
+          limit: 1,
+        });
+          
+        // Create synthetic response with diet plan but no diet plan day
+        return Response.json({
+          docs: [{
+            id: null,
+            diet_plan: dietPlans?.docs[0],
+            date: null,
+            day_of_week: null,
+            repeat_interval_days: null,
+            updatedAt: null,
+            createdAt: null
+          }],
+          totalDocs: 1,
+          page: 1,
+          totalPages: 1,
+          limit: 1
         });
 
-        return Response.json(days);
       } catch (error) {
         console.error('[NutritionistApi][diet-plans]:', error);
         return Response.json({

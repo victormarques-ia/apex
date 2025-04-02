@@ -163,10 +163,11 @@ export const MealsApi: Endpoint[] = [
           dateRange.forEach(dateStr => {
             const currentDate = new Date(dateStr);
             
-            // Skip if outside plan range
-            if (currentDate < planStartDate || currentDate > planEndDate) {
-              return;
-            }
+            // // Skip if outside plan range
+            // I never use this, but it's a good idea to keep it in case you want to use it
+            // if (currentDate < planStartDate || currentDate > planEndDate) {
+            //   return;
+            // }
             
             // Check if original date or a repeated date
             const isOriginalDate = dietDayDateStr === dateStr;

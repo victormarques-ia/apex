@@ -65,7 +65,7 @@ export function MealCard({ meal, onMealUpdated, onMealDeleted }: MealCardProps) 
           onMealDeleted();
         }
       } else {
-        setError(response.data.message || 'Erro ao excluir refeição');
+        setError(response.data?.message || 'Erro ao excluir refeição');
       }
     } catch (err) {
       setError('Erro ao excluir refeição');

@@ -14,7 +14,7 @@ async function getLoggedInNutritionistId(req: PayloadRequest) {
                 equals: userId,
             },
         },
-        limit: 1,
+        limi : 1,
     });
 
     if (!nutritionistProfiles.docs || nutritionistProfiles.docs.length === 0) {
@@ -259,28 +259,20 @@ export const NutritionistApi: Endpoint[] = [
         }
         
 
-          // Fallback: If no days found, find a diet plan that covers the target date
-          const dietPlans = await req.payload.find({
-            collection: 'diet-plans',
-            where: {
-              and: [
-                { athlete: { equals: athleteId } },
-                { nutritionist: { equals: nutritionistId } },
-              ]
-            },
-            sort: '-createdAt', // Most recent first if multiple match
-            depth: 2,
-            limit: 1
-          });
-
-        // return diet plan if found
-        const days = await req.payload.find({
-          collection: 'diet-plan-days',
-          where: query,
+        // Fallback: If no days found, find a diet plan that covers the target date
+        const dietPlans = await req.payload.find({
+          collection: 'diet-plans',
+          where: {
+            and: [
+              { athlete: { equals: athleteId } },
+              { nutritionist: { equals: nutritionistId } },
+            ]
+          },
+          sort: '-createdAt', // Most recent first if multiple match
           depth: 2,
-          limit: 1,
+          limit: 1
         });
-          
+
         // Create synthetic response with diet plan but no diet plan day
         return Response.json({
           docs: [{

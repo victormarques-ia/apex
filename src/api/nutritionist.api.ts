@@ -368,54 +368,24 @@ export const NutritionistApi: Endpoint[] = [
         const startDate = data.startDate;
         const endDate = data.endDate;
 
-        // Check if a diet plan already exists for this athlete and nutritionist
-        const existingDietPlans = await req.payload.find({
+        // Create new diet plan
+        const dietPlanData = {
+          athlete: athleteId,
+          nutritionist: nutritionistId,
+          start_date: startDate,
+          end_date: endDate,
+          total_daily_calories: data.totalDailyCalories || 0,
+          notes: data.notes || null
+        };
+
+        const dietPlan = await req.payload.create({
           collection: 'diet-plans',
-          where: {
-            and: [
-              { athlete: { equals: athleteId } },
-              { nutritionist: { equals: nutritionistId } }
-            ]
-          },
-          limit: 1
+          data: dietPlanData
         });
 
-        let dietPlanId;
+        const dietPlanId = dietPlan.id;
 
-        // Create or update diet plan
-        if (existingDietPlans.docs && existingDietPlans.docs.length > 0) {
-          // Update existing diet plan
-          dietPlanId = existingDietPlans.docs[0].id;
-          await req.payload.update({
-            collection: 'diet-plans',
-            id: dietPlanId,
-            data: {
-              start_date: startDate,
-              end_date: endDate,
-              total_daily_calories: data.totalDailyCalories || 0,
-              notes: data.notes || null
-            }
-          });
-        } else {
-          // Create new diet plan
-          const dietPlanData = {
-            athlete: athleteId,
-            nutritionist: nutritionistId,
-            start_date: startDate,
-            end_date: endDate,
-            total_daily_calories: data.totalDailyCalories || 0,
-            notes: data.notes || null
-          };
-
-          const dietPlan = await req.payload.create({
-            collection: 'diet-plans',
-            data: dietPlanData
-          });
-
-          dietPlanId = dietPlan.id;
-        }
-
-        // Now create the diet plan day
+        // Now create the diet plan day associated with the diet plan
         const dayDate = data.dayDate || new Date().toISOString().split('T')[0];
         const dayOfWeek = data.dayOfWeek || new Date(dayDate).toLocaleDateString('pt-BR', { weekday: 'long' });
 
@@ -431,22 +401,6 @@ export const NutritionistApi: Endpoint[] = [
           data: dietPlanDayData
         });
 
-        // Optionally, create an initial meal if data is provided
-        let meal = null;
-        if (data.initialMeal) {
-          const mealData = {
-            diet_plan_day: dietPlanDay.id,
-            meal_type: data.initialMeal.mealType || 'Café da manhã',
-            scheduled_time: data.initialMeal.scheduledTime || null,
-            order_index: data.initialMeal.orderIndex || 0
-          };
-
-          meal = await req.payload.create({
-            collection: 'meal',
-            data: mealData
-          });
-        }
-
         // Return response with created entities
         return Response.json({
           data: {
@@ -456,7 +410,6 @@ export const NutritionistApi: Endpoint[] = [
               end_date: endDate
             },
             dietPlanDay: dietPlanDay,
-            meal: meal
           }
         });
       } catch (error) {
@@ -537,65 +490,51 @@ export const NutritionistApi: Endpoint[] = [
           );
         }
 
-        // Check if the diet plan exists and belongs to this nutritionist
-        const dietPlan = await req.payload.find({
-          collection: 'diet-plans',
-          where: { id: dietPlanId },
+        // Delete meals associated with this diet plan
+        await req.payload.delete({
+          collection: 'meal',
+          where: {
+            and: [
+              {
+                'diet_plan_day.diet_plan.id': { equals: dietPlanId },
+              },
+              {
+                'diet_plan_day.diet_plan.nutritionist.id': { equals: nutritionistId },
+              }
+            ],
+          },
+          depth: 5,
         });
 
-
-        if (!dietPlan || dietPlan.totalDocs === 0) {
-          return Response.json(
-            { errors: [{ message: 'Plano alimentar não encontrado' }] },
-            { status: 404 }
-          );
-        }
-
-        if (dietPlan.docs[0].nutritionist.id !== nutritionistId) {
-          return Response.json(
-            { errors: [{ message: 'Você não tem permissão para excluir este plano alimentar' }] },
-            { status: 403 }
-          );
-        }
-
-        // Find associated diet plan days
-        const dietPlanDays = await req.payload.find({
+        // Delete the diet plan days associated with this diet plan
+        await req.payload.delete({
           collection: 'diet-plan-days',
-          where: { 'diet_plan.id': dietPlanId },
-          depth: 2,
+          where: {
+            and: [
+              {
+                'diet_plan.id': { equals: dietPlanId },
+              },
+              {
+                'diet_plan.nutritionist.id': { equals: nutritionistId },
+              }
+            ],
+          },
+          depth: 4,
         });
 
-        // Delete all associated diet plan days first
-        for (const day of dietPlanDays.docs) {
-          // Find associated meals
-          // const meals = await req.payload.find({
-          //   collection: 'meal',
-          //   where: {
-          //     diet_plan_day: {
-          //       equals: day.id
-          //     }
-          //   }
-          // })
-
-          // Delete all meals for this diet plan day
-          const mealsDeleted = await req.payload.delete({
-            collection: 'meal',
-            where: { 'diet_plan_day.id': day.id },
-            depth: 2,
-          });
-
-          // Delete the diet plan day
-          const dayDeleted = await req.payload.delete({
-            collection: 'diet-plan-days',
-            where: { id: day.id }
-          });
-
-        }
-
-        // Finally delete the diet plan itself
+        // Delete the diet plan itself
         await req.payload.delete({
           collection: 'diet-plans',
-          where: { id: dietPlanId }
+          where: {
+            and: [
+              {
+                id: { equals: dietPlanId },
+              },
+              {
+                nutritionist: { equals: nutritionistId },
+              }
+            ],
+          },
         });
 
         return Response.json({

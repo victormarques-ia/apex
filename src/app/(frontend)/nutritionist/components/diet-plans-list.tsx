@@ -26,6 +26,26 @@ export function DietPlansList({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // Track component mount status to avoid state updates after unmount
+  const isMounted = React.useRef(true);
+  
+  // Update local selection when parent selection changes
+  useEffect(() => {
+    if (selectedPlanId && dietPlans.length > 0) {
+      const selectedPlan = dietPlans.find(plan => plan.id === selectedPlanId);
+      if (selectedPlan) {
+        console.log('Selected plan found:', selectedPlan);
+      }
+    }
+  }, [selectedPlanId, dietPlans]);
+  
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      isMounted.current = false;
+    };
+  }, []);
+  
   // Fetch all diet plans for this athlete
   useEffect(() => {
     const fetchDietPlans = async () => {
@@ -162,8 +182,10 @@ export function DietPlansList({
             {dietPlans.map(plan => (
               <div
                 key={plan.id}
-                className={`p-3 rounded-md flex justify-between items-center ${selectedPlanId === plan.id ? 'bg-primary/10 border border-primary/30' : 'bg-gray-50 hover:bg-gray-100'
-                  }`}
+                className={`p-3 rounded-md flex justify-between items-center cursor-pointer ${
+                  selectedPlanId === plan.id ? 'bg-primary/10 border border-primary/30' : 'bg-gray-50 hover:bg-gray-100'
+                }`}
+                onClick={() => onSelectPlan(plan)}
               >
                 <div className="flex-1">
                   <div className="font-medium">

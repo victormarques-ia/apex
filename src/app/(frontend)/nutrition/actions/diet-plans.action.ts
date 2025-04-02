@@ -169,6 +169,65 @@ export async function createDietPlanAction(_state: unknown, formData: FormData) 
 }
 
 /**
+ * Action to update an existing diet plan
+ */
+export async function updateDietPlanAction(_state: unknown, formData: FormData) {
+  return actionHandlerWithValidation(
+    formData,
+    async (data) => {
+      const dietPlanId = data.dietPlanId;
+
+      if (!dietPlanId) {
+        throw new Error('ID do plano alimentar é obrigatório');
+      }
+
+      // Prepare update data
+      const updateData = {
+        startDate: data.startDate,
+        endDate: data.endDate,
+        totalDailyCalories: data.totalDailyCalories,
+        notes: data.notes,
+        dietPlanDay: {
+          date: data.dayDate,
+          dayOfWeek: data.dayOfWeek,
+          repeatIntervalDays: data.repeatIntervalDays
+        }
+      };
+
+      // Update the diet plan
+      const result = await fetchFromApi(`/api/nutritionists/diet-plan/${dietPlanId}`, {
+        method: 'PUT',
+        body: JSON.stringify(updateData),
+      });
+
+      if (!result.data || !result.data.success) {
+        console.error('Diet plan update error:', result.errors);
+        throw new Error(result.errors?.[0]?.message || 'Erro ao atualizar plano alimentar');
+      }
+
+      return result.data;
+    },
+    {
+      onSuccess: (data) => {
+        return {
+          success: true,
+          data,
+          message: 'Plano alimentar atualizado com sucesso',
+        };
+      },
+      onFailure: (error) => {
+        console.error('Diet plan update failure:', error);
+        return {
+          success: false,
+          error,
+          message: 'Falha ao atualizar plano alimentar',
+        };
+      },
+    }
+  );
+}
+
+/**
  * Action to delete a diet plan and all associated entities
  */
 export async function deleteDietPlanAction(_state: unknown, formData: FormData) {

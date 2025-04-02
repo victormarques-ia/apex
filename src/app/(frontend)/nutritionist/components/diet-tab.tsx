@@ -249,23 +249,41 @@ export function DietTabContent({ athleteId, nutritionistId }) {
     setDietPlan(null);
     setSelectedPlanId(null);
   };
-  
+
+  const handleDietPlanUpdated = () => {
+    refreshData();
+  };
+
   const handleSelectPlan = (plan) => {
+    console.log('Plan selected:', plan);
     setDietPlan(plan);
     setSelectedPlanId(plan.id);
-    
+
     // Find the diet plan day for this plan and selected date
     const formData = new FormData();
     formData.append('dietPlanId', plan.id);
-    
+
     getDietPlanAction(null, formData).then(response => {
-      if (response.success && response.data) {
-        setDietPlanDay(response.data.dietPlanDay);
+      console.log('Response getDietPlanAction:', response);
+      if (response.data.data) {
+        setDietPlanDay(response.data.data.dietPlanDay);
         setShowDietPlanForm(true);
+        setIsCreatingNewPlan(false);
+      } else {
+        console.error('Failed to get diet plan details:', response);
+        // Handle error - still show the form but without day data
+        setDietPlanDay(null);
+        setShowDietPlanForm(true);
+        setIsCreatingNewPlan(false);
       }
+    }).catch(err => {
+      console.error('Error getting diet plan details:', err);
+      setDietPlanDay(null);
+      setShowDietPlanForm(true);
+      setIsCreatingNewPlan(false);
     });
   };
-  
+
   const handleAddNewPlan = () => {
     setDietPlan(null);
     setDietPlanDay(null);
@@ -295,7 +313,7 @@ export function DietTabContent({ athleteId, nutritionistId }) {
           selectedPlanId={selectedPlanId}
         />
       )}
-      
+
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Calendário */}
         <div className="lg:col-span-1">
@@ -319,8 +337,8 @@ export function DietTabContent({ athleteId, nutritionistId }) {
             </CardContent>
             <CardFooter>
               {isCreatingNewPlan ? (
-                <Button 
-                  className="w-full" 
+                <Button
+                  className="w-full"
                   onClick={() => {
                     setShowDietPlanForm(false);
                     setIsCreatingNewPlan(false);
@@ -329,15 +347,15 @@ export function DietTabContent({ athleteId, nutritionistId }) {
                   Cancelar
                 </Button>
               ) : selectedPlanId ? (
-                <Button 
-                  className="w-full" 
+                <Button
+                  className="w-full"
                   onClick={() => setShowDietPlanForm(!showDietPlanForm)}
                 >
                   {showDietPlanForm ? "Esconder Formulário" : "Editar Plano"}
                 </Button>
               ) : (
-                <Button 
-                  className="w-full" 
+                <Button
+                  className="w-full"
                   onClick={handleAddNewPlan}
                 >
                   Adicionar Plano
@@ -433,6 +451,7 @@ export function DietTabContent({ athleteId, nutritionistId }) {
           onDietPlanCreated={handleDietPlanCreated}
           onDietPlanDayCreated={handleDietPlanDayCreated}
           onDietPlanDayDeleted={handleDietPlanDayDeleted}
+          onDietPlanUpdated={handleDietPlanUpdated}
         />
       )}
     </div>

@@ -11,7 +11,7 @@ import { Calendar } from '@/components/ui/calendar';
 import { CalendarIcon, PlusIcon, TrashIcon } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { format } from 'date-fns';
-import { createDietPlanAction, deleteDietPlanAction } from '@/app/(frontend)/nutrition/actions/diet-plans.action';
+import { createDietPlanAction, updateDietPlanAction, deleteDietPlanAction } from '@/app/(frontend)/nutrition/actions/diet-plans.action';
 import { getMealsByDietPlanDayAction } from '@/app/(frontend)/nutrition/actions/meals.action';
 import { CreateMealForm } from './create-meal-form';
 import { MealCard } from './meal-card';
@@ -26,6 +26,7 @@ interface DietPlanFormProps {
   onDietPlanCreated: () => void;
   onDietPlanDayCreated: () => void;
   onDietPlanDayDeleted: () => void;
+  onDietPlanUpdated?: () => void;
 }
 
 export function DietPlanForm({
@@ -37,7 +38,8 @@ export function DietPlanForm({
   isCreatingNewPlan,
   onDietPlanCreated,
   onDietPlanDayCreated,
-  onDietPlanDayDeleted
+  onDietPlanDayDeleted,
+  onDietPlanUpdated = () => { }
 }: DietPlanFormProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -137,6 +139,48 @@ export function DietPlanForm({
       }
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Erro ao criar plano alimentar';
+      setError(errorMessage);
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Update an existing diet plan
+  const handleUpdateDietPlan = async () => {
+    if (!dietPlan || !dietPlan.id) {
+      setError('Nenhum plano alimentar selecionado');
+      return;
+    }
+
+    try {
+      setLoading(true);
+      setError(null);
+
+      const formData = new FormData();
+      formData.append('dietPlanId', dietPlan.id);
+      formData.append('startDate', startDate.toISOString().split('T')[0]);
+      formData.append('endDate', endDate.toISOString().split('T')[0]);
+      formData.append('totalDailyCalories', totalDailyCalories.toString());
+      formData.append('notes', notes);
+      formData.append('repeatIntervalDays', repeatInterval.toString());
+
+      const response = await updateDietPlanAction(null, formData);
+
+      console.log('====================');
+      console.log('Response updateDietPlanAction:', response);
+      console.log('====================');
+
+      if (response.data.success) {
+        if (onDietPlanUpdated) {
+          onDietPlanUpdated();
+        }
+        alert('Plano alimentar atualizado com sucesso!');
+      } else {
+        setError(response.message || 'Erro ao atualizar plano alimentar');
+      }
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Erro ao atualizar plano alimentar';
       setError(errorMessage);
       console.error(err);
     } finally {
@@ -300,28 +344,87 @@ export function DietPlanForm({
           <div className="grid grid-cols-2 gap-4">
             <div>
               <Label htmlFor="start_date">Data de Início</Label>
-              <Input id="start_date" value={format(new Date(dietPlan.start_date), 'dd/MM/yyyy')} disabled />
+              <div className="mb-4">
+                <Calendar
+                  selectedDate={startDate}
+                  onDateChange={(date) => {
+                    console.log("Setting start date:", date);
+                    setStartDate(date);
+                  }}
+                />
+              </div>
             </div>
             <div>
               <Label htmlFor="end_date">Data de Término</Label>
-              <Input id="end_date" value={format(new Date(dietPlan.end_date), 'dd/MM/yyyy')} disabled />
+              <div className="mb-4">
+                <Calendar
+                  selectedDate={endDate}
+                  onDateChange={(date) => {
+                    console.log("Setting end date:", date);
+                    if (date >= startDate) {
+                      setEndDate(date);
+                    } else {
+                      alert("A data de término deve ser posterior à data de início");
+                    }
+                  }}
+                />
+              </div>
             </div>
             <div>
               <Label htmlFor="total_daily_calories">Calorias Diárias</Label>
-              <Input id="total_daily_calories" value={dietPlan.total_daily_calories || 0} disabled />
+              <Input
+                id="total_daily_calories"
+                type="number"
+                min="0"
+                value={totalDailyCalories}
+                onChange={(e) => {
+                  const value = parseInt(e.target.value);
+                  if (!isNaN(value) && value >= 0) {
+                    setTotalDailyCalories(value);
+                  }
+                }}
+              />
             </div>
             <div>
               <Label htmlFor="repeat_interval">Repetir a cada (dias)</Label>
-              <Input id="repeat_interval" value={dietPlanDay.repeat_interval_days || 0} disabled />
+              <div className="flex items-center gap-2">
+                <Input
+                  id="repeat_interval"
+                  type="number"
+                  min="0"
+                  max="30"
+                  value={repeatInterval}
+                  onChange={(e) => {
+                    const value = parseInt(e.target.value);
+                    if (!isNaN(value) && value >= 0 && value <= 30) {
+                      setRepeatInterval(value);
+                    }
+                  }}
+                />
+                <span className="text-sm text-muted-foreground">dias</span>
+              </div>
+              <p className="text-xs text-muted-foreground mt-1">0 = não repetir, 1-30 = intervalo de repetição</p>
             </div>
           </div>
 
-          {dietPlan.notes && (
-            <div>
-              <Label htmlFor="notes">Observações</Label>
-              <Textarea id="notes" value={dietPlan.notes} disabled className="min-h-[80px]" />
-            </div>
-          )}
+          <div>
+            <Label htmlFor="notes">Observações</Label>
+            <Textarea
+              id="notes"
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              placeholder="Adicione observações sobre o plano alimentar"
+              className="min-h-[80px]"
+            />
+          </div>
+
+          <Button
+            className="w-full mt-4"
+            onClick={handleUpdateDietPlan}
+            disabled={loading}
+          >
+            Salvar Alterações
+          </Button>
 
           <Separator className="my-4" />
 

@@ -6,9 +6,10 @@ import { Calendar } from '@/components/ui/calendar';
 import { format, isSameDay, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Button } from '@/components/ui/button';
-import { clientFetch } from '@/app/utils/client-fetch';
 import { getMealHistoryAction } from '@/app/(frontend)/nutrition/actions/meals.action';
+import { getAthleteDietPlansAction, getDietPlanAction } from '@/app/(frontend)/nutrition/actions/diet-plans.action';
 import { DietPlanForm } from './diet-plan-form';
+import { DietPlansList } from './diet-plans-list';
 
 export function DietTabContent({ athleteId, nutritionistId }) {
   const [selectedDate, setSelectedDate] = useState(new Date());
@@ -19,24 +20,32 @@ export function DietTabContent({ athleteId, nutritionistId }) {
   const [dietPlan, setDietPlan] = useState(null);
   const [dietPlanDay, setDietPlanDay] = useState(null);
   const [showDietPlanForm, setShowDietPlanForm] = useState(false);
+  const [isCreatingNewPlan, setIsCreatingNewPlan] = useState(false);
+  const [selectedPlanId, setSelectedPlanId] = useState(null);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         setLoading(true);
 
-        // 1. Fetch diet plans and diet plan days in one call
+        // 1. Fetch diet plans and diet plan days with the new one-to-one relationship
+        console.log('Athlete ID: ', athleteId);
         if (athleteId) {
           const dateStr = selectedDate.toISOString().split('T')[0];
-          const dietPlansResponse = await clientFetch(`/api/nutritionists/diet-plans?athleteId=${athleteId}&date=${dateStr}`);
 
-          console.log(dietPlansResponse)
-          
-          if (dietPlansResponse.data && dietPlansResponse.data.docs && dietPlansResponse.data.docs.length > 0) {
-            // Set the diet plan day (we have days that match this date due to our API filter)
-            setDietPlanDay(dietPlansResponse.data.docs[0]);
-            // Get the associated diet plan from the day
-            setDietPlan(dietPlansResponse.data.docs[0].diet_plan);
+          const formData = new FormData();
+          formData.append('athleteId', athleteId);
+          formData.append('date', dateStr);
+
+          const response = await getAthleteDietPlansAction(null, formData);
+
+          console.log('Response: ', response);
+
+          if (response.data && response.data?.totalDocs > 0) {
+            // Set diet plan day
+            setDietPlanDay(response.data.docs[0]);
+            // Get the associated diet plan
+            setDietPlan(response.data.docs[0].diet_plan);
           } else {
             setDietPlanDay(null);
             setDietPlan(null);
@@ -46,40 +55,40 @@ export function DietTabContent({ athleteId, nutritionistId }) {
         // 2. Fetch meals history - use exact dates to match what we're displaying
         const formData = new FormData();
         formData.append('athleteId', athleteId);
-        
+
         const dateStr = selectedDate.toISOString().split('T')[0];
         // Use the exact selected date instead of a date range
         formData.append('from', dateStr);
         formData.append('to', dateStr);
-        
+
         console.log(`Fetching meals for athleteId=${athleteId}, date=${dateStr}`);
         const mealsResponse = await getMealHistoryAction(null, formData);
-        console.log('Meals response:', mealsResponse);
-        
+        // console.log('Meals response:', mealsResponse);
+
         if (mealsResponse.data?.dateRange) {
           setMealsHistory(mealsResponse.data);
-          
+
           // Extract all unique meals for any other operations that need the flat list
           if (mealsResponse.data.history) {
             const allMeals = Object.values(mealsResponse.data.history)
               .flatMap(dayData => dayData.meals || []);
-            
+
             // Get unique meals by ID to avoid duplicates in the flat list
             const uniqueMeals = [];
             const mealIds = new Set();
-            
+
             allMeals.forEach(meal => {
               if (!mealIds.has(meal.id)) {
                 mealIds.add(meal.id);
                 uniqueMeals.push(meal);
               }
             });
-            
+
             setMeals(uniqueMeals);
           } else {
             setMeals([]);
           }
-          
+
           // Extract dates that have meals directly from the response
           if (mealsResponse.data.dateRange) {
             setDietDays(mealsResponse.data.dateRange.map(dateStr => ({
@@ -108,51 +117,56 @@ export function DietTabContent({ athleteId, nutritionistId }) {
   const refreshData = async () => {
     try {
       setLoading(true);
-      
-      // Get diet plan day for selected date using the optimized endpoint
+
+      // Get diet plan day for selected date using the new action
       if (athleteId) {
         const dateStr = selectedDate.toISOString().split('T')[0];
-        const dietPlansResponse = await clientFetch(`/api/nutritionists/diet-plans?athleteId=${athleteId}&date=${dateStr}`);
-        
-        if (dietPlansResponse.data && dietPlansResponse.data.docs && dietPlansResponse.data.docs.length > 0) {
-          setDietPlanDay(dietPlansResponse.data.docs[0]);
-          setDietPlan(dietPlansResponse.data.docs[0].diet_plan);
+
+        const formData = new FormData();
+        formData.append('athleteId', athleteId);
+        formData.append('date', dateStr);
+
+        const response = await getAthleteDietPlansAction(null, formData);
+
+        if (response.success && response.data && response.data.docs && response.data.docs.length > 0) {
+          setDietPlanDay(response.data.docs[0]);
+          setDietPlan(response.data.docs[0].diet_plan);
         } else {
           setDietPlanDay(null);
           setDietPlan(null);
         }
       }
-      
+
       // Fetch meals again - use exact date
       const formData = new FormData();
       formData.append('athleteId', athleteId);
-      
+
       const dateStr = selectedDate.toISOString().split('T')[0];
       formData.append('from', dateStr);
       formData.append('to', dateStr);
-      
+
       const mealsResponse = await getMealHistoryAction(null, formData);
-      
+
       if (mealsResponse.success && mealsResponse.data) {
         setMealsHistory(mealsResponse.data);
-        
+
         if (mealsResponse.data.history) {
           const allMeals = Object.values(mealsResponse.data.history)
             .flatMap(dayData => dayData.meals || []);
-          
+
           const uniqueMeals = [];
           const mealIds = new Set();
-          
+
           allMeals.forEach(meal => {
             if (!mealIds.has(meal.id)) {
               mealIds.add(meal.id);
               uniqueMeals.push(meal);
             }
           });
-          
+
           setMeals(uniqueMeals);
         }
-        
+
         if (mealsResponse.data.dateRange) {
           setDietDays(mealsResponse.data.dateRange.map(dateStr => ({
             date: dateStr
@@ -168,16 +182,16 @@ export function DietTabContent({ athleteId, nutritionistId }) {
 
   const getMealsForDate = (date) => {
     const dateStr = date.toISOString().split('T')[0];
-    
-    console.log('Looking for meals on date:', dateStr);
-    console.log('mealsHistory:', mealsHistory);
-    
+
+    // console.log('Looking for meals on date:', dateStr);
+    // console.log('mealsHistory:', mealsHistory);
+
     // Get all meals for this exact date from our original history response
     if (mealsHistory && mealsHistory.history && mealsHistory.history[dateStr]) {
-      console.log('Found meals for date:', mealsHistory.history[dateStr].meals);
+      // console.log('Found meals for date:', mealsHistory.history[dateStr].meals);
       return mealsHistory.history[dateStr].meals || [];
     }
-    
+
     console.log('No meals found for date:', dateStr);
     return [];
   };
@@ -222,6 +236,7 @@ export function DietTabContent({ athleteId, nutritionistId }) {
   const handleDietPlanCreated = () => {
     refreshData();
     setShowDietPlanForm(false);
+    setIsCreatingNewPlan(false);
   };
 
   const handleDietPlanDayCreated = () => {
@@ -231,6 +246,32 @@ export function DietTabContent({ athleteId, nutritionistId }) {
   const handleDietPlanDayDeleted = () => {
     refreshData();
     setDietPlanDay(null);
+    setDietPlan(null);
+    setSelectedPlanId(null);
+  };
+  
+  const handleSelectPlan = (plan) => {
+    setDietPlan(plan);
+    setSelectedPlanId(plan.id);
+    
+    // Find the diet plan day for this plan and selected date
+    const formData = new FormData();
+    formData.append('dietPlanId', plan.id);
+    
+    getDietPlanAction(null, formData).then(response => {
+      if (response.success && response.data) {
+        setDietPlanDay(response.data.dietPlanDay);
+        setShowDietPlanForm(true);
+      }
+    });
+  };
+  
+  const handleAddNewPlan = () => {
+    setDietPlan(null);
+    setDietPlanDay(null);
+    setSelectedPlanId(null);
+    setIsCreatingNewPlan(true);
+    setShowDietPlanForm(true);
   };
 
   if (loading) {
@@ -238,12 +279,23 @@ export function DietTabContent({ athleteId, nutritionistId }) {
   }
 
   const groupedMeals = groupMealsByType();
-  
+
   // Dates with meals come directly from the API's dateRange
   const datesWithMeals = dietDays.map(day => new Date(day.date));
 
   return (
     <div className="space-y-6">
+      {/* List of diet plans */}
+      {athleteId && (
+        <DietPlansList
+          athleteId={athleteId}
+          onSelectPlan={handleSelectPlan}
+          onAddNewPlan={handleAddNewPlan}
+          onPlanDeleted={handleDietPlanDayDeleted}
+          selectedPlanId={selectedPlanId}
+        />
+      )}
+      
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Calendário */}
         <div className="lg:col-span-1">
@@ -266,12 +318,31 @@ export function DietTabContent({ athleteId, nutritionistId }) {
               />
             </CardContent>
             <CardFooter>
-              <Button 
-                className="w-full" 
-                onClick={() => setShowDietPlanForm(!showDietPlanForm)}
-              >
-                {showDietPlanForm ? "Esconder Formulário" : "Adicionar"}
-              </Button>
+              {isCreatingNewPlan ? (
+                <Button 
+                  className="w-full" 
+                  onClick={() => {
+                    setShowDietPlanForm(false);
+                    setIsCreatingNewPlan(false);
+                  }}
+                >
+                  Cancelar
+                </Button>
+              ) : selectedPlanId ? (
+                <Button 
+                  className="w-full" 
+                  onClick={() => setShowDietPlanForm(!showDietPlanForm)}
+                >
+                  {showDietPlanForm ? "Esconder Formulário" : "Editar Plano"}
+                </Button>
+              ) : (
+                <Button 
+                  className="w-full" 
+                  onClick={handleAddNewPlan}
+                >
+                  Adicionar Plano
+                </Button>
+              )}
             </CardFooter>
           </Card>
         </div>
@@ -293,8 +364,8 @@ export function DietTabContent({ athleteId, nutritionistId }) {
                     <h3 className="font-medium mb-2">{translateMealType(mealType)}</h3>
                     <ul className="space-y-2">
                       {meals.map(meal => (
-                        <li 
-                          key={meal.id} 
+                        <li
+                          key={meal.id}
                           className={`${meal.isRepeated ? 'bg-gray-50' : 'bg-blue-50'} p-3 rounded-md`}
                         >
                           <div className="flex justify-between items-start">
@@ -314,7 +385,7 @@ export function DietTabContent({ athleteId, nutritionistId }) {
                               </span>
                             )}
                           </div>
-                          
+
                           <div className="flex flex-wrap gap-2 mt-1 text-xs text-muted-foreground">
                             {meal.orderIndex && (
                               <span>Ordem: {meal.orderIndex}</span>
@@ -323,7 +394,7 @@ export function DietTabContent({ athleteId, nutritionistId }) {
                               <span>Original: {new Date(meal.originalDate).toLocaleDateString()}</span>
                             )}
                           </div>
-                          
+
                           {/* Add food items information */}
                           {meal.foods && meal.foods.length > 0 && (
                             <div className="mt-2 text-sm">
@@ -355,8 +426,10 @@ export function DietTabContent({ athleteId, nutritionistId }) {
           athleteId={athleteId}
           nutritionistId={nutritionistId}
           selectedDate={selectedDate}
+          dietDays={dietDays}
           dietPlan={dietPlan}
           dietPlanDay={dietPlanDay}
+          isCreatingNewPlan={isCreatingNewPlan}
           onDietPlanCreated={handleDietPlanCreated}
           onDietPlanDayCreated={handleDietPlanDayCreated}
           onDietPlanDayDeleted={handleDietPlanDayDeleted}

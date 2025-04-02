@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isSameDay, addMonths, subMonths } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
-export function Calendar({ selectedDate, onDateChange }) {
+export function Calendar({ selectedDate, onDateChange = () => {}, modifiers = {}, modifiersStyles = {} }) {
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [monthDays, setMonthDays] = useState([]);
 
@@ -60,17 +60,36 @@ export function Calendar({ selectedDate, onDateChange }) {
             return <div key={`empty-${index}`} className="h-8"></div>;
           }
 
-          const isSelected = isSameDay(day, selectedDate);
+          const isSelected = selectedDate && isSameDay(day, selectedDate);
           const isCurrentMonth = isSameMonth(day, currentMonth);
-
+          
+          // Apply custom modifiers and styles
+          const customStyles = {};
+          const customClasses = [];
+          
+          // Apply modifiers
+          Object.keys(modifiers).forEach(key => {
+            if (modifiers[key] && typeof modifiers[key] === 'function' && modifiers[key](day)) {
+              if (modifiersStyles[key]) {
+                Object.assign(customStyles, modifiersStyles[key]);
+              }
+              customClasses.push(`modifier-${key}`);
+            }
+          });
+          
           return (
             <Button
               key={day.toString()}
               variant={isSelected ? 'default' : 'ghost'}
               size="sm"
-              className={`h-8 p-0 ${!isCurrentMonth ? 'text-gray-400' : ''}`}
-              onClick={() => onDateChange(day)}
+              className={`h-8 p-0 ${!isCurrentMonth ? 'text-gray-400' : ''} ${customClasses.join(' ')}`}
+              onClick={() => {
+                if (typeof onDateChange === 'function') {
+                  onDateChange(day);
+                }
+              }}
               disabled={!isCurrentMonth}
+              style={customStyles}
             >
               {format(day, 'd')}
             </Button>

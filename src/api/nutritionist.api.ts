@@ -292,38 +292,6 @@ export const NutritionistApi: Endpoint[] = [
 
         return Response.json(allDays);
 
-        // If date 
-        // Fallback: If no days found, find a diet plan that covers the target date
-        // const dietPlans = await req.payload.find({
-        //   collection: 'diet-plans',
-        //   where: {
-        //     and: [
-        //       { athlete: { equals: athleteId } },
-        //       { nutritionist: { equals: nutritionistId } },
-        //     ]
-        //   },
-        //   sort: '-createdAt', // Most recent first if multiple match
-        //   depth: 2,
-        //   limit: 1
-        // });
-
-        // Create synthetic response with diet plan but no diet plan day
-        // return Response.json({
-        //   docs: [{
-        //     id: null,
-        //     diet_plan: dietPlans?.docs[0],
-        //     date: null,
-        //     day_of_week: null,
-        //     repeat_interval_days: null,
-        //     updatedAt: null,
-        //     createdAt: null
-        //   }],
-        //   totalDocs: 1,
-        //   page: 1,
-        //   totalPages: 1,
-        //   limit: 1
-        // });
-
       } catch (error) {
         console.error('[NutritionistApi][diet-plans-days]:', error);
         return Response.json({
@@ -942,7 +910,7 @@ export const NutritionistApi: Endpoint[] = [
         const dietPlanDayId = dietPlanDay.id || dietPlanDay.docs[0].id;
 
         const mealData = {
-          diet_plan_day: dietPlanDay.id,
+          diet_plan_day: dietPlanDayId,
           meal_type: data.mealType,
           ...(data.scheduledTime && { scheduled_time: data.scheduledTime }),
           ...(data.orderIndex && { order_index: data.orderIndex }),

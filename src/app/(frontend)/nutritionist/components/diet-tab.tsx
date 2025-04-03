@@ -6,10 +6,16 @@ import { Calendar } from '@/components/ui/calendar';
 import { format, isSameDay, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Button } from '@/components/ui/button';
+import { PlusIcon, Trash2Icon, Edit2Icon } from 'lucide-react';
 import { getMealHistoryAction } from '@/app/(frontend)/nutrition/actions/meals.action';
+import { deleteMealAction } from '@/app/(frontend)/nutrition/actions/meal-plan.action';
 import { getAthleteDietPlansAction, getDietPlanAction } from '@/app/(frontend)/nutrition/actions/diet-plans.action';
 import { DietPlanForm } from './diet-plan-form';
+import { DietPlanDayForm } from './diet-plan-day-form';
 import { DietPlansList } from './diet-plans-list';
+import { CreateMealForm } from './create-meal-form';
+import { AddFoodToMeal } from './add-food-to-meal';
+import { EditMealFoods } from './edit-meal-foods';
 
 export function DietTabContent({ athleteId, nutritionistId }) {
   const [selectedDate, setSelectedDate] = useState(new Date());
@@ -20,15 +26,20 @@ export function DietTabContent({ athleteId, nutritionistId }) {
   const [dietPlan, setDietPlan] = useState(null);
   const [dietPlanDay, setDietPlanDay] = useState(null);
   const [showDietPlanForm, setShowDietPlanForm] = useState(false);
+  const [showDietPlanDayForm, setShowDietPlanDayForm] = useState(false);
   const [isCreatingNewPlan, setIsCreatingNewPlan] = useState(false);
+  const [showAddFoodForm, setShowAddFoodForm] = useState(false);
+  const [showEditFoodsForm, setShowEditFoodsForm] = useState(false);
+  const [selectedMealId, setSelectedMealId] = useState(null);
+  const [deletingMeal, setDeletingMeal] = useState(false);
   const [selectedPlanId, setSelectedPlanId] = useState(null);
+  const [selectedPlanDayId, setSelectedPlanDayId] = useState(null);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         setLoading(true);
 
-        // 1. Fetch diet plans and diet plan days with the new one-to-one relationship
         console.log('Athlete ID: ', athleteId);
         if (athleteId) {
           const dateStr = selectedDate.toISOString().split('T')[0];
@@ -63,33 +74,20 @@ export function DietTabContent({ athleteId, nutritionistId }) {
 
         console.log(`Fetching meals for athleteId=${athleteId}, date=${dateStr}`);
         const mealsResponse = await getMealHistoryAction(null, formData);
-        // console.log('Meals response:', mealsResponse);
+        console.log('Meals response:', mealsResponse);
 
         if (mealsResponse.data?.dateRange) {
           setMealsHistory(mealsResponse.data);
 
-          // Extract all unique meals for any other operations that need the flat list
-          if (mealsResponse.data.history) {
-            const allMeals = Object.values(mealsResponse.data.history)
-              .flatMap(dayData => dayData.meals || []);
-
-            // Get unique meals by ID to avoid duplicates in the flat list
-            const uniqueMeals = [];
-            const mealIds = new Set();
-
-            allMeals.forEach(meal => {
-              if (!mealIds.has(meal.id)) {
-                mealIds.add(meal.id);
-                uniqueMeals.push(meal);
-              }
-            });
-
-            setMeals(uniqueMeals);
+          // Extract all unique meals for the selected date
+          const dateStr = selectedDate.toISOString().split('T')[0];
+          if (mealsResponse.data.history && mealsResponse.data.history[dateStr]) {
+            setMeals(mealsResponse.data.history[dateStr].meals || []);
           } else {
             setMeals([]);
           }
 
-          // Extract dates that have meals directly from the response
+          // Set dates with meals for calendar highlighting
           if (mealsResponse.data.dateRange) {
             setDietDays(mealsResponse.data.dateRange.map(dateStr => ({
               date: dateStr
@@ -146,27 +144,20 @@ export function DietTabContent({ athleteId, nutritionistId }) {
       formData.append('to', dateStr);
 
       const mealsResponse = await getMealHistoryAction(null, formData);
+      console.log('Meal response:', mealsResponse)
 
-      if (mealsResponse.success && mealsResponse.data) {
+      if (mealsResponse.data) {
         setMealsHistory(mealsResponse.data);
 
-        if (mealsResponse.data.history) {
-          const allMeals = Object.values(mealsResponse.data.history)
-            .flatMap(dayData => dayData.meals || []);
-
-          const uniqueMeals = [];
-          const mealIds = new Set();
-
-          allMeals.forEach(meal => {
-            if (!mealIds.has(meal.id)) {
-              mealIds.add(meal.id);
-              uniqueMeals.push(meal);
-            }
-          });
-
-          setMeals(uniqueMeals);
+        // Extract meals for the selected date
+        const dateStr = selectedDate.toISOString().split('T')[0];
+        if (mealsResponse.data.history && mealsResponse.data.history[dateStr]) {
+          setMeals(mealsResponse.data.history[dateStr].meals || []);
+        } else {
+          setMeals([]);
         }
 
+        // Set dates with meals for calendar highlighting
         if (mealsResponse.data.dateRange) {
           setDietDays(mealsResponse.data.dateRange.map(dateStr => ({
             date: dateStr
@@ -180,35 +171,10 @@ export function DietTabContent({ athleteId, nutritionistId }) {
     }
   };
 
-  const getMealsForDate = (date) => {
-    const dateStr = date.toISOString().split('T')[0];
-
-    // console.log('Looking for meals on date:', dateStr);
-    // console.log('mealsHistory:', mealsHistory);
-
-    // Get all meals for this exact date from our original history response
-    if (mealsHistory && mealsHistory.history && mealsHistory.history[dateStr]) {
-      // console.log('Found meals for date:', mealsHistory.history[dateStr].meals);
-      return mealsHistory.history[dateStr].meals || [];
-    }
-
-    console.log('No meals found for date:', dateStr);
-    return [];
-  };
-
-  const groupMealsByType = () => {
-    const mealsForDate = getMealsForDate(selectedDate);
-    const grouped = {};
-
-    mealsForDate.forEach(meal => {
-      // Use mealType instead of meal_type
-      if (!grouped[meal.mealType]) {
-        grouped[meal.mealType] = [];
-      }
-      grouped[meal.mealType].push(meal);
-    });
-
-    return grouped;
+  // Sort meals by order_index for display
+  const getSortedMeals = () => {
+    if (!meals || meals.length === 0) return [];
+    return [...meals].sort((a, b) => (a.order_index || 0) - (b.order_index || 0));
   };
 
   const translateMealType = (type) => {
@@ -246,8 +212,6 @@ export function DietTabContent({ athleteId, nutritionistId }) {
   const handleDietPlanDayDeleted = () => {
     refreshData();
     setDietPlanDay(null);
-    setDietPlan(null);
-    setSelectedPlanId(null);
   };
 
   const handleDietPlanUpdated = () => {
@@ -259,44 +223,46 @@ export function DietTabContent({ athleteId, nutritionistId }) {
     setDietPlan(plan);
     setSelectedPlanId(plan.id);
 
-    // Find the diet plan day for this plan and selected date
-    const formData = new FormData();
-    formData.append('dietPlanId', plan.id);
+    // Mostrar formulário do plano alimentar
+    setShowDietPlanForm(false);
+    setShowDietPlanDayForm(false);
+    setIsCreatingNewPlan(false);
+  };
 
-    getDietPlanAction(null, formData).then(response => {
-      console.log('Response getDietPlanAction:', response);
-      if (response.data.data) {
-        setDietPlanDay(response.data.data.dietPlanDay);
-        setShowDietPlanForm(true);
-        setIsCreatingNewPlan(false);
-      } else {
-        console.error('Failed to get diet plan details:', response);
-        // Handle error - still show the form but without day data
-        setDietPlanDay(null);
-        setShowDietPlanForm(true);
-        setIsCreatingNewPlan(false);
-      }
-    }).catch(err => {
-      console.error('Error getting diet plan details:', err);
-      setDietPlanDay(null);
-      setShowDietPlanForm(true);
-      setIsCreatingNewPlan(false);
-    });
+  const handleEditPlan = (plan: any) => {
+    setDietPlan(plan);
+    setSelectedPlanId(null);
+
+    // Mostrar formulário do plano alimentar
+    setShowDietPlanForm(true);
+    setShowDietPlanDayForm(false);
+    setIsCreatingNewPlan(false);
+  };
+
+  const handleSelectPlanDays = (plan: any) => {
+    setDietPlanDay(plan);
+    setSelectedPlanDayId(plan.id);
+    console.log('Diet Plan Day selected:', plan);
+
+    // Mostrar formulário do dia do plano alimentar
+    setShowDietPlanDayForm(true);
+    setShowDietPlanForm(false);
+    setIsCreatingNewPlan(false);
   };
 
   const handleAddNewPlan = () => {
     setDietPlan(null);
     setDietPlanDay(null);
     setSelectedPlanId(null);
+    setSelectedPlanDayId(null);
     setIsCreatingNewPlan(true);
     setShowDietPlanForm(true);
+    setShowDietPlanDayForm(false);
   };
 
   if (loading) {
     return <div className="min-h-[600px] flex items-center justify-center">Carregando...</div>;
   }
-
-  const groupedMeals = groupMealsByType();
 
   // Dates with meals come directly from the API's dateRange
   const datesWithMeals = dietDays.map(day => new Date(day.date));
@@ -308,151 +274,229 @@ export function DietTabContent({ athleteId, nutritionistId }) {
         <DietPlansList
           athleteId={athleteId}
           onSelectPlan={handleSelectPlan}
+          onSelectPlanDays={handleSelectPlanDays}
+          onEditPlan={handleEditPlan}
           onAddNewPlan={handleAddNewPlan}
           onPlanDeleted={handleDietPlanDayDeleted}
+          onPlanDayDeleted={handleDietPlanDayDeleted}
+
           selectedPlanId={selectedPlanId}
+          selectedPlanDayId={selectedPlanDayId}
         />
       )}
-
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Calendário */}
-        <div className="lg:col-span-1">
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg font-semibold">Calendário de Dietas</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <Calendar
-                selectedDate={selectedDate}
-                onDateChange={setSelectedDate}
-                modifiers={{
-                  hasMeals: (date) => datesWithMeals.some(d => isSameDay(d, date)),
-                }}
-                modifiersStyles={{
-                  hasMeals: {
-                    border: '2px solid #10B981',
-                  },
-                }}
-              />
-            </CardContent>
-            <CardFooter>
-              {isCreatingNewPlan ? (
-                <Button
-                  className="w-full"
-                  onClick={() => {
-                    setShowDietPlanForm(false);
-                    setIsCreatingNewPlan(false);
-                  }}
-                >
-                  Cancelar
-                </Button>
-              ) : selectedPlanId ? (
-                <Button
-                  className="w-full"
-                  onClick={() => setShowDietPlanForm(!showDietPlanForm)}
-                >
-                  {showDietPlanForm ? "Esconder Formulário" : "Editar Plano"}
-                </Button>
-              ) : (
-                <Button
-                  className="w-full"
-                  onClick={handleAddNewPlan}
-                >
-                  Adicionar Plano
-                </Button>
-              )}
-            </CardFooter>
-          </Card>
-        </div>
-
-        {/* Detalhes das Refeições */}
-        <div className="lg:col-span-2">
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg font-semibold">
-                {format(selectedDate, "EEEE, d 'de' MMMM 'de' yyyy", { locale: ptBR })}
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              {Object.keys(groupedMeals).length === 0 ? (
-                <p className="text-sm text-muted-foreground">Nenhuma refeição registrada</p>
-              ) : (
-                Object.entries(groupedMeals).map(([mealType, meals]) => (
-                  <div key={mealType}>
-                    <h3 className="font-medium mb-2">{translateMealType(mealType)}</h3>
-                    <ul className="space-y-2">
-                      {meals.map(meal => (
-                        <li
-                          key={meal.id}
-                          className={`${meal.isRepeated ? 'bg-gray-50' : 'bg-blue-50'} p-3 rounded-md`}
-                        >
-                          <div className="flex justify-between items-start">
-                            <div>
-                              <span className="font-medium capitalize">
-                                {meal.mealType.replace('_', ' ')}
-                              </span>
-                              {meal.isRepeated && (
-                                <span className="ml-2 text-xs bg-gray-200 px-1.5 py-0.5 rounded-full">
-                                  Repetida
-                                </span>
-                              )}
-                            </div>
-                            {meal.scheduledTime && (
-                              <span className="text-xs text-muted-foreground">
-                                {formatTime(meal.scheduledTime)}
-                              </span>
-                            )}
-                          </div>
-
-                          <div className="flex flex-wrap gap-2 mt-1 text-xs text-muted-foreground">
-                            {meal.orderIndex && (
-                              <span>Ordem: {meal.orderIndex}</span>
-                            )}
-                            {meal.isRepeated && meal.originalDate && (
-                              <span>Original: {new Date(meal.originalDate).toLocaleDateString()}</span>
-                            )}
-                          </div>
-
-                          {/* Add food items information */}
-                          {meal.foods && meal.foods.length > 0 && (
-                            <div className="mt-2 text-sm">
-                              <p className="text-xs font-medium mb-1">Alimentos:</p>
-                              <ul className="space-y-1 pl-2">
-                                {meal.foods.map(foodItem => (
-                                  <li key={foodItem.id} className="flex justify-between">
-                                    <span>{foodItem.food.name}</span>
-                                    <span className="text-muted-foreground">{foodItem.quantity}g</span>
-                                  </li>
-                                ))}
-                              </ul>
-                            </div>
-                          )}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                ))
-              )}
-            </CardContent>
-          </Card>
-        </div>
-      </div>
-
-      {/* Diet Plan Form */}
-      {showDietPlanForm && (
+      {(!showDietPlanForm && showDietPlanDayForm && selectedPlanId) && (
+        <CreateMealForm
+          athleteId={athleteId}
+          nutritionistId={nutritionistId}
+          date={selectedDate.toISOString().split('T')[0]}
+          intervalDays={0}
+          dietPlanId={selectedPlanId}
+          onMealCreated={handleDietPlanUpdated}
+          onCancel={() => setShowDietPlanDayForm(false)}
+        />
+      )}
+      {(showDietPlanForm && !showDietPlanDayForm) ? (
         <DietPlanForm
           athleteId={athleteId}
           nutritionistId={nutritionistId}
           selectedDate={selectedDate}
-          dietDays={dietDays}
           dietPlan={dietPlan}
-          dietPlanDay={dietPlanDay}
           isCreatingNewPlan={isCreatingNewPlan}
           onDietPlanCreated={handleDietPlanCreated}
-          onDietPlanDayCreated={handleDietPlanDayCreated}
-          onDietPlanDayDeleted={handleDietPlanDayDeleted}
           onDietPlanUpdated={handleDietPlanUpdated}
+          onBackToCalendar={() => setShowDietPlanForm(false)}
         />
+      ) : (
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Calendário */}
+          <div className="lg:col-span-1">
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg font-semibold">Calendário de Dietas</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <Calendar
+                  selectedDate={selectedDate}
+                  onDateChange={setSelectedDate}
+                  modifiers={{
+                    hasMeals: (date) => datesWithMeals.some(d => isSameDay(d, date)),
+                  }}
+                  modifiersStyles={{
+                    hasMeals: {
+                      border: '2px solid #10B981',
+                    },
+                  }}
+                />
+              </CardContent>
+              <CardFooter>
+                {isCreatingNewPlan ? (
+                  <Button
+                    className="w-full"
+                    onClick={() => {
+                      setShowDietPlanForm(false);
+                      setShowDietPlanDayForm(false);
+                      setIsCreatingNewPlan(false);
+                    }}
+                  >
+                    Cancelar
+                  </Button>
+                ) : selectedPlanId ? (
+                  <Button
+                    className="w-full"
+                    onClick={() => {
+                      setShowDietPlanDayForm(true);
+                      setShowDietPlanForm(false);
+                      setIsCreatingNewPlan(false);
+                    }}
+                  >
+                    {"Adicionar Refeição"}
+                  </Button>
+                ) : (
+                  <Button
+                    className="w-full"
+                    onClick={handleAddNewPlan}
+                  >
+                    Adicionar Plano
+                  </Button>
+                )}
+              </CardFooter>
+            </Card>
+          </div>
+
+          {/* Detalhes das Refeições */}
+          <div className="lg:col-span-2">
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg font-semibold">
+                  {format(selectedDate, "EEEE, d 'de' MMMM 'de' yyyy", { locale: ptBR })}
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                {meals.length === 0 ? (
+                  <p className="text-sm text-muted-foreground">Nenhuma refeição registrada</p>
+                ) : (
+                  <ul className="space-y-2">
+                    {getSortedMeals().map(meal => (
+                      <li key={meal.id} className="bg-blue-50 p-3 rounded-md">
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <span className="font-medium capitalize">
+                              {translateMealType(meal.meal_type)}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-6 w-6 rounded-full bg-white hover:bg-gray-100"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setSelectedMealId(meal.id);
+                                setShowAddFoodForm(true);
+                              }}
+                              title="Adicionar alimento"
+                            >
+                              <PlusIcon className="h-3 w-3" />
+                            </Button>
+
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-6 w-6 rounded-full bg-white hover:bg-gray-100"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setSelectedMealId(meal.id);
+                                setShowEditFoodsForm(true);
+                              }}
+                              title="Editar alimentos"
+                            >
+                              <Edit2Icon className="h-3 w-3" />
+                            </Button>
+
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-6 w-6 rounded-full bg-white hover:bg-gray-100 hover:text-red-600"
+                              onClick={async (e) => {
+                                e.stopPropagation();
+                                if (confirm('Tem certeza que deseja excluir esta refeição?')) {
+                                  setDeletingMeal(true);
+                                  try {
+                                    const formData = new FormData();
+                                    formData.append('mealId', meal.id);
+                                    await deleteMealAction(null, formData);
+                                    refreshData();
+                                  } catch (error) {
+                                    console.error('Error deleting meal:', error);
+                                    alert('Erro ao excluir refeição');
+                                  } finally {
+                                    setDeletingMeal(false);
+                                  }
+                                }
+                              }}
+                              disabled={deletingMeal}
+                              title="Excluir refeição"
+                            >
+                              <Trash2Icon className="h-3 w-3" />
+                            </Button>
+
+                            {meal.scheduled_time && (
+                              <span className="text-xs text-muted-foreground ml-1">
+                                {formatTime(meal.scheduled_time)}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+
+                        <div className="flex flex-wrap gap-2 mt-1 text-xs text-muted-foreground">
+                          {meal.foods && meal.foods.length > 0 ?
+                            <span>
+                              {meal.foods.map(food => String(food.quantity_grams) + 'g de ' + food.food.name).join(', ')}
+                            </span>
+                            :
+                            <span className="italic text-gray-400">Nenhum alimento cadastrado</span>
+                          }
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      )}
+
+      {/* Add Food Form */}
+      {showAddFoodForm && selectedMealId && (
+        <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50 p-4">
+          <div className="max-w-md w-full">
+            <AddFoodToMeal
+              mealId={selectedMealId}
+              onFoodAdded={() => {
+                setShowAddFoodForm(false);
+                refreshData();
+              }}
+              onCancel={() => setShowAddFoodForm(false)}
+            />
+          </div>
+        </div>
+      )}
+
+      {/* Edit Foods Form */}
+      {showEditFoodsForm && selectedMealId && (
+        <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50 p-4">
+          <div className="max-w-xl w-full">
+            <EditMealFoods
+              mealId={selectedMealId}
+              foods={meals.find(meal => meal.id === selectedMealId)?.foods || []}
+              onFoodsUpdated={() => {
+                refreshData();
+              }}
+              onCancel={() => setShowEditFoodsForm(false)}
+            />
+          </div>
+        </div>
       )}
     </div>
   );

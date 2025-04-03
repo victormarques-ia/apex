@@ -15,12 +15,12 @@ interface CreateMealFormProps {
   nutritionistId: string;
   date: string;
   intervalDays: int;
-  dietPlanDayId: string;
+  dietPlanId: string;
   onMealCreated: () => void;
   onCancel: () => void;
 }
 
-export function CreateMealForm({ athleteId, nutritionistId, date, intervalDays, dietPlanDayId, onMealCreated, onCancel }: CreateMealFormProps) {
+export function CreateMealForm({ athleteId, nutritionistId, date, intervalDays, dietPlanId, onMealCreated, onCancel }: CreateMealFormProps) {
   const [mealType, setMealType] = useState('breakfast');
   const [scheduledTime, setScheduledTime] = useState('');
   const [orderIndex, setOrderIndex] = useState(1);
@@ -47,26 +47,16 @@ export function CreateMealForm({ athleteId, nutritionistId, date, intervalDays, 
         mealDateTime.setHours(hours, minutes, 0, 0);
       }
 
-      const formGetDietPlanDay = new FormData();
-      formGetDietPlanDay.append('athleteId', athleteId);
-      formGetDietPlanDay.append('nutritionistId', nutritionistId);
-      formGetDietPlanDay.append('date', date.toISOString());
-      formGetDietPlanDay.append('intervalDays', intervalDays);
-
-      const responseGetDietPlanDay = await getAthleteDietPlansAction(null, formGetDietPlanDay);
-
-      console.log('Response getDietPlanDay on createMeal: ', responseGetDietPlanDay);
-
       const formData = new FormData();
-      formData.append('dietPlanDayId', dietPlanDayId || responseGetDietPlanDay.data.docs[0].id);
+      formData.append('dietPlanId', dietPlanId);
       formData.append('mealType', mealType);
       formData.append('scheduledTime', mealDateTime.toISOString());
       formData.append('orderIndex', orderIndex.toString());
+      formData.append('date', date);
 
       const response = await createMealAction(null, formData);
-      console.log('Response createMeal: ', response);
 
-      if (response.data.doc) {
+      if (response.data) {
         if (onMealCreated) {
           onMealCreated();
         }

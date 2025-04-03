@@ -141,9 +141,9 @@ export async function updateMealFoodAction(_state: unknown, formData: FormData) 
 
       // Update the meal food
       const result = await fetchFromApi(`/api/meal-food/${mealFoodId}`, {
-        method: 'PUT',
+        method: 'PATCH',
         body: JSON.stringify({
-          quantity_grams: parseInt(quantity as string),
+          quantity_grams: parseInt(quantity),
         }),
       })
 

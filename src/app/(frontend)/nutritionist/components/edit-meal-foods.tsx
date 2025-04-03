@@ -47,7 +47,7 @@ export function EditMealFoods({ mealId, foods, onFoodsUpdated, onCancel }: EditM
 
       const response = await updateMealFoodAction(null, formData);
 
-      if (response.success) {
+      if (response.data) {
         // Update the food in local state
         setFoodItems(
           foodItems.map(food => 

@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { getAthleteDietPlansAction, getAthleteDietPlanDaysAction, deleteDietPlanAction } from '@/app/(frontend)/nutrition/actions/diet-plans.action';
+import { getAthleteDietPlansAction, getAthleteDietPlanDaysAction, deleteDietPlanAction, deleteDietPlanDayAction } from '@/app/(frontend)/nutrition/actions/diet-plans.action';
 import { format } from 'date-fns';
 import { PencilIcon, TrashIcon, PlusIcon } from 'lucide-react';
 
@@ -13,6 +13,7 @@ interface DietPlansListProps {
   onSelectPlanDays: (plan: any) => void;
   onAddNewPlan: () => void;
   onPlanDeleted: () => void;
+  onPlanDayDeleted: () => void;
   selectedPlanId: string | null;
   selectedPlanDaysId: string | null;
 }
@@ -23,6 +24,7 @@ export function DietPlansList({
   onSelectPlanDays,
   onAddNewPlan,
   onPlanDeleted,
+  onPlanDayDeleted,
   selectedPlanId,
   selectedPlanDaysId
 }: DietPlansListProps) {
@@ -144,6 +146,40 @@ export function DietPlansList({
     } catch (err) {
       console.error('Error deleting diet plan:', err);
       setError('Erro ao excluir plano alimentar');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Handle delete plan day 
+  const handleDeletePlanDay = async (planDayId: string) => {
+    if (!confirm('Tem certeza que deseja excluir este plano diário? Todas as refeições associadas também serão excluídas.')) {
+      return;
+    }
+
+    try {
+      setLoading(true);
+
+      const formData = new FormData();
+      formData.append('dietPlanDayId', planDayId);
+
+      const response = await deleteDietPlanDayAction(null, formData);
+
+      console.log('Response deleteDietPlanDayAction:', response);
+
+      if (response.data.success) {
+        // Remove from local list
+        setDietPlanDays(dietPlanDays.filter(planDay => planDay.id !== planDayId));
+        // Notify parent component
+        if (onPlanDayDeleted) {
+          onPlanDayDeleted();
+        }
+      } else {
+        setError('Erro ao excluir plano diário');
+      }
+    } catch (err) {
+      console.error('Error deleting diet plan day:', err);
+      setError('Erro ao excluir plano diário');
     } finally {
       setLoading(false);
     }
@@ -292,7 +328,7 @@ export function DietPlansList({
                           size="sm"
                           variant="ghost"
                           className="text-red-500 hover:text-red-600 hover:bg-red-50"
-                          onClick={() => handleDeletePlan(plan.id)}
+                          onClick={() => handleDeletePlanDay(plan.id)}
                         >
                           <TrashIcon className="h-4 w-4" />
                         </Button>

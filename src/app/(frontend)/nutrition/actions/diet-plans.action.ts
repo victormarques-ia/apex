@@ -269,6 +269,57 @@ export async function updateDietPlanAction(_state: unknown, formData: FormData) 
 }
 
 /**
+ * Action to delete a diet plan day and all associated entities
+ */
+export async function deleteDietPlanDayAction(_state: unknown, formData: FormData) {
+  return actionHandlerWithValidation(
+    formData,
+    async (data) => {
+      const dietPlanDayId = data.dietPlanDayId;
+
+      if (!dietPlanDayId) {
+        throw new Error('ID do plano diário é obrigatório');
+      }
+
+      console.log('=================================================================');
+      console.log('Deleting diet plan day with ID:', dietPlanDayId);
+      console.log('=================================================================');
+      // Delete the diet plan day and all associated entities
+      const result = await fetchFromApi(`/api/nutritionists/diet-plan-day/${dietPlanDayId}`, {
+        method: 'DELETE',
+      });
+
+      console.log('Result of diet plan day deletion:', result);
+
+      if (!result.data || !result.data.success) {
+        console.error('Diet plan day deletion error:', result.errors);
+        throw new Error(result.error?.messages[0] || 'Erro ao excluir plano diário');
+      }
+
+      return result.data;
+    },
+    {
+      onSuccess: (data) => {
+        console.log('Diet plan day deleted successfully:', data);
+        return {
+          success: true,
+          data,
+          message: 'Plano diário excluído com sucesso',
+        };
+      },
+      onFailure: (error) => {
+        console.error('Diet plan day deletion failure:', error);
+        return {
+          success: false,
+          error,
+          message: 'Falha ao excluir plano diário',
+        };
+      },
+    }
+  );
+}
+
+/**
  * Action to delete a diet plan and all associated entities
  */
 export async function deleteDietPlanAction(_state: unknown, formData: FormData) {

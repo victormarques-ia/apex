@@ -628,6 +628,21 @@ export const NutritionistApi: Endpoint[] = [
           );
         }
 
+        // Delete mealfood associated with this diet plan
+        await req.payload.delete({
+          collection: 'meal-food',
+          where: {
+            and: [
+              {
+                'meal.diet_plan_day.diet_plan.id': { equals: dietPlanId },
+              },
+              {
+                'meal.diet_plan_day.diet_plan.nutritionist.id': { equals: nutritionistId },
+              },
+            ],
+          },
+        });
+
         // Delete meals associated with this diet plan
         await req.payload.delete({
           collection: 'meal',
@@ -682,6 +697,79 @@ export const NutritionistApi: Endpoint[] = [
       } catch (error) {
         console.error('[NutritionistApi][delete-diet-plan]:', error);
         const errorMessage = error instanceof Error ? error.message : 'Erro inesperado ao excluir plano alimentar';
+        return Response.json({ errors: [{ message: errorMessage }] }, { status: 500 });
+      }
+    }
+  },
+  {
+    method: 'delete',
+    path: '/diet-plan-day/:id',
+    handler: async (req: PayloadRequest) => {
+      try {
+        const nutritionistId = await getLoggedInNutritionistId(req);
+        const dietPlanDayId = req.routeParams?.id;
+
+        if (!dietPlanDayId) {
+          return Response.json(
+            { errors: [{ message: 'ID do plano alimentar é obrigatório' }] },
+            { status: 400 }
+          );
+        }
+
+        // Delete mealfood associated with this diet plan day
+        await req.payload.delete({
+          collection: 'meal-food',
+          where: {
+            and: [
+              {
+                'meal.diet_plan_day.id': { equals: dietPlanDayId },
+              },
+              {
+                'meal.diet_plan_day.diet_plan.nutritionist.id': { equals: nutritionistId },
+              },
+            ],
+          },
+          depth: 5,
+        });
+
+        // Delete meals associated with this diet plan day
+        await req.payload.delete({
+          collection: 'meal',
+          where: {
+            and: [
+              {
+                'diet_plan_day.id': { equals: dietPlanDayId },
+              },
+              {
+                'diet_plan_day.diet_plan.nutritionist.id': { equals: nutritionistId },
+              }
+            ],
+          },
+          depth: 5,
+        });
+
+        // Delete the diet plan day itself
+        await req.payload.delete({
+          collection: 'diet-plan-days',
+          where: {
+            and: [
+              {
+                id: { equals: dietPlanDayId },
+              },
+              {
+                'diet_plan.nutritionist': { equals: nutritionistId },
+              }
+            ],
+          },
+        });
+
+        return Response.json({
+          success: true,
+          message: 'Plano diário e todas as refeições associadas foram excluídos com sucesso'
+        });
+      } catch (error) {
+        console.error('[NutritionistApi][delete-diet-plan-day]:', error);
+        const errorMessage = error instanceof Error ? error.message : 'Erro inesperado ao excluir plano diário';
         return Response.json({ errors: [{ message: errorMessage }] }, { status: 500 });
       }
     }

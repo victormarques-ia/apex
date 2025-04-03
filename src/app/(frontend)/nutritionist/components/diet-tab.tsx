@@ -22,7 +22,7 @@ export function DietTabContent({ athleteId, nutritionistId }) {
   const [showDietPlanForm, setShowDietPlanForm] = useState(false);
   const [isCreatingNewPlan, setIsCreatingNewPlan] = useState(false);
   const [selectedPlanId, setSelectedPlanId] = useState(null);
-  const [selectedPlanDayId, setSelectPlanDayId] = useState(null);
+  const [selectedPlanDayId, setSelectedPlanDayId] = useState(null);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -73,7 +73,7 @@ export function DietTabContent({ athleteId, nutritionistId }) {
             const allMeals = Object.values(mealsResponse.data.history)
               .flatMap(dayData => dayData.meals || []);
 
-            // Get unique meals by ID to avoid duplicates in the flat list
+            // Get unique m && selectedPlanDayIdeals by ID to avoid duplicates in the flat list
             const uniqueMeals = [];
             const mealIds = new Set();
 
@@ -247,8 +247,6 @@ export function DietTabContent({ athleteId, nutritionistId }) {
   const handleDietPlanDayDeleted = () => {
     refreshData();
     setDietPlanDay(null);
-    setDietPlan(null);
-    setSelectedPlanId(null);
   };
 
   const handleDietPlanUpdated = () => {
@@ -286,6 +284,8 @@ export function DietTabContent({ athleteId, nutritionistId }) {
   };
 
   const handleSelectPlanDays = (plan: any) => {
+    setDietPlanDay(plan);
+    setSelectedPlanDayId(plan.id);
     console.log('Plan selected:', plan);
   };
 
@@ -316,6 +316,7 @@ export function DietTabContent({ athleteId, nutritionistId }) {
           onSelectPlanDays={handleSelectPlanDays}
           onAddNewPlan={handleAddNewPlan}
           onPlanDeleted={handleDietPlanDayDeleted}
+          onPlanDayDeleted={handleDietPlanDayDeleted}
           selectedPlanId={selectedPlanId}
           selectedPlanDayId={selectedPlanDayId}
         />
@@ -353,7 +354,7 @@ export function DietTabContent({ athleteId, nutritionistId }) {
                 >
                   Cancelar
                 </Button>
-              ) : selectedPlanId ? (
+              ) : selectedPlanId && selectedPlanDayId ? (
                 <Button
                   className="w-full"
                   onClick={() => setShowDietPlanForm(!showDietPlanForm)}

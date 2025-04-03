@@ -55,7 +55,38 @@ export const MealsApi: Endpoint[] = [
           );
         }
 
-        // Buscar todos os meal-food com profundidade 3 (isso já traz todos os dados relacionados)
+        // Fetch meals first, similar to history endpoint
+        const meals = await req.payload.find({
+          collection: 'meal',
+          where: {
+            and: [
+              {
+                "diet_plan_day.diet_plan.athlete": {
+                  equals: athleteId,
+                },
+              },
+              nutritionistId ? {
+                "diet_plan_day.diet_plan.nutritionist": {
+                  equals: nutritionistId,
+                },
+              } : {},
+              dietPlanDayId ? {
+                "diet_plan_day.id": {
+                  equals: dietPlanDayId,
+                },
+              } : {},
+              dietPlanId ? {
+                "diet_plan_day.diet_plan.id": {
+                  equals: dietPlanId,
+                },
+              } : {},
+            ]
+          },
+          depth: 3,
+          limit: 100,
+        });
+
+        // Fetch meal-foods to calculate nutrition data
         const mealFoods = await req.payload.find({
           collection: 'meal-food',
           where: {
@@ -86,42 +117,12 @@ export const MealsApi: Endpoint[] = [
           limit: 100,
         });
 
-        // Organizar os meal-foods por meal para processamento
-        const mealMap = new Map();
-
-        mealFoods.docs.forEach(mealFood => {
-          const mealId = mealFood.meal.id;
-
-          if (!mealMap.has(mealId)) {
-            mealMap.set(mealId, {
-              id: mealId,
-              type: mealFood.meal.meal_type,
-              scheduledTime: mealFood.meal.scheduled_time,
-              orderIndex: mealFood.meal.order_index || 0,
-              dietPlanDay: mealFood.meal.diet_plan_day,
-              foods: []
-            });
-          }
-
-          mealMap.get(mealId).foods.push({
-            id: mealFood.id,
-            food: mealFood.food,
-            quantity: mealFood.quantity_grams
-          });
-
-        });
-
-        const history: MealHistory = {};
-        const dietPlanDates: Date[] = [];
+        // Determine date range based on meal plan dates
         let fromDietPlanDates = new Date('9999-01-01');
         let toDietPlanDates = new Date('0001-01-01');
 
-        // Gerar intervalo de datas para o período solicitado
-        // Pega a primeira data de todos os dias de planos alimentares
-        // e a última data de todos os dias de planos alimentares
-
-        mealMap.forEach(meal => {
-          const dietPlan = meal.dietPlanDay.diet_plan;
+        meals.docs.forEach(meal => {
+          const dietPlan = meal.diet_plan_day.diet_plan;
 
           const startDate = new Date(dietPlan.start_date);
           const endDate = new Date(dietPlan.end_date);
@@ -133,13 +134,7 @@ export const MealsApi: Endpoint[] = [
           if (endDate > toDietPlanDates) {
             toDietPlanDates = endDate;
           }
-
-          // dietPlanDates.push(startDate);
-          // dietPlanDates.push(endDate);
         });
-
-        // Sort dietPlanDates
-        // dietPlanDates.sort();
         const fromQueryDate = new Date(from as string);
         const toQueryDate = new Date(to as string);
         const fromDate = (fromQueryDate && fromQueryDate > fromDietPlanDates) ? fromQueryDate : fromDietPlanDates;
@@ -173,54 +168,63 @@ export const MealsApi: Endpoint[] = [
           };
         });
 
-        // Process each meal-food and apply to relevant dates
-        mealFoods.docs.forEach(mealFood => {
-          const meal = mealFood.meal;
-          const food = mealFood.food;
-          const quantity = mealFood.quantity_grams;
+        // Organize meals by date first, similar to history endpoint
+        const organizedMeals = {};
 
-          if (!meal || !food || !meal.diet_plan_day || !meal.diet_plan_day.diet_plan) {
-            return; // Skip if missing critical data
-          }
+        // Initialize date ranges in organizedMeals
+        dateRange.forEach(date => {
+          organizedMeals[date] = [];
+        });
 
-          const mealType = meal.meal_type || 'Unknown';
+        // Group meals by date like in history endpoint
+        meals.docs.forEach(meal => {
           const dietPlanDay = meal.diet_plan_day;
           const dietPlan = dietPlanDay.diet_plan;
-          const dietDayDate = new Date(dietPlanDay.date);
-          const repeatInterval = dietPlanDay.repeat_interval_days || 0;
-
-          const dietDayDateStr = dietDayDate.toISOString().split('T')[0];
           const planStartDate = new Date(dietPlan.start_date);
           const planEndDate = new Date(dietPlan.end_date);
+          const dietDayDate = new Date(dietPlanDay.date);
 
-          // Calculate nutrition values per 100g
-          const quantityMultiplier = quantity / 100;
-          const calories = (food.calories_per_100g || 0) * quantityMultiplier;
-          const protein = (food.protein_per_100g || 0) * quantityMultiplier;
-          const carbs = (food.carbs_per_100g || 0) * quantityMultiplier;
-          const fat = (food.fat_per_100g || 0) * quantityMultiplier;
-
-          // Add to relevant dates (original and repeats if applicable)
+          // Add meal to each applicable date in range
           dateRange.forEach(dateStr => {
             const currentDate = new Date(dateStr);
 
-            // // Skip if outside plan range
+            // Skip if outside plan range
             if (currentDate < planStartDate || currentDate > planEndDate) {
               return;
             }
 
-            // Check if original date or a repeated date
-            const isOriginalDate = dietDayDateStr === dateStr;
-
-            let isRepeatedDate = false;
-            if (repeatInterval > 0 && includeRepeated === 'true') {
-              const diffTime = Math.abs(currentDate.getTime() - dietDayDate.getTime());
-              const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-              isRepeatedDate = diffDays % repeatInterval === 0 && diffDays > 0;
+            if (currentDate.toISOString().split('T')[0] !== dietDayDate.toISOString().split('T')[0]) {
+              console.log('Skipping meal for date:', currentDate);
+              return; // Pular se a data não é o dia do plano
             }
 
-            // If this food applies to this date
-            if (isOriginalDate || isRepeatedDate) {
+            // If meal applies to this date, add it
+            organizedMeals[dateStr].push(meal);
+          });
+        });
+
+        // Now process each meal-food for nutritional calculation
+        Object.keys(organizedMeals).forEach(dateStr => {
+          const mealsForDate = organizedMeals[dateStr];
+
+          mealsForDate.forEach(meal => {
+            // Find related meal-foods
+            const relatedMealFoods = mealFoods.docs.filter(mf => mf.meal.id === meal.id);
+
+            relatedMealFoods.forEach(mealFood => {
+              const food = mealFood.food;
+              const quantity = mealFood.quantity_grams;
+              const mealType = meal.meal_type || 'Unknown';
+
+              if (!food) return; // Skip if missing food data
+
+              // Calculate nutrition values per 100g
+              const quantityMultiplier = quantity / 100;
+              const calories = (food.calories_per_100g || 0) * quantityMultiplier;
+              const protein = (food.protein_per_100g || 0) * quantityMultiplier;
+              const carbs = (food.carbs_per_100g || 0) * quantityMultiplier;
+              const fat = (food.fat_per_100g || 0) * quantityMultiplier;
+
               // Initialize meal type totals if needed
               if (!dailyTotals[dateStr].byMealType[mealType]) {
                 dailyTotals[dateStr].byMealType[mealType] = {
@@ -248,7 +252,7 @@ export const MealsApi: Endpoint[] = [
               grandTotal.protein += protein;
               grandTotal.carbs += carbs;
               grandTotal.fat += fat;
-            }
+            });
           });
         });
 
@@ -279,8 +283,7 @@ export const MealsApi: Endpoint[] = [
           dailyTotals,
           grandTotal,
           dateRange,
-          message: 'Totais nutricionais calculados com sucesso',
-          includeRepeated: includeRepeated === 'true'
+          message: 'Totais nutricionais calculados com sucesso'
         });
 
       } catch (error) {
@@ -312,8 +315,41 @@ export const MealsApi: Endpoint[] = [
           );
         }
 
+        const meals = await req.payload.find({
+          collection: 'meal',
+          where: {
+            and: [
+              {
+                "diet_plan_day.diet_plan.athlete": {
+                  equals: athleteId,
+                },
+              },
+              nutritionistId ? {
+                "diet_plan_day.diet_plan.nutritionist": {
+                  equals: nutritionistId,
+                },
+              } : {},
+              // Acho que vou tirar isso aqui kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk
+              dietPlanDayId ? {
+                "diet_plan_day.id": {
+                  equals: dietPlanDayId,
+                },
+              } : {},
+              dietPlanId ? {
+                "diet_plan_day.diet_plan.id": {
+                  equals: dietPlanId,
+                },
+              } : {},
+            ]
+          },
+          depth: 3,
+          limit: 100,
+        });
+
+        console.log('Meals:', meals);
+
         // Buscar todos os meal-food com profundidade 3 (isso já traz todos os dados relacionados)
-        const mealFoods = await req.payload.find({
+        const mealWithFoods = await req.payload.find({
           collection: 'meal-food',
           where: {
             and: [
@@ -344,29 +380,34 @@ export const MealsApi: Endpoint[] = [
         });
 
         // Organizar os meal-foods por meal para processamento
-        const mealMap = new Map();
+        console.log('=========================')
+        const mealMap = [];
 
-        mealFoods.docs.forEach(mealFood => {
-          const mealId = mealFood.meal.id;
+        meals.docs.forEach(meal => {
+          const mealId = meal.id;
 
-          if (!mealMap.has(mealId)) {
-            mealMap.set(mealId, {
-              id: mealId,
-              type: mealFood.meal.meal_type,
-              scheduledTime: mealFood.meal.scheduled_time,
-              orderIndex: mealFood.meal.order_index || 0,
-              dietPlanDay: mealFood.meal.diet_plan_day,
-              foods: []
-            });
-          }
+          const mealFoods = mealWithFoods.docs.filter(
+            mealFood => mealFood.meal.id === mealId
+          );
 
-          mealMap.get(mealId).foods.push({
-            id: mealFood.id,
-            food: mealFood.food,
-            quantity: mealFood.quantity_grams
+          mealMap.push({
+            id: mealId,
+            type: meal.meal_type,
+            scheduledTime: meal.scheduled_time,
+            orderIndex: meal.order_index || 0,
+            dietPlanDay: meal.diet_plan_day,
+            mealFoods: mealFoods.map(mealFood => {
+              return {
+                id: mealFood.id,
+                food: mealFood.food,
+                quantity_grams: mealFood.quantity_grams
+              }
+            })
           });
 
         });
+
+        console.log('Meal Map:', mealMap);
 
         const history: MealHistory = {};
         const dietPlanDates: Date[] = [];
@@ -417,43 +458,31 @@ export const MealsApi: Endpoint[] = [
             const dietPlanDay = meal.dietPlanDay;
             const dietPlan = dietPlanDay.diet_plan;
             const dietDayDate = new Date(dietPlanDay.date);
-            const repeatInterval = dietPlanDay.repeat_interval_days || 0;
 
             // Verificar se a data está dentro do período do plano
             const planStartDate = new Date(dietPlan.start_date);
             const planEndDate = new Date(dietPlan.end_date);
 
-            if (currentDate < planStartDate || currentDate > planEndDate) {
+            if ((currentDate < planStartDate || currentDate > planEndDate)) {
               return; // Pular se fora do período do plano
             }
 
-            // Verificar se é o dia original
-            const isOriginalDay = dietDayDate.toISOString().split('T')[0] === date;
+            console.log(dietDayDate, currentDate);
 
-            // Verificar se é um dia repetido
-            let isRepeatedDay = false;
-            if (repeatInterval > 0 && includeRepeated === 'true') {
-              // Calcular diferença de dias
-              const diffTime = Math.abs(currentDate.getTime() - dietDayDate.getTime());
-              const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-
-              // Verificar se a diferença é múltiplo do intervalo de repetição
-              isRepeatedDay = diffDays % repeatInterval === 0 && diffDays > 0;
+            if (dietDayDate.toISOString().split('T')[0] !== currentDate.toISOString().split('T')[0]) {
+              console.log('Skipping meal for date:', currentDate);
+              return; // Pular se a data não é o dia do plano
             }
 
             // Adicionar meal ao histórico se for o dia original ou um dia repetido
-            if (isOriginalDay || isRepeatedDay) {
-              history[date].meals.push({
-                id: meal.id,
-                diet_plan_day: meal.dietPlanDay,
-                meal_type: meal.type,
-                scheduled_time: meal.scheduledTime,
-                order_index: meal.orderIndex,
-                foods: meal.foods,
-                is_repeated: isRepeatedDay,
-                original_date: isRepeatedDay ? dietDayDate.toISOString().split('T')[0] : undefined
-              });
-            }
+            history[date].meals.push({
+              id: meal.id,
+              diet_plan_day: meal.dietPlanDay,
+              meal_type: meal.type,
+              scheduled_time: meal.scheduledTime,
+              order_index: meal.orderIndex,
+              foods: meal.mealFoods,
+            });
           });
 
           // Ordenar meals por orderIndex
@@ -467,7 +496,6 @@ export const MealsApi: Endpoint[] = [
           message: Object.values(history).some(day => day.meals.length > 0)
             ? 'Histórico de refeições gerado com sucesso'
             : 'Nenhuma refeição encontrada para o período',
-          includeRepeated: includeRepeated === 'true'
         };
 
         return Response.json({

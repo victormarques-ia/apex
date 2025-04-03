@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { getMealHistoryAction } from '@/app/(frontend)/nutrition/actions/meals.action';
 import { getAthleteDietPlansAction, getDietPlanAction } from '@/app/(frontend)/nutrition/actions/diet-plans.action';
 import { DietPlanForm } from './diet-plan-form';
+import { DietPlanDayForm } from './diet-plan-day-form';
 import { DietPlansList } from './diet-plans-list';
 
 export function DietTabContent({ athleteId, nutritionistId }) {
@@ -20,6 +21,7 @@ export function DietTabContent({ athleteId, nutritionistId }) {
   const [dietPlan, setDietPlan] = useState(null);
   const [dietPlanDay, setDietPlanDay] = useState(null);
   const [showDietPlanForm, setShowDietPlanForm] = useState(false);
+  const [showDietPlanDayForm, setShowDietPlanDayForm] = useState(false);
   const [isCreatingNewPlan, setIsCreatingNewPlan] = useState(false);
   const [selectedPlanId, setSelectedPlanId] = useState(null);
   const [selectedPlanDayId, setSelectedPlanDayId] = useState(null);
@@ -257,44 +259,32 @@ export function DietTabContent({ athleteId, nutritionistId }) {
     console.log('Plan selected:', plan);
     setDietPlan(plan);
     setSelectedPlanId(plan.id);
-
-    // // Find the diet plan day for this plan
-    // const formData = new FormData();
-    // formData.append('dietPlanId', plan.id);
-    //
-    // getDietPlanAction(null, formData).then(response => {
-    //   console.log('Response getDietPlanAction:', response);
-    //   if (response.data) {
-    //     setDietPlanDay(response.data.data.dietPlanDay);
-    //     setShowDietPlanForm(true);
-    //     setIsCreatingNewPlan(false);
-    //   } else {
-    //     console.error('Failed to get diet plan details:', response);
-    //     // Handle error - still show the form but without day data
-    //     setDietPlanDay(null);
-    //     setShowDietPlanForm(true);
-    //     setIsCreatingNewPlan(false);
-    //   }
-    // }).catch(err => {
-    //   console.error('Error getting diet plan details:', err);
-    //   setDietPlanDay(null);
-    //   setShowDietPlanForm(true);
-    //   setIsCreatingNewPlan(false);
-    // });
+    
+    // Mostrar formulário do plano alimentar
+    setShowDietPlanForm(true);
+    setShowDietPlanDayForm(false);
+    setIsCreatingNewPlan(false);
   };
 
   const handleSelectPlanDays = (plan: any) => {
     setDietPlanDay(plan);
     setSelectedPlanDayId(plan.id);
-    console.log('Plan selected:', plan);
+    console.log('Diet Plan Day selected:', plan);
+    
+    // Mostrar formulário do dia do plano alimentar
+    setShowDietPlanDayForm(true);
+    setShowDietPlanForm(false);
+    setIsCreatingNewPlan(false);
   };
 
   const handleAddNewPlan = () => {
     setDietPlan(null);
     setDietPlanDay(null);
     setSelectedPlanId(null);
+    setSelectedPlanDayId(null);
     setIsCreatingNewPlan(true);
     setShowDietPlanForm(true);
+    setShowDietPlanDayForm(false);
   };
 
   if (loading) {
@@ -349,17 +339,26 @@ export function DietTabContent({ athleteId, nutritionistId }) {
                   className="w-full"
                   onClick={() => {
                     setShowDietPlanForm(false);
+                    setShowDietPlanDayForm(false);
                     setIsCreatingNewPlan(false);
                   }}
                 >
                   Cancelar
                 </Button>
-              ) : selectedPlanId && selectedPlanDayId ? (
+              ) : selectedPlanId ? (
                 <Button
                   className="w-full"
-                  onClick={() => setShowDietPlanForm(!showDietPlanForm)}
+                  onClick={() => {
+                    if (showDietPlanForm) {
+                      setShowDietPlanForm(false);
+                    } else if (showDietPlanDayForm) {
+                      setShowDietPlanDayForm(false);
+                    } else {
+                      setShowDietPlanForm(true);
+                    }
+                  }}
                 >
-                  {showDietPlanForm ? "Esconder Formulário" : "Editar Plano"}
+                  {(showDietPlanForm || showDietPlanDayForm) ? "Esconder Formulário" : "Editar Plano"}
                 </Button>
               ) : (
                 <Button
@@ -452,14 +451,20 @@ export function DietTabContent({ athleteId, nutritionistId }) {
           athleteId={athleteId}
           nutritionistId={nutritionistId}
           selectedDate={selectedDate}
-          dietDays={dietDays}
           dietPlan={dietPlan}
-          dietPlanDay={dietPlanDay}
           isCreatingNewPlan={isCreatingNewPlan}
           onDietPlanCreated={handleDietPlanCreated}
-          onDietPlanDayCreated={handleDietPlanDayCreated}
-          onDietPlanDayDeleted={handleDietPlanDayDeleted}
           onDietPlanUpdated={handleDietPlanUpdated}
+        />
+      )}
+
+      {/* Diet Plan Day Form */}
+      {showDietPlanDayForm && dietPlanDay && (
+        <DietPlanDayForm
+          athleteId={athleteId}
+          nutritionistId={nutritionistId}
+          dietPlanDay={dietPlanDay}
+          onDietPlanDayUpdated={handleDietPlanUpdated}
         />
       )}
     </div>

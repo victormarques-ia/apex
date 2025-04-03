@@ -411,6 +411,64 @@ export const NutritionistApi: Endpoint[] = [
           notes: data.notes || null
         };
 
+        // Search for existing diet plans in the same date range
+        const existingDietPlans = await req.payload.find({
+          collection: 'diet-plans',
+          where: {
+            and: [
+              {
+                athlete: {
+                  equals: athleteId,
+                },
+              },
+              {
+                nutritionist: {
+                  equals: nutritionistId,
+                },
+              },
+              {
+                or: [
+                  {
+                    and: [
+                      {
+                        start_date: {
+                          less_than_equal: startDate,
+                        },
+                      },
+                      {
+                        end_date: {
+                          greater_than_equal: endDate,
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    and: [
+                      {
+                        start_date: {
+                          less_than_equal: startDate,
+                        },
+                      },
+                      {
+                        end_date: {
+                          greater_than_equal: endDate,
+                        }
+                      }
+                    ]
+                  }
+                ]
+              },
+            ],
+          },
+          depth: 2,
+        });
+
+        console.log('Existing diet plans:', existingDietPlans);
+
+        if (existingDietPlans.totalDocs > 0) {
+          throw new Error('Plano de refeição já cadastrado');
+        }
+
         const dietPlan = await req.payload.create({
           collection: 'diet-plans',
           data: dietPlanData
@@ -418,33 +476,8 @@ export const NutritionistApi: Endpoint[] = [
 
         const dietPlanId = dietPlan.id;
 
-        // Now create the diet plan day associated with the diet plan
-        const dayDate = data.dayDate || new Date().toISOString().split('T')[0];
-        const dayOfWeek = data.dayOfWeek || new Date(dayDate).toLocaleDateString('pt-BR', { weekday: 'long' });
-
-        const dietPlanDayData = {
-          diet_plan: dietPlanId,
-          date: dayDate,
-          day_of_week: dayOfWeek,
-          repeat_interval_days: data.repeatIntervalDays || null
-        };
-
-        const dietPlanDay = await req.payload.create({
-          collection: 'diet-plan-days',
-          data: dietPlanDayData
-        });
-
         // Return response with created entities
-        return Response.json({
-          data: {
-            dietPlan: {
-              id: dietPlanId,
-              start_date: startDate,
-              end_date: endDate
-            },
-            dietPlanDay: dietPlanDay,
-          }
-        });
+        return Response.json(dietPlan);
       } catch (error) {
         console.error('[NutritionistApi][create-diet-plan]:', error);
         const errorMessage = error instanceof Error ? error.message : 'Erro inesperado ao criar plano alimentar';
@@ -524,7 +557,7 @@ export const NutritionistApi: Endpoint[] = [
         // Parse request body
         const data = await req.json?.();
 
-        console.log('data:', data);
+        console.log('data diet-plan update:', data);
         if (!data) {
           return Response.json(
             { errors: [{ message: 'Corpo da requisição inválido' }] },
@@ -548,26 +581,6 @@ export const NutritionistApi: Endpoint[] = [
           depth: 2
         });
 
-        const dietPlanDays = await req.payload.find({
-          collection: 'diet-plan-days',
-          where: {
-            diet_plan: {
-              equals: dietPlanId
-            }
-          },
-          depth: 1,
-          limit: 1
-        });
-
-        if (!dietPlanDays.docs || dietPlanDays.docs.length === 0) {
-          return Response.json(
-            { errors: [{ message: 'Nenhum dia do plano alimentar encontrado' }] },
-            { status: 404 }
-          );
-        }
-
-        const dietPlanDayId = dietPlanDays.docs[0].id;
-
         if (!dietPlan) {
           return Response.json(
             { errors: [{ message: 'Plano alimentar não encontrado' }] },
@@ -583,16 +596,79 @@ export const NutritionistApi: Endpoint[] = [
           ...(data.notes !== undefined && { notes: data.notes })
         };
 
-        const updateDayData = {
-          ...(data.startDate && { date: data.startDate }),
-          ...(data.repeatIntervalDays !== undefined && { repeat_interval_days: data.repeatIntervalDays })
-        };
-
         const updatedDietPlan = await req.payload.update({
           collection: 'diet-plans',
           id: dietPlanId,
           data: updateData
         });
+
+        return Response.json({
+          success: true,
+          dietPlan: updatedDietPlan
+        });
+
+      } catch (error) {
+        console.error('[NutritionistApi][update-diet-plan]:', error);
+        const errorMessage = error instanceof Error ? error.message : 'Erro inesperado ao atualizar plano alimentar';
+        return Response.json({ errors: [{ message: errorMessage }] }, { status: 500 });
+      }
+    }
+  },
+  {
+    method: 'put',
+    path: '/diet-plan-day/:id',
+    handler: async (req: PayloadRequest) => {
+      try {
+        const nutritionistId = await getLoggedInNutritionistId(req);
+        const dietPlanDayId = req.routeParams?.id;
+
+        if (!dietPlanDayId) {
+          return Response.json(
+            { errors: [{ message: 'ID do dia do plano alimentar é obrigatório' }] },
+            { status: 400 }
+          );
+        }
+
+        // Parse request body
+        const data = await req.json?.();
+
+        console.log('data diet-plan-day update:', data);
+        if (!data) {
+          return Response.json(
+            { errors: [{ message: 'Corpo da requisição inválido' }] },
+            { status: 400 }
+          );
+        }
+
+        // Verify the diet plan day exists and belongs to this nutritionist
+        const dietPlanDay = await req.payload.find({
+          collection: 'diet-plan-days',
+          where: {
+            and: [
+              {
+                id: { equals: dietPlanDayId }
+              },
+              {
+                'diet_plan.nutritionist': { equals: nutritionistId }
+              }
+            ]
+          },
+          depth: 2
+        });
+
+        if (!dietPlanDay.docs || dietPlanDay.docs.length === 0) {
+          return Response.json(
+            { errors: [{ message: 'Dia do plano alimentar não encontrado' }] },
+            { status: 404 }
+          );
+        }
+
+        // Update the diet plan day with the provided data
+        const updateDayData = {
+          ...(data.date && { date: data.date }),
+          ...(data.repeatIntervalDays !== undefined && { repeat_interval_days: data.repeatIntervalDays }),
+          ...(data.dayOfWeek && { day_of_week: data.dayOfWeek })
+        };
 
         const updatedDietPlanDay = await req.payload.update({
           collection: 'diet-plan-days',
@@ -602,13 +678,12 @@ export const NutritionistApi: Endpoint[] = [
 
         return Response.json({
           success: true,
-          dietPlan: updatedDietPlan,
           dietPlanDay: updatedDietPlanDay
         });
 
       } catch (error) {
-        console.error('[NutritionistApi][update-diet-plan]:', error);
-        const errorMessage = error instanceof Error ? error.message : 'Erro inesperado ao atualizar plano alimentar';
+        console.error('[NutritionistApi][update-diet-plan-day]:', error);
+        const errorMessage = error instanceof Error ? error.message : 'Erro inesperado ao atualizar dia do plano alimentar';
         return Response.json({ errors: [{ message: errorMessage }] }, { status: 500 });
       }
     }

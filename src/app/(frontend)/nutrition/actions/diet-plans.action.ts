@@ -166,14 +166,6 @@ export async function createDietPlanAction(_state: unknown, formData: FormData) 
         endDate: data.endDate,
         totalDailyCalories: data.totalDailyCalories || 0,
         notes: data.notes || '',
-        dayDate: data.dayDate,
-        dayOfWeek: data.dayOfWeek,
-        repeatIntervalDays: data.repeatIntervalDays || 7,
-        initialMeal: data.initialMeal ? {
-          mealType: data.initialMeal.mealType || 'Café da manhã',
-          scheduledTime: data.initialMeal.scheduledTime,
-          orderIndex: data.initialMeal.orderIndex || 0
-        } : null
       };
 
       // Create diet plan with its day
@@ -227,12 +219,7 @@ export async function updateDietPlanAction(_state: unknown, formData: FormData) 
         startDate: data.startDate,
         endDate: data.endDate,
         totalDailyCalories: data.totalDailyCalories,
-        notes: data.notes,
-        dietPlanDay: {
-          date: data.dayDate,
-          dayOfWeek: data.dayOfWeek,
-          repeatIntervalDays: data.repeatIntervalDays
-        }
+        notes: data.notes
       };
 
       // Update the diet plan
@@ -262,6 +249,59 @@ export async function updateDietPlanAction(_state: unknown, formData: FormData) 
           success: false,
           error,
           message: 'Falha ao atualizar plano alimentar',
+        };
+      },
+    }
+  );
+}
+
+/**
+ * Action to update an existing diet plan day
+ */
+export async function updateDietPlanDayAction(_state: unknown, formData: FormData) {
+  return actionHandlerWithValidation(
+    formData,
+    async (data) => {
+      const dietPlanDayId = data.dietPlanDayId;
+
+      if (!dietPlanDayId) {
+        throw new Error('ID do dia do plano alimentar é obrigatório');
+      }
+
+      // Prepare update data
+      const updateData = {
+        date: data.date,
+        dayOfWeek: data.dayOfWeek,
+        repeatIntervalDays: data.repeatIntervalDays
+      };
+
+      // Update the diet plan day
+      const result = await fetchFromApi(`/api/nutritionists/diet-plan-day/${dietPlanDayId}`, {
+        method: 'PUT',
+        body: JSON.stringify(updateData),
+      });
+
+      if (!result.data || !result.data.success) {
+        console.error('Diet plan day update error:', result.errors);
+        throw new Error(result.errors?.[0]?.message || 'Erro ao atualizar dia do plano alimentar');
+      }
+
+      return result.data;
+    },
+    {
+      onSuccess: (data) => {
+        return {
+          success: true,
+          data,
+          message: 'Dia do plano alimentar atualizado com sucesso',
+        };
+      },
+      onFailure: (error) => {
+        console.error('Diet plan day update failure:', error);
+        return {
+          success: false,
+          error,
+          message: 'Falha ao atualizar dia do plano alimentar',
         };
       },
     }

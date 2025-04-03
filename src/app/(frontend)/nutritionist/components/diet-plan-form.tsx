@@ -4,28 +4,19 @@ import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
-import { Separator } from '@/components/ui/separator';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Calendar } from '@/components/ui/calendar';
-import { CalendarIcon, PlusIcon, TrashIcon } from 'lucide-react';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { format } from 'date-fns';
-import { createDietPlanAction, updateDietPlanAction, deleteDietPlanAction } from '@/app/(frontend)/nutrition/actions/diet-plans.action';
-import { getMealsByDietPlanDayAction } from '@/app/(frontend)/nutrition/actions/meals.action';
-import { CreateMealForm } from './create-meal-form';
-import { MealCard } from './meal-card';
+import { createDietPlanAction, updateDietPlanAction } from '@/app/(frontend)/nutrition/actions/diet-plans.action';
 
 interface DietPlanFormProps {
   athleteId: string;
   nutritionistId: string;
   selectedDate: Date;
   dietPlan: any;
-  dietPlanDay: any;
   isCreatingNewPlan: boolean;
   onDietPlanCreated: () => void;
-  onDietPlanDayCreated: () => void;
-  onDietPlanDayDeleted: () => void;
   onDietPlanUpdated?: () => void;
 }
 
@@ -34,18 +25,13 @@ export function DietPlanForm({
   nutritionistId,
   selectedDate,
   dietPlan,
-  dietPlanDay,
   isCreatingNewPlan,
   onDietPlanCreated,
-  onDietPlanDayCreated,
-  onDietPlanDayDeleted,
   onDietPlanUpdated = () => { }
 }: DietPlanFormProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [repeatInterval, setRepeatInterval] = useState(7);
-  const [meals, setMeals] = useState([]);
-  const [showCreateMeal, setShowCreateMeal] = useState(false);
+  const [repeatInterval, setRepeatInterval] = useState<number>(7);
   const [startDate, setStartDate] = useState<Date>(new Date());
   const [endDate, setEndDate] = useState<Date>(new Date(new Date().setFullYear(new Date().getFullYear() + 1)));
   const [totalDailyCalories, setTotalDailyCalories] = useState<number>(0);
@@ -72,45 +58,6 @@ export function DietPlanForm({
     }
   }, [dietPlan]);
 
-  // Fetch meals when diet plan day changes
-  useEffect(() => {
-    if (dietPlanDay && dietPlanDay.id) {
-      fetchMeals();
-    } else {
-      setMeals([]);
-    }
-  }, [dietPlanDay]);
-
-  // Fetch meals for the current diet plan day
-  const fetchMeals = async () => {
-    if (!dietPlanDay || !dietPlanDay.id) return;
-
-    try {
-      setLoading(true);
-
-      const formData = new FormData();
-      formData.append('dietPlanDayId', dietPlanDay.id);
-
-      const response = await getMealsByDietPlanDayAction(null, formData);
-
-      if (response.data?.docs) {
-        setMeals(response.data.docs || []);
-      } else {
-        setMeals([]);
-      }
-    } catch (err) {
-      console.error('Error fetching meals:', err);
-      setMeals([]);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Refresh meals after changes
-  const refreshMeals = () => {
-    fetchMeals();
-  };
-
   // Create a new diet plan with diet plan day
   const handleCreateDietPlan = async () => {
     try {
@@ -123,8 +70,6 @@ export function DietPlanForm({
       formData.append('endDate', endDate.toISOString().split('T')[0]);
       formData.append('totalDailyCalories', totalDailyCalories.toString());
       formData.append('notes', notes);
-      formData.append('dayDate', selectedDate.toISOString().split('T')[0]);
-      formData.append('repeatIntervalDays', repeatInterval.toString());
 
       const response = await createDietPlanAction(null, formData);
 
@@ -157,27 +102,27 @@ export function DietPlanForm({
       setLoading(true);
       setError(null);
 
-      const formData = new FormData();
-      formData.append('dietPlanId', dietPlan.id);
-      formData.append('startDate', startDate.toISOString().split('T')[0]);
-      formData.append('endDate', endDate.toISOString().split('T')[0]);
-      formData.append('totalDailyCalories', totalDailyCalories.toString());
-      formData.append('notes', notes);
-      formData.append('repeatIntervalDays', repeatInterval.toString());
+      // Atualizar o plano alimentar
+      const planFormData = new FormData();
+      planFormData.append('dietPlanId', dietPlan.id);
+      planFormData.append('startDate', startDate.toISOString().split('T')[0]);
+      planFormData.append('endDate', endDate.toISOString().split('T')[0]);
+      planFormData.append('totalDailyCalories', totalDailyCalories.toString());
+      planFormData.append('notes', notes);
 
-      const response = await updateDietPlanAction(null, formData);
+      const planResponse = await updateDietPlanAction(null, planFormData);
 
       console.log('====================');
-      console.log('Response updateDietPlanAction:', response);
+      console.log('Response updateDietPlanAction:', planResponse);
       console.log('====================');
 
-      if (response.data.success) {
+      if (planResponse.data.success) {
         if (onDietPlanUpdated) {
           onDietPlanUpdated();
         }
         alert('Plano alimentar atualizado com sucesso!');
       } else {
-        setError(response.message || 'Erro ao atualizar plano alimentar');
+        setError(planResponse.message || 'Erro ao atualizar plano alimentar');
       }
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Erro ao atualizar plano alimentar';
@@ -223,43 +168,7 @@ export function DietPlanForm({
                 />
               </div>
             </div>
-            <div>
-              <Label htmlFor="total_daily_calories">Calorias Diárias</Label>
-              <Input
-                id="total_daily_calories"
-                type="number"
-                min="0"
-                value={totalDailyCalories}
-                onChange={(e) => {
-                  const value = parseInt(e.target.value);
-                  if (!isNaN(value) && value >= 0) {
-                    setTotalDailyCalories(value);
-                  }
-                }}
-              />
-            </div>
-            <div>
-              <Label htmlFor="repeat_interval">Repetir a cada (dias)</Label>
-              <div className="flex items-center gap-2">
-                <Input
-                  id="repeat_interval"
-                  type="number"
-                  min="0"
-                  max="30"
-                  value={repeatInterval}
-                  onChange={(e) => {
-                    const value = parseInt(e.target.value);
-                    if (!isNaN(value) && value >= 0 && value <= 30) {
-                      setRepeatInterval(value);
-                    }
-                  }}
-                />
-                <span className="text-sm text-muted-foreground">dias</span>
-              </div>
-              <p className="text-xs text-muted-foreground mt-1">0 = não repetir, 1-30 = intervalo de repetição</p>
-            </div>
           </div>
-
           <div>
             <Label htmlFor="notes">Observações</Label>
             <Textarea
@@ -271,12 +180,6 @@ export function DietPlanForm({
             />
           </div>
 
-          <div>
-            <Label htmlFor="day_date">Data Inicial do Plano</Label>
-            <Input id="day_date" value={formattedDate} disabled />
-            <p className="text-xs text-muted-foreground mt-1">Este será o primeiro dia do plano alimentar</p>
-          </div>
-
           <Button
             className="w-full"
             onClick={handleCreateDietPlan}
@@ -286,12 +189,12 @@ export function DietPlanForm({
           </Button>
         </div>
       );
-    } else if (dietPlan && dietPlanDay) {
-      // Render existing diet plan with meals
+    } else if (dietPlan) {
+      // Render existing diet plan
       return (
         <div className="space-y-4">
           <div className="flex justify-between items-center">
-            <h3 className="text-lg font-medium">Plano Alimentar</h3>
+            <h3 className="text-lg font-medium">Editar Plano Alimentar</h3>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
@@ -338,26 +241,6 @@ export function DietPlanForm({
                 }}
               />
             </div>
-            <div>
-              <Label htmlFor="repeat_interval">Repetir a cada (dias)</Label>
-              <div className="flex items-center gap-2">
-                <Input
-                  id="repeat_interval"
-                  type="number"
-                  min="0"
-                  max="30"
-                  value={repeatInterval}
-                  onChange={(e) => {
-                    const value = parseInt(e.target.value);
-                    if (!isNaN(value) && value >= 0 && value <= 30) {
-                      setRepeatInterval(value);
-                    }
-                  }}
-                />
-                <span className="text-sm text-muted-foreground">dias</span>
-              </div>
-              <p className="text-xs text-muted-foreground mt-1">0 = não repetir, 1-30 = intervalo de repetição</p>
-            </div>
           </div>
 
           <div>
@@ -371,67 +254,15 @@ export function DietPlanForm({
             />
           </div>
 
-          <Button
-            className="w-full mt-4"
-            onClick={handleUpdateDietPlan}
-            disabled={loading}
-          >
-            Salvar Alterações
-          </Button>
-
-          <Separator className="my-4" />
-
-          <div className="flex justify-between items-center">
-            <h3 className="text-lg font-medium">Refeições</h3>
+          <div className="flex gap-2 mt-4">
             <Button
-              onClick={() => setShowCreateMeal(true)}
-              size="sm"
+              className="w-full"
+              onClick={handleUpdateDietPlan}
               disabled={loading}
             >
-              <PlusIcon className="h-4 w-4 mr-1" /> Nova Refeição
+              Salvar Alterações
             </Button>
           </div>
-
-          {showCreateMeal ? (
-            <CreateMealForm
-              athleteId={athleteId}
-              nutritionistId={nutritionistId}
-              date={selectedDate}
-              intervalDays={dietPlanDay.repeat_interval_days || 0}
-              dietPlanDayId={dietPlanDay.id}
-              onMealCreated={() => {
-                setShowCreateMeal(false);
-                refreshMeals();
-              }}
-              onCancel={() => setShowCreateMeal(false)}
-            />
-          ) : (
-            <>
-              {meals.length === 0 ? (
-                <div className="text-center py-8 bg-gray-50 rounded-lg border border-dashed border-gray-200">
-                  <p className="text-gray-500 mb-2">Nenhuma refeição registrada</p>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setShowCreateMeal(true)}
-                  >
-                    <PlusIcon className="h-4 w-4 mr-1" /> Adicionar Refeição
-                  </Button>
-                </div>
-              ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {meals.map(meal => (
-                    <MealCard
-                      key={meal.id}
-                      meal={meal}
-                      onMealUpdated={refreshMeals}
-                      onMealDeleted={refreshMeals}
-                    />
-                  ))}
-                </div>
-              )}
-            </>
-          )}
         </div>
       );
     } else {

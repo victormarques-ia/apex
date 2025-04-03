@@ -252,8 +252,21 @@ export function DietPlansList({
                       <Button
                         size="sm"
                         variant="ghost"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onSelectPlan(plan);
+                        }}
+                      >
+                        <PencilIcon className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="ghost"
                         className="text-red-500 hover:text-red-600 hover:bg-red-50"
-                        onClick={() => handleDeletePlan(plan.id)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDeletePlan(plan.id);
+                        }}
                       >
                         <TrashIcon className="h-4 w-4" />
                       </Button>
@@ -320,7 +333,10 @@ export function DietPlansList({
                         <Button
                           size="sm"
                           variant="ghost"
-                          onClick={() => onSelectPlanDays(plan)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onSelectPlanDays(plan);
+                          }}
                         >
                           <PencilIcon className="h-4 w-4" />
                         </Button>
@@ -328,7 +344,10 @@ export function DietPlansList({
                           size="sm"
                           variant="ghost"
                           className="text-red-500 hover:text-red-600 hover:bg-red-50"
-                          onClick={() => handleDeletePlanDay(plan.id)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDeletePlanDay(plan.id);
+                          }}
                         >
                           <TrashIcon className="h-4 w-4" />
                         </Button>

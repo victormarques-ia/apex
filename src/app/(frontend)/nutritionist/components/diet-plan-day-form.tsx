@@ -18,6 +18,8 @@ interface DietPlanDayFormProps {
   athleteId: string;
   nutritionistId: string;
   dietPlanDay: any;
+  dietPlanId: string;
+  selectedDate: Date;
   onDietPlanDayUpdated: () => void;
 }
 
@@ -25,6 +27,8 @@ export function DietPlanDayForm({
   athleteId,
   nutritionistId,
   dietPlanDay,
+  dietPlanId,
+  selectedDate,
   onDietPlanDayUpdated
 }: DietPlanDayFormProps) {
   const [loading, setLoading] = useState(false);
@@ -33,7 +37,7 @@ export function DietPlanDayForm({
   const [date, setDate] = useState<Date>(new Date());
   const [meals, setMeals] = useState([]);
   const [showCreateMeal, setShowCreateMeal] = useState(false);
-  
+
   // Initialize form with existing diet plan day data
   useEffect(() => {
     if (dietPlanDay) {
@@ -102,7 +106,7 @@ export function DietPlanDayForm({
       dayFormData.append('dietPlanDayId', dietPlanDay.id);
       dayFormData.append('date', date.toISOString().split('T')[0]);
       dayFormData.append('repeatIntervalDays', repeatInterval.toString());
-      
+
       // Obter o nome do dia da semana em português
       const dayOfWeek = new Date(date).toLocaleDateString('pt-BR', { weekday: 'long' });
       dayFormData.append('dayOfWeek', dayOfWeek);
@@ -199,9 +203,9 @@ export function DietPlanDayForm({
             <CreateMealForm
               athleteId={athleteId}
               nutritionistId={nutritionistId}
-              date={date}
+              date={selectedDate.toISOString().split('T')[0]}
               intervalDays={dietPlanDay.repeat_interval_days || 0}
-              dietPlanDayId={dietPlanDay.id}
+              dietPlanId={dietPlanId}
               onMealCreated={() => {
                 setShowCreateMeal(false);
                 refreshMeals();

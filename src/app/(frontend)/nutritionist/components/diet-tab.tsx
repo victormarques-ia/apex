@@ -11,6 +11,7 @@ import { getAthleteDietPlansAction, getDietPlanAction } from '@/app/(frontend)/n
 import { DietPlanForm } from './diet-plan-form';
 import { DietPlanDayForm } from './diet-plan-day-form';
 import { DietPlansList } from './diet-plans-list';
+import { CreateMealForm } from './create-meal-form';
 
 export function DietTabContent({ athleteId, nutritionistId }) {
   const [selectedDate, setSelectedDate] = useState(new Date());
@@ -259,7 +260,17 @@ export function DietTabContent({ athleteId, nutritionistId }) {
     console.log('Plan selected:', plan);
     setDietPlan(plan);
     setSelectedPlanId(plan.id);
-    
+
+    // Mostrar formulário do plano alimentar
+    setShowDietPlanForm(false);
+    setShowDietPlanDayForm(false);
+    setIsCreatingNewPlan(false);
+  };
+
+  const handleEditPlan = (plan: any) => {
+    setDietPlan(plan);
+    setSelectedPlanId(null);
+
     // Mostrar formulário do plano alimentar
     setShowDietPlanForm(true);
     setShowDietPlanDayForm(false);
@@ -270,7 +281,7 @@ export function DietTabContent({ athleteId, nutritionistId }) {
     setDietPlanDay(plan);
     setSelectedPlanDayId(plan.id);
     console.log('Diet Plan Day selected:', plan);
-    
+
     // Mostrar formulário do dia do plano alimentar
     setShowDietPlanDayForm(true);
     setShowDietPlanForm(false);
@@ -304,149 +315,27 @@ export function DietTabContent({ athleteId, nutritionistId }) {
           athleteId={athleteId}
           onSelectPlan={handleSelectPlan}
           onSelectPlanDays={handleSelectPlanDays}
+          onEditPlan={handleEditPlan}
           onAddNewPlan={handleAddNewPlan}
           onPlanDeleted={handleDietPlanDayDeleted}
           onPlanDayDeleted={handleDietPlanDayDeleted}
+
           selectedPlanId={selectedPlanId}
           selectedPlanDayId={selectedPlanDayId}
         />
       )}
-
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Calendário */}
-        <div className="lg:col-span-1">
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg font-semibold">Calendário de Dietas</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <Calendar
-                selectedDate={selectedDate}
-                onDateChange={setSelectedDate}
-                modifiers={{
-                  hasMeals: (date) => datesWithMeals.some(d => isSameDay(d, date)),
-                }}
-                modifiersStyles={{
-                  hasMeals: {
-                    border: '2px solid #10B981',
-                  },
-                }}
-              />
-            </CardContent>
-            <CardFooter>
-              {isCreatingNewPlan ? (
-                <Button
-                  className="w-full"
-                  onClick={() => {
-                    setShowDietPlanForm(false);
-                    setShowDietPlanDayForm(false);
-                    setIsCreatingNewPlan(false);
-                  }}
-                >
-                  Cancelar
-                </Button>
-              ) : selectedPlanId ? (
-                <Button
-                  className="w-full"
-                  onClick={() => {
-                    if (showDietPlanForm) {
-                      setShowDietPlanForm(false);
-                    } else if (showDietPlanDayForm) {
-                      setShowDietPlanDayForm(false);
-                    } else {
-                      setShowDietPlanForm(true);
-                    }
-                  }}
-                >
-                  {(showDietPlanForm || showDietPlanDayForm) ? "Esconder Formulário" : "Editar Plano"}
-                </Button>
-              ) : (
-                <Button
-                  className="w-full"
-                  onClick={handleAddNewPlan}
-                >
-                  Adicionar Plano
-                </Button>
-              )}
-            </CardFooter>
-          </Card>
-        </div>
-
-        {/* Detalhes das Refeições */}
-        <div className="lg:col-span-2">
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg font-semibold">
-                {format(selectedDate, "EEEE, d 'de' MMMM 'de' yyyy", { locale: ptBR })}
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              {Object.keys(groupedMeals).length === 0 ? (
-                <p className="text-sm text-muted-foreground">Nenhuma refeição registrada</p>
-              ) : (
-                Object.entries(groupedMeals).map(([mealType, meals]) => (
-                  <div key={mealType}>
-                    <h3 className="font-medium mb-2">{translateMealType(mealType)}</h3>
-                    <ul className="space-y-2">
-                      {meals.map(meal => (
-                        <li
-                          key={meal.id}
-                          className={`${meal.isRepeated ? 'bg-gray-50' : 'bg-blue-50'} p-3 rounded-md`}
-                        >
-                          <div className="flex justify-between items-start">
-                            <div>
-                              <span className="font-medium capitalize">
-                                {meal.mealType.replace('_', ' ')}
-                              </span>
-                              {meal.isRepeated && (
-                                <span className="ml-2 text-xs bg-gray-200 px-1.5 py-0.5 rounded-full">
-                                  Repetida
-                                </span>
-                              )}
-                            </div>
-                            {meal.scheduledTime && (
-                              <span className="text-xs text-muted-foreground">
-                                {formatTime(meal.scheduledTime)}
-                              </span>
-                            )}
-                          </div>
-
-                          <div className="flex flex-wrap gap-2 mt-1 text-xs text-muted-foreground">
-                            {meal.orderIndex && (
-                              <span>Ordem: {meal.orderIndex}</span>
-                            )}
-                            {meal.isRepeated && meal.originalDate && (
-                              <span>Original: {new Date(meal.originalDate).toLocaleDateString()}</span>
-                            )}
-                          </div>
-
-                          {/* Add food items information */}
-                          {meal.foods && meal.foods.length > 0 && (
-                            <div className="mt-2 text-sm">
-                              <p className="text-xs font-medium mb-1">Alimentos:</p>
-                              <ul className="space-y-1 pl-2">
-                                {meal.foods.map(foodItem => (
-                                  <li key={foodItem.id} className="flex justify-between">
-                                    <span>{foodItem.food.name}</span>
-                                    <span className="text-muted-foreground">{foodItem.quantity}g</span>
-                                  </li>
-                                ))}
-                              </ul>
-                            </div>
-                          )}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                ))
-              )}
-            </CardContent>
-          </Card>
-        </div>
-      </div>
-
-      {/* Diet Plan Form */}
-      {showDietPlanForm && (
+      {(!showDietPlanForm && showDietPlanDayForm && selectedPlanId) && (
+        <CreateMealForm
+          athleteId={athleteId}
+          nutritionistId={nutritionistId}
+          date={selectedDate.toISOString().split('T')[0]}
+          intervalDays={0}
+          dietPlanId={selectedPlanId}
+          onMealCreated={handleDietPlanUpdated}
+          onCancel={() => setShowDietPlanDayForm(false)}
+        />
+      )}
+      {(showDietPlanForm && !showDietPlanDayForm) ? (
         <DietPlanForm
           athleteId={athleteId}
           nutritionistId={nutritionistId}
@@ -455,17 +344,137 @@ export function DietTabContent({ athleteId, nutritionistId }) {
           isCreatingNewPlan={isCreatingNewPlan}
           onDietPlanCreated={handleDietPlanCreated}
           onDietPlanUpdated={handleDietPlanUpdated}
+          onBackToCalendar={() => setShowDietPlanForm(false)}
         />
-      )}
+      ) : (
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Calendário */}
+          <div className="lg:col-span-1">
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg font-semibold">Calendário de Dietas</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <Calendar
+                  selectedDate={selectedDate}
+                  onDateChange={setSelectedDate}
+                  modifiers={{
+                    hasMeals: (date) => datesWithMeals.some(d => isSameDay(d, date)),
+                  }}
+                  modifiersStyles={{
+                    hasMeals: {
+                      border: '2px solid #10B981',
+                    },
+                  }}
+                />
+              </CardContent>
+              <CardFooter>
+                {isCreatingNewPlan ? (
+                  <Button
+                    className="w-full"
+                    onClick={() => {
+                      setShowDietPlanForm(false);
+                      setShowDietPlanDayForm(false);
+                      setIsCreatingNewPlan(false);
+                    }}
+                  >
+                    Cancelar
+                  </Button>
+                ) : selectedPlanId ? (
+                  <Button
+                    className="w-full"
+                    onClick={() => {
+                      setShowDietPlanDayForm(true);
+                      setShowDietPlanForm(false);
+                      setIsCreatingNewPlan(false);
+                    }}
+                  >
+                    {"Adicionar Refeição"}
+                  </Button>
+                ) : (
+                  <Button
+                    className="w-full"
+                    onClick={handleAddNewPlan}
+                  >
+                    Adicionar Plano
+                  </Button>
+                )}
+              </CardFooter>
+            </Card>
+          </div>
 
-      {/* Diet Plan Day Form */}
-      {showDietPlanDayForm && dietPlanDay && (
-        <DietPlanDayForm
-          athleteId={athleteId}
-          nutritionistId={nutritionistId}
-          dietPlanDay={dietPlanDay}
-          onDietPlanDayUpdated={handleDietPlanUpdated}
-        />
+          {/* Detalhes das Refeições */}
+          <div className="lg:col-span-2">
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg font-semibold">
+                  {format(selectedDate, "EEEE, d 'de' MMMM 'de' yyyy", { locale: ptBR })}
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                {Object.keys(groupedMeals).length === 0 ? (
+                  <p className="text-sm text-muted-foreground">Nenhuma refeição registrada</p>
+                ) : (
+                  Object.entries(groupedMeals).map(([mealType, meals]) => (
+                    <div key={mealType}>
+                      <h3 className="font-medium mb-2">{translateMealType(mealType)}</h3>
+                      <ul className="space-y-2">
+                        {meals.map(meal => (
+                          <li
+                            key={meal.id}
+                            className={`${meal.isRepeated ? 'bg-gray-50' : 'bg-blue-50'} p-3 rounded-md`}
+                          >
+                            <div className="flex justify-between items-start">
+                              <div>
+                                <span className="font-medium capitalize">
+                                  {meal.mealType.replace('_', ' ')}
+                                </span>
+                                {meal.isRepeated && (
+                                  <span className="ml-2 text-xs bg-gray-200 px-1.5 py-0.5 rounded-full">
+                                    Repetida
+                                  </span>
+                                )}
+                              </div>
+                              {meal.scheduledTime && (
+                                <span className="text-xs text-muted-foreground">
+                                  {formatTime(meal.scheduledTime)}
+                                </span>
+                              )}
+                            </div>
+
+                            <div className="flex flex-wrap gap-2 mt-1 text-xs text-muted-foreground">
+                              {meal.orderIndex && (
+                                <span>Ordem: {meal.orderIndex}</span>
+                              )}
+                              {meal.isRepeated && meal.originalDate && (
+                                <span>Original: {new Date(meal.originalDate).toLocaleDateString()}</span>
+                              )}
+                            </div>
+
+                            {/* Add food items information */}
+                            {meal.foods && meal.foods.length > 0 && (
+                              <div className="mt-2 text-sm">
+                                <p className="text-xs font-medium mb-1">Alimentos:</p>
+                                <ul className="space-y-1 pl-2">
+                                  {meal.foods.map(foodItem => (
+                                    <li key={foodItem.id} className="flex justify-between">
+                                      <span>{foodItem.food.name}</span>
+                                      <span className="text-muted-foreground">{foodItem.quantity}g</span>
+                                    </li>
+                                  ))}
+                                </ul>
+                              </div>
+                            )}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  ))
+                )}
+              </CardContent>
+            </Card>
+          </div>
+        </div>
       )}
     </div>
   );

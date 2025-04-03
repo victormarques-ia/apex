@@ -10,33 +10,23 @@ export async function createMealAction(_state: unknown, formData: FormData) {
   return actionHandlerWithValidation(
     formData,
     async (data) => {
-      const dietPlanDayId = data.dietPlanDayId
-      const mealType = data.mealType
-      const scheduledTime = data.scheduledTime
-      const orderIndex = data.orderIndex
-
-      if (!dietPlanDayId) {
-        throw new Error('ID do dia do plano alimentar é obrigatório')
-      }
-
-      if (!mealType) {
-        throw new Error('Tipo de refeição é obrigatório')
-      }
-
-      console.log('dietPlanDayId: ', dietPlanDayId);
+      const dietPlanId = data.dietPlanId;
+      const mealType = data.mealType;
+      const scheduledTime = data.scheduledTime || new Date().toISOString();
+      const orderIndex = data.orderIndex || 1;
+      const date = data.date;
 
       // Build the meal data
       const mealData = {
-        diet_plan_day: parseInt(dietPlanDayId as string, 10),
-        meal_type: mealType,
-        scheduled_time: scheduledTime || new Date().toISOString(),
-        order_index: orderIndex || 1,
+        dietPlanId: dietPlanId,
+        mealType: mealType,
+        scheduledTime: scheduledTime || new Date().toISOString(),
+        orderIndex: orderIndex || 1,
+        date: date,
       }
 
-      console.log('mealData: ', mealData);
-
       // Create the meal
-      const result = await fetchFromApi('/api/meal', {
+      const result = await fetchFromApi('/api/nutritionists/create-meal', {
         method: 'POST',
         body: JSON.stringify(mealData),
       })

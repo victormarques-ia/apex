@@ -895,5 +895,77 @@ export const NutritionistApi: Endpoint[] = [
         return Response.json({ errors: [{ message: errorMessage }] }, { status: 500 });
       }
     }
+  },
+  {
+    method: 'post',
+    path: '/create-meal',
+    handler: async (req: PayloadRequest) => {
+      try {
+        const nutritionistId = await getLoggedInNutritionistId(req);
+
+        const data = await req.json?.();
+
+
+        if (!data.dietPlanId) {
+          throw new Error('Diet plan ID is required');
+        }
+
+        if (!data.mealType) {
+          throw new Error('Meal type is required');
+        }
+
+        console.log('Creating meal:', data);
+
+        let dietPlanDay = await req.payload.find({
+          collection: 'diet-plan-days',
+          where: {
+            date: {
+              equals: data.date,
+            },
+          },
+          depth: 1,
+          limit: 1,
+        });
+
+        console.log('Diet plan day:', dietPlanDay);
+        console.log('Diet Plan Id:', data.dietPlanId);
+        console.log('Date:', data.date);
+
+        if (dietPlanDay.totalDocs === 0) {
+          console.log('Diet plan day not found');
+
+          dietPlanDay = await req.payload.create({
+            collection: 'diet-plan-days',
+            data: {
+              diet_plan: parseInt(data.dietPlanId as string, 10),
+              date: data.date,
+            },
+          });
+
+          console.log('Created diet plan day:', dietPlanDay);
+          console.log('Diet Plan Id:', data.dietPlanId);
+        }
+
+        const mealData = {
+          diet_plan_day: dietPlanDay.docs[0].id,
+          meal_type: data.mealType,
+          ...(data.scheduledTime && { scheduled_time: data.scheduledTime }),
+          ...(data.orderIndex && { order_index: data.orderIndex }),
+        };
+
+        // Create the meal
+        const meal = await req.payload.create({
+          collection: 'meal',
+          data: mealData,
+        });
+
+        return Response.json(meal);
+      }
+      catch (error) {
+        console.error('[NutritionistApi][create-meal]:', error);
+        const errorMessage = error instanceof Error ? error.message : 'Erro inesperado ao criar refeição';
+        return Response.json({ errors: [{ message: errorMessage }] }, { status: 500 });
+      }
+    }
   }
-];
+]

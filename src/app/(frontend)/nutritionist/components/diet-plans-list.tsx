@@ -11,6 +11,7 @@ interface DietPlansListProps {
   athleteId: string;
   onSelectPlan: (plan: any) => void;
   onSelectPlanDays: (plan: any) => void;
+  onEditPlan: (plan: any) => void;
   onAddNewPlan: () => void;
   onPlanDeleted: () => void;
   onPlanDayDeleted: () => void;
@@ -22,6 +23,7 @@ export function DietPlansList({
   athleteId,
   onSelectPlan,
   onSelectPlanDays,
+  onEditPlan,
   onAddNewPlan,
   onPlanDeleted,
   onPlanDayDeleted,
@@ -254,7 +256,7 @@ export function DietPlansList({
                         variant="ghost"
                         onClick={(e) => {
                           e.stopPropagation();
-                          onSelectPlan(plan);
+                          onEditPlan(plan);
                         }}
                       >
                         <PencilIcon className="h-4 w-4" />
@@ -279,86 +281,6 @@ export function DietPlansList({
         </Card>
       </div>
       <div>
-        {/* Apenas caso queira adicionar um plano diario */}
-        {selectedPlanId && (
-          <Card className="mb-4">
-            <CardHeader className="pb-2">
-              <div className="flex justify-between items-center">
-                <CardTitle className="text-lg">Planos Alimentares Diários</CardTitle>
-                <Button
-                  size="sm"
-                  onClick={onAddNewPlan}
-                  variant="outline"
-                >
-                  <PlusIcon className="h-4 w-4 mr-1" /> Novo Plano
-                </Button>
-              </div>
-            </CardHeader>
-            <CardContent>
-              {error && (
-                <div className="bg-red-50 text-red-500 p-3 rounded mb-4">
-                  {error}
-                </div>
-              )}
-
-              {dietPlanDays.length === 0 ? (
-                <div className="text-center py-6 bg-gray-50 rounded-lg border border-dashed border-gray-200">
-                  <p className="text-gray-500 mb-2">Nenhum plano alimentar encontrado</p>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={onAddNewPlan}
-                  >
-                    <PlusIcon className="h-4 w-4 mr-1" /> Criar Plano Alimentar
-                  </Button>
-                </div>
-              ) : (
-                <div className="space-y-2">
-                  {dietPlanDays.map(plan => (
-                    <div
-                      key={plan.id}
-                      className={`p-3 rounded-md flex justify-between items-center cursor-pointer ${selectedPlanDaysId === plan.id ? 'bg-primary/10 border border-primary/30' : 'bg-gray-50 hover:bg-gray-100'
-                        }`}
-                      onClick={() => onSelectPlanDays(plan)}
-                    >
-                      <div className="flex-1">
-                        <div className="font-medium">
-                          Plano diário de {format(new Date(plan.date), 'dd/MM/yyyy')}
-                        </div>
-                        <div className="text-sm text-muted-foreground">
-                          {plan.repeat_interval_days ? `Repete-se a cada ${plan.repeat_interval_days} dias` : 'Sem repetição'}
-                        </div>
-                      </div>
-                      <div className="flex gap-2">
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            onSelectPlanDays(plan);
-                          }}
-                        >
-                          <PencilIcon className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          className="text-red-500 hover:text-red-600 hover:bg-red-50"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleDeletePlanDay(plan.id);
-                          }}
-                        >
-                          <TrashIcon className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        )}
       </div>
     </div>
   );

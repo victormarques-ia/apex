@@ -18,6 +18,7 @@ interface DietPlanFormProps {
   isCreatingNewPlan: boolean;
   onDietPlanCreated: () => void;
   onDietPlanUpdated?: () => void;
+  onBackToCalendar?: () => void;
 }
 
 export function DietPlanForm({
@@ -27,7 +28,8 @@ export function DietPlanForm({
   dietPlan,
   isCreatingNewPlan,
   onDietPlanCreated,
-  onDietPlanUpdated = () => { }
+  onDietPlanUpdated = () => { },
+  onBackToCalendar
 }: DietPlanFormProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -280,8 +282,23 @@ export function DietPlanForm({
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Configuração do Plano Alimentar</CardTitle>
-        <p className="text-sm text-muted-foreground">Data selecionada: {format(selectedDate, 'dd/MM/yyyy')}</p>
+        <div className="flex justify-between items-center">
+          <div className="flex items-center">
+            {onBackToCalendar && (
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={onBackToCalendar}
+                className="mr-2"
+              >
+                ← Voltar
+              </Button>
+            )}
+            <div>
+              <CardTitle>Configuração do Plano Alimentar</CardTitle>
+            </div>
+          </div>
+        </div>
       </CardHeader>
       <CardContent>
         {error && (

@@ -2,6 +2,7 @@
 
 import { actionHandlerWithValidation } from '@/app/utils/action-handle-with-validation'
 import { fetchFromApi } from '@/app/utils/fetch-from-api'
+import { error } from 'console';
 
 // Action to get the pacient list
 export async function getPacientList(_state: unknown, formData: FormData) {
@@ -66,4 +67,3 @@ export async function getPacientList(_state: unknown, formData: FormData) {
       }
     );
   }
-  

@@ -30,6 +30,7 @@ import {
 } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import NutritionDashboard from './components/NutritionDashboard';
+import { DietTabContent } from '@/app/(frontend)/nutritionist/components/diet-tab';
 
 // Define the main tabs
 const TABS = {
@@ -181,12 +182,13 @@ export default function NutritionistOverviewPage() {
             </TabsContent>
 
             <TabsContent value={TABS.DIET} className="mt-0">
-              {/* Diet component will be placed here */}
-              <div className="min-h-[600px]">
-                <h2 className="text-xl font-semibold mb-4">Dieta</h2>
-                <p>Conteúdo da dieta para o atleta selecionado. ID: {selectedAthleteId}</p>
-                {/* Diet component will be loaded here */}
-              </div>
+              {selectedAthleteId ? (
+                <DietTabContent athleteId={selectedAthleteId} />
+              ) : (
+                <div className="min-h-[600px] flex items-center justify-center">
+                <p>Selecione um atleta para visualizar o plano alimentar</p>
+                </div>
+              )}
             </TabsContent>
 
             <TabsContent value={TABS.TRAINING} className="mt-0">

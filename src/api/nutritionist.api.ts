@@ -914,8 +914,6 @@ export const NutritionistApi: Endpoint[] = [
           throw new Error('Meal type is required');
         }
 
-        console.log('Creating meal:', data);
-
         let dietPlanDay = await req.payload.find({
           collection: 'diet-plan-days',
           where: {
@@ -927,12 +925,7 @@ export const NutritionistApi: Endpoint[] = [
           limit: 1,
         });
 
-        console.log('Diet plan day:', dietPlanDay);
-        console.log('Diet Plan Id:', data.dietPlanId);
-        console.log('Date:', data.date);
-
         if (dietPlanDay.totalDocs === 0) {
-          console.log('Diet plan day not found');
 
           dietPlanDay = await req.payload.create({
             collection: 'diet-plan-days',
@@ -941,13 +934,15 @@ export const NutritionistApi: Endpoint[] = [
               date: data.date,
             },
           });
-
-          console.log('Created diet plan day:', dietPlanDay);
-          console.log('Diet Plan Id:', data.dietPlanId);
         }
 
+        console.log('>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>');
+        console.log(dietPlanDay);
+
+        const dietPlanDayId = dietPlanDay.id || dietPlanDay.docs[0].id;
+
         const mealData = {
-          diet_plan_day: dietPlanDay.docs[0].id,
+          diet_plan_day: dietPlanDay.id,
           meal_type: data.mealType,
           ...(data.scheduledTime && { scheduled_time: data.scheduledTime }),
           ...(data.orderIndex && { order_index: data.orderIndex }),

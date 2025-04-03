@@ -194,7 +194,6 @@ export const MealsApi: Endpoint[] = [
             }
 
             if (currentDate.toISOString().split('T')[0] !== dietDayDate.toISOString().split('T')[0]) {
-              console.log('Skipping meal for date:', currentDate);
               return; // Pular se a data não é o dia do plano
             }
 
@@ -346,7 +345,6 @@ export const MealsApi: Endpoint[] = [
           limit: 100,
         });
 
-        console.log('Meals:', meals);
 
         // Buscar todos os meal-food com profundidade 3 (isso já traz todos os dados relacionados)
         const mealWithFoods = await req.payload.find({
@@ -380,7 +378,6 @@ export const MealsApi: Endpoint[] = [
         });
 
         // Organizar os meal-foods por meal para processamento
-        console.log('=========================')
         const mealMap = [];
 
         meals.docs.forEach(meal => {
@@ -407,7 +404,6 @@ export const MealsApi: Endpoint[] = [
 
         });
 
-        console.log('Meal Map:', mealMap);
 
         const history: MealHistory = {};
         const dietPlanDates: Date[] = [];
@@ -445,7 +441,6 @@ export const MealsApi: Endpoint[] = [
           dateRange.push(d.toISOString().split('T')[0]);
         }
 
-        console.log('Date range:', dateRange);
 
         // Gerar o histórico considerando as repetições
 
@@ -467,10 +462,8 @@ export const MealsApi: Endpoint[] = [
               return; // Pular se fora do período do plano
             }
 
-            console.log(dietDayDate, currentDate);
 
             if (dietDayDate.toISOString().split('T')[0] !== currentDate.toISOString().split('T')[0]) {
-              console.log('Skipping meal for date:', currentDate);
               return; // Pular se a data não é o dia do plano
             }
 
@@ -521,7 +514,6 @@ export const MealsApi: Endpoint[] = [
         const mealId = req.routeParams?.mealId;
 
         // Delete the meal-food
-        console.log('Deleting meal-foods for meal:', mealId);
         await req.payload.delete({
           collection: 'meal-food',
           where: {
@@ -531,7 +523,6 @@ export const MealsApi: Endpoint[] = [
           },
         });
 
-        console.log('Deleting meal:', mealId);
         await req.payload.delete({
           collection: 'meal',
           where: {

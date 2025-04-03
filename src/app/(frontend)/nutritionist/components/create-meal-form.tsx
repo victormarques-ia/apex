@@ -48,27 +48,13 @@ export function CreateMealForm({ athleteId, nutritionistId, date, intervalDays, 
       }
 
       const formData = new FormData();
-      console.log('=================')
-      console.log('=================')
-      console.log('=================')
-      console.log('Diet Plan Id:', dietPlanId);
-      console.log('Meal Type:', mealType);
-      console.log('Scheduled Time:', mealDateTime.toISOString());
-      console.log('Order Index:', orderIndex.toString());
-      console.log('Date:', date);
       formData.append('dietPlanId', dietPlanId);
       formData.append('mealType', mealType);
       formData.append('scheduledTime', mealDateTime.toISOString());
       formData.append('orderIndex', orderIndex.toString());
       formData.append('date', date);
 
-      console.log('-----------------')
       const response = await createMealAction(null, formData);
-      console.log('-0---------------')
-      console.log('Response createMeal: ', response);
-      console.log('=================')
-      console.log('=================')
-      console.log('=================')
 
       if (response.data) {
         if (onMealCreated) {

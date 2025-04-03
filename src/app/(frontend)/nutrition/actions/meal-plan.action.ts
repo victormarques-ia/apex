@@ -122,6 +122,59 @@ export async function addFoodToMealAction(_state: unknown, formData: FormData) {
 }
 
 /**
+ * Action to update food quantity in a meal
+ */
+export async function updateMealFoodAction(_state: unknown, formData: FormData) {
+  return actionHandlerWithValidation(
+    formData,
+    async (data) => {
+      const mealFoodId = data.mealFoodId
+      const quantity = data.quantity
+
+      if (!mealFoodId) {
+        throw new Error('ID do item de refeição é obrigatório')
+      }
+
+      if (!quantity) {
+        throw new Error('Quantidade é obrigatória')
+      }
+
+      // Update the meal food
+      const result = await fetchFromApi(`/api/meal-food/${mealFoodId}`, {
+        method: 'PUT',
+        body: JSON.stringify({
+          quantity_grams: parseInt(quantity as string),
+        }),
+      })
+
+      if (!result.data) {
+        console.error('Meal food update API error:', result.error)
+        throw new Error(result.error?.messages[0] || 'Erro ao atualizar quantidade do alimento')
+      }
+
+      return result.data
+    },
+    {
+      onSuccess: (data) => {
+        return {
+          success: true,
+          data,
+          message: 'Quantidade atualizada com sucesso',
+        }
+      },
+      onFailure: (error) => {
+        console.error('Meal food update failure:', error)
+        return {
+          success: false,
+          error,
+          message: 'Falha ao atualizar quantidade do alimento',
+        }
+      },
+    },
+  )
+}
+
+/**
  * Action to remove food from a meal
  */
 export async function removeFoodFromMealAction(_state: unknown, formData: FormData) {

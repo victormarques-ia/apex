@@ -45,6 +45,48 @@ export async function getDietPlanAction(_state: unknown, formData: FormData) {
   );
 }
 
+export async function getAthleteDietPlanDaysAction(_state: unknown, formData: FormData) {
+  return actionHandlerWithValidation(
+    formData,
+    async (data) => {
+      const athleteId = data.athleteId;
+      const dietPlanId = data.dietPlanId;
+
+      if (!athleteId) {
+        throw new Error('ID do atleta é obrigatório');
+      }
+
+      // Build the query parameters
+      const queryParams = new URLSearchParams();
+      queryParams.append('athleteId', athleteId as string);
+      queryParams.append('dietPlanId', dietPlanId as string);
+
+      // Fetch diet plans
+      const result = await fetchFromApi(`/api/nutritionists/diet-plan-days?${queryParams.toString()}`, {
+        method: 'GET',
+      });
+
+      return result.data;
+    },
+    {
+      onSuccess: (data) => {
+        return {
+          success: true,
+          data,
+        };
+      },
+      onFailure: (error) => {
+        return {
+          success: false,
+          error,
+          message: 'Falha ao buscar planos alimentares',
+        };
+      },
+    }
+  );
+
+}
+
 /**
  * Action to get diet plans for a specific athlete
  */
@@ -69,7 +111,6 @@ export async function getAthleteDietPlansAction(_state: unknown, formData: FormD
       }
 
       // Fetch diet plans
-      console.log('Fetching', `/api/nutritionists/diet-plans?${queryParams.toString()}`);
       const result = await fetchFromApi(`/api/nutritionists/diet-plans?${queryParams.toString()}`, {
         method: 'GET',
       });

@@ -22,13 +22,13 @@ export function DietTabContent({ athleteId, nutritionistId }) {
   const [showDietPlanForm, setShowDietPlanForm] = useState(false);
   const [isCreatingNewPlan, setIsCreatingNewPlan] = useState(false);
   const [selectedPlanId, setSelectedPlanId] = useState(null);
+  const [selectedPlanDayId, setSelectPlanDayId] = useState(null);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         setLoading(true);
 
-        // 1. Fetch diet plans and diet plan days with the new one-to-one relationship
         console.log('Athlete ID: ', athleteId);
         if (athleteId) {
           const dateStr = selectedDate.toISOString().split('T')[0];
@@ -63,7 +63,7 @@ export function DietTabContent({ athleteId, nutritionistId }) {
 
         console.log(`Fetching meals for athleteId=${athleteId}, date=${dateStr}`);
         const mealsResponse = await getMealHistoryAction(null, formData);
-        // console.log('Meals response:', mealsResponse);
+        console.log('Meals response:', mealsResponse);
 
         if (mealsResponse.data?.dateRange) {
           setMealsHistory(mealsResponse.data);
@@ -146,6 +146,7 @@ export function DietTabContent({ athleteId, nutritionistId }) {
       formData.append('to', dateStr);
 
       const mealsResponse = await getMealHistoryAction(null, formData);
+      console.log('Meal response:', mealsResponse)
 
       if (mealsResponse.success && mealsResponse.data) {
         setMealsHistory(mealsResponse.data);
@@ -259,29 +260,33 @@ export function DietTabContent({ athleteId, nutritionistId }) {
     setDietPlan(plan);
     setSelectedPlanId(plan.id);
 
-    // Find the diet plan day for this plan and selected date
-    const formData = new FormData();
-    formData.append('dietPlanId', plan.id);
+    // // Find the diet plan day for this plan
+    // const formData = new FormData();
+    // formData.append('dietPlanId', plan.id);
+    //
+    // getDietPlanAction(null, formData).then(response => {
+    //   console.log('Response getDietPlanAction:', response);
+    //   if (response.data) {
+    //     setDietPlanDay(response.data.data.dietPlanDay);
+    //     setShowDietPlanForm(true);
+    //     setIsCreatingNewPlan(false);
+    //   } else {
+    //     console.error('Failed to get diet plan details:', response);
+    //     // Handle error - still show the form but without day data
+    //     setDietPlanDay(null);
+    //     setShowDietPlanForm(true);
+    //     setIsCreatingNewPlan(false);
+    //   }
+    // }).catch(err => {
+    //   console.error('Error getting diet plan details:', err);
+    //   setDietPlanDay(null);
+    //   setShowDietPlanForm(true);
+    //   setIsCreatingNewPlan(false);
+    // });
+  };
 
-    getDietPlanAction(null, formData).then(response => {
-      console.log('Response getDietPlanAction:', response);
-      if (response.data.data) {
-        setDietPlanDay(response.data.data.dietPlanDay);
-        setShowDietPlanForm(true);
-        setIsCreatingNewPlan(false);
-      } else {
-        console.error('Failed to get diet plan details:', response);
-        // Handle error - still show the form but without day data
-        setDietPlanDay(null);
-        setShowDietPlanForm(true);
-        setIsCreatingNewPlan(false);
-      }
-    }).catch(err => {
-      console.error('Error getting diet plan details:', err);
-      setDietPlanDay(null);
-      setShowDietPlanForm(true);
-      setIsCreatingNewPlan(false);
-    });
+  const handleSelectPlanDays = (plan: any) => {
+    console.log('Plan selected:', plan);
   };
 
   const handleAddNewPlan = () => {
@@ -308,9 +313,11 @@ export function DietTabContent({ athleteId, nutritionistId }) {
         <DietPlansList
           athleteId={athleteId}
           onSelectPlan={handleSelectPlan}
+          onSelectPlanDays={handleSelectPlanDays}
           onAddNewPlan={handleAddNewPlan}
           onPlanDeleted={handleDietPlanDayDeleted}
           selectedPlanId={selectedPlanId}
+          selectedPlanDayId={selectedPlanDayId}
         />
       )}
 

@@ -155,10 +155,6 @@ export async function createDietPlanAction(_state: unknown, formData: FormData) 
         throw new Error('Data de término é obrigatória');
       }
 
-      if (!data.dayDate) {
-        throw new Error('Data do dia do plano é obrigatória');
-      }
-
       // Prepare request data
       const requestData = {
         athleteId: data.athleteId,

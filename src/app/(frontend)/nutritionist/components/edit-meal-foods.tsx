@@ -9,13 +9,13 @@ import { AddFoodToMeal } from './add-food-to-meal';
 
 interface EditMealFoodsProps {
   mealId: string;
-  mealFoods: any[];
+  foods: any[];
   onFoodsUpdated: () => void;
   onCancel: () => void;
 }
 
-export function EditMealFoods({ mealId, mealFoods, onFoodsUpdated, onCancel }: EditMealFoodsProps) {
-  const [foods, setFoods] = useState(mealFoods || []);
+export function EditMealFoods({ mealId, foods, onFoodsUpdated, onCancel }: EditMealFoodsProps) {
+  const [foodItems, setFoodItems] = useState(foods || []);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showAddFood, setShowAddFood] = useState(false);
@@ -31,10 +31,10 @@ export function EditMealFoods({ mealId, mealFoods, onFoodsUpdated, onCancel }: E
 
       const response = await removeFoodFromMealAction(null, formData);
 
-      if (response.success) {
+      if (response.data) {
         // Remove the food from local state
-        setFoods(foods.filter(food => food.id !== mealFoodId));
-        
+        setFoodItems(foodItems.filter(food => food.id !== mealFoodId));
+
         // Notify parent of update
         onFoodsUpdated();
       } else {
@@ -62,7 +62,7 @@ export function EditMealFoods({ mealId, mealFoods, onFoodsUpdated, onCancel }: E
         )}
 
         {showAddFood ? (
-          <AddFoodToMeal 
+          <AddFoodToMeal
             mealId={mealId}
             onFoodAdded={() => {
               setShowAddFood(false);
@@ -72,7 +72,7 @@ export function EditMealFoods({ mealId, mealFoods, onFoodsUpdated, onCancel }: E
           />
         ) : (
           <>
-            {foods.length === 0 ? (
+            {foodItems.length === 0 ? (
               <div className="text-center py-8 bg-gray-50 rounded-lg">
                 <p className="text-gray-500 mb-4">Nenhum alimento adicionado</p>
                 <Button onClick={() => setShowAddFood(true)}>
@@ -82,16 +82,16 @@ export function EditMealFoods({ mealId, mealFoods, onFoodsUpdated, onCancel }: E
             ) : (
               <div className="space-y-4">
                 <div className="flex justify-end">
-                  <Button 
-                    size="sm" 
+                  <Button
+                    size="sm"
                     onClick={() => setShowAddFood(true)}
                   >
                     Adicionar Alimento
                   </Button>
                 </div>
-                
+
                 <ul className="divide-y">
-                  {foods.map(food => (
+                  {foodItems.map(food => (
                     <li key={food.id} className="py-3 flex justify-between items-center">
                       <div className="flex-1">
                         <p className="font-medium">{food.food.name}</p>

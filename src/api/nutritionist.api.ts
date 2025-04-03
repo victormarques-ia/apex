@@ -581,7 +581,7 @@ export const NutritionistApi: Endpoint[] = [
           depth: 2
         });
 
-        if (!dietPlan) {
+        if (dietPlan.totalDocs === 0) {
           return Response.json(
             { errors: [{ message: 'Plano alimentar não encontrado' }] },
             { status: 404 }
@@ -595,6 +595,53 @@ export const NutritionistApi: Endpoint[] = [
           ...(data.totalDailyCalories !== undefined && { total_daily_calories: data.totalDailyCalories }),
           ...(data.notes !== undefined && { notes: data.notes })
         };
+
+        const existingDietPlans = await req.payload.find({
+          collection: 'diet-plans',
+          where: {
+            and: [
+              { id: { not_equals: dietPlanId } },
+              {
+                or: [
+                  {
+                    and: [
+                      {
+                        start_date: {
+                          less_than_equal: data.startDate,
+                        },
+                      },
+                      {
+                        end_date: {
+                          greater_than_equal: data.endDate,
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    and: [
+                      {
+                        start_date: {
+                          less_than_equal: data.startDate,
+                        },
+                      },
+                      {
+                        end_date: {
+                          greater_than_equal: data.endDate,
+                        }
+                      }
+                    ]
+                  }
+                ]
+              },
+            ],
+          },
+          depth: 2,
+        });
+
+        if (existingDietPlans.totalDocs > 0) {
+          throw new Error('Plano de refeição já cadastrado');
+        }
+
 
         const updatedDietPlan = await req.payload.update({
           collection: 'diet-plans',

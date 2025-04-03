@@ -40,7 +40,7 @@ export function CreateMealForm({ athleteId, nutritionistId, date, intervalDays, 
       setError(null);
 
       // Create meal date-time from selected time or current time
-      let mealDateTime = new Date();
+      const mealDateTime = new Date();
 
       if (scheduledTime) {
         const [hours, minutes] = scheduledTime.split(':').map(Number);

@@ -221,7 +221,7 @@ export const NutritionistApi: Endpoint[] = [
 
         // If date is provided, filter for recurring diet plan days
         if (date) {
-          let targetDate = new Date(date as string);
+          const targetDate = new Date(date as string);
 
           // Filter days that apply to the target date based on repeat interval
           const applicableDays = allDays.docs.filter(day => {

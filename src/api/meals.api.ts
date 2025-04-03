@@ -42,8 +42,8 @@ export const MealsApi: Endpoint[] = [
     path: '/totals',
     handler: async (req: PayloadRequest) => {
       try {
-        let { from, to } = req.query;
-        const { athleteId, nutritionistId, includeRepeated = 'true' } = req.query;
+        const { from, to } = req.query;
+        const { athleteId, nutritionistId, dietPlanId, dietPlanDayId, includeRepeated = 'true' } = req.query;
 
         // Basic validation
         if (!athleteId) {
@@ -55,21 +55,8 @@ export const MealsApi: Endpoint[] = [
           );
         }
 
-        // Set default date range if not provided
-        if (!from) {
-          const today = new Date();
-          from = today.toISOString().split('T')[0];
-        }
-
-        // If to is not provided, use the from date (single day)
-        if (!to) {
-          to = from;
-        }
-
-        console.log('Params for meal totals:', from, to, athleteId, nutritionistId, includeRepeated);
-
         // Buscar todos os meal-food com profundidade 3 (isso já traz todos os dados relacionados)
-        const mealFoodsResponse = await req.payload.find({
+        const mealFoods = await req.payload.find({
           collection: 'meal-food',
           where: {
             and: [
@@ -83,27 +70,81 @@ export const MealsApi: Endpoint[] = [
                   equals: nutritionistId,
                 },
               } : {},
-              {
-                "meal.diet_plan_day.diet_plan.start_date": {
-                  less_than_equal: to as string,
+              dietPlanDayId ? {
+                "meal.diet_plan_day.id": {
+                  equals: dietPlanDayId,
                 },
-              },
-              {
-                "meal.diet_plan_day.diet_plan.end_date": {
-                  greater_than_equal: from as string,
+              } : {},
+              dietPlanId ? {
+                "meal.diet_plan_day.diet_plan.id": {
+                  equals: dietPlanId,
                 },
-              }
-            ].filter(item => Object.keys(item).length > 0),
+              } : {}
+            ]
           },
           depth: 3,
           limit: 100,
         });
 
-        const mealFoods = mealFoodsResponse.docs;
+        // Organizar os meal-foods por meal para processamento
+        const mealMap = new Map();
 
-        // Generate date range for the requested period
-        const fromDate = new Date(from as string);
-        const toDate = new Date(to as string);
+        mealFoods.docs.forEach(mealFood => {
+          const mealId = mealFood.meal.id;
+
+          if (!mealMap.has(mealId)) {
+            mealMap.set(mealId, {
+              id: mealId,
+              type: mealFood.meal.meal_type,
+              scheduledTime: mealFood.meal.scheduled_time,
+              orderIndex: mealFood.meal.order_index || 0,
+              dietPlanDay: mealFood.meal.diet_plan_day,
+              foods: []
+            });
+          }
+
+          mealMap.get(mealId).foods.push({
+            id: mealFood.id,
+            food: mealFood.food,
+            quantity: mealFood.quantity_grams
+          });
+
+        });
+
+        const history: MealHistory = {};
+        const dietPlanDates: Date[] = [];
+        let fromDietPlanDates = new Date('9999-01-01');
+        let toDietPlanDates = new Date('0001-01-01');
+
+        // Gerar intervalo de datas para o período solicitado
+        // Pega a primeira data de todos os dias de planos alimentares
+        // e a última data de todos os dias de planos alimentares
+
+        mealMap.forEach(meal => {
+          const dietPlan = meal.dietPlanDay.diet_plan;
+
+          const startDate = new Date(dietPlan.start_date);
+          const endDate = new Date(dietPlan.end_date);
+
+          if (startDate < fromDietPlanDates) {
+            fromDietPlanDates = startDate;
+          }
+
+          if (endDate > toDietPlanDates) {
+            toDietPlanDates = endDate;
+          }
+
+          // dietPlanDates.push(startDate);
+          // dietPlanDates.push(endDate);
+        });
+
+        // Sort dietPlanDates
+        // dietPlanDates.sort();
+        const fromQueryDate = new Date(from as string);
+        const toQueryDate = new Date(to as string);
+        const fromDate = (fromQueryDate && fromQueryDate > fromDietPlanDates) ? fromQueryDate : fromDietPlanDates;
+        const toDate = (toQueryDate && toQueryDate < toDietPlanDates) ? toQueryDate : toDietPlanDates;
+
         const dateRange = [];
 
         for (let d = new Date(fromDate); d <= toDate; d.setDate(d.getDate() + 1)) {
@@ -133,7 +174,7 @@ export const MealsApi: Endpoint[] = [
         });
 
         // Process each meal-food and apply to relevant dates
-        mealFoods.forEach(mealFood => {
+        mealFoods.docs.forEach(mealFood => {
           const meal = mealFood.meal;
           const food = mealFood.food;
           const quantity = mealFood.quantity_grams;
@@ -258,8 +299,8 @@ export const MealsApi: Endpoint[] = [
     path: '/history',
     handler: async (req: PayloadRequest) => {
       try {
-        let { from, to } = req.query;
-        const { athleteId, nutritionistId, includeRepeated = 'true' } = req.query;
+        const { from, to } = req.query;
+        const { athleteId, nutritionistId, dietPlanId, dietPlanDayId, includeRepeated = 'true' } = req.query;
 
         // Basic validation
         if (!athleteId) {
@@ -270,19 +311,6 @@ export const MealsApi: Endpoint[] = [
             { status: 400 }
           );
         }
-
-        // Set default date range if not provided
-        if (!from) {
-          const today = new Date();
-          from = today.toISOString().split('T')[0];
-        }
-
-        // If to is not provided, use the from date (single day)
-        if (!to) {
-          to = from;
-        }
-
-        console.log('Params for meal history:', from, to, athleteId, nutritionistId, includeRepeated);
 
         // Buscar todos os meal-food com profundidade 3 (isso já traz todos os dados relacionados)
         const mealFoods = await req.payload.find({
@@ -299,17 +327,17 @@ export const MealsApi: Endpoint[] = [
                   equals: nutritionistId,
                 },
               } : {},
-              {
-                "meal.diet_plan_day.diet_plan.start_date": {
-                  less_than_equal: to as string,
+              dietPlanDayId ? {
+                "meal.diet_plan_day.id": {
+                  equals: dietPlanDayId,
                 },
-              },
-              {
-                "meal.diet_plan_day.diet_plan.end_date": {
-                  greater_than_equal: from as string,
+              } : {},
+              dietPlanId ? {
+                "meal.diet_plan_day.diet_plan.id": {
+                  equals: dietPlanId,
                 },
-              }
-            ].filter(item => Object.keys(item).length > 0),
+              } : {},
+            ]
           },
           depth: 3,
           limit: 100,
@@ -337,19 +365,48 @@ export const MealsApi: Endpoint[] = [
             food: mealFood.food,
             quantity: mealFood.quantity_grams
           });
+
         });
 
+        const history: MealHistory = {};
+        const dietPlanDates: Date[] = [];
+        let fromDietPlanDates = new Date('9999-01-01');
+        let toDietPlanDates = new Date('0001-01-01');
+
         // Gerar intervalo de datas para o período solicitado
-        const fromDate = new Date(from as string);
-        const toDate = new Date(to as string);
+        // Pega a primeira data de todos os dias de planos alimentares
+        // e a última data de todos os dias de planos alimentares
+
+        mealMap.forEach(meal => {
+          const dietPlan = meal.dietPlanDay.diet_plan;
+
+          const startDate = new Date(dietPlan.start_date);
+          const endDate = new Date(dietPlan.end_date);
+
+          if (startDate < fromDietPlanDates) {
+            fromDietPlanDates = startDate;
+          }
+
+          if (endDate > toDietPlanDates) {
+            toDietPlanDates = endDate;
+          }
+
+        });
+
+        const fromQueryDate = new Date(from as string);
+        const toQueryDate = new Date(to as string);
+        const fromDate = (fromQueryDate && fromQueryDate > fromDietPlanDates) ? fromQueryDate : fromDietPlanDates;
+        const toDate = (toQueryDate && toQueryDate < toDietPlanDates) ? toQueryDate : toDietPlanDates;
+
         const dateRange = [];
 
         for (let d = new Date(fromDate); d <= toDate; d.setDate(d.getDate() + 1)) {
           dateRange.push(d.toISOString().split('T')[0]);
         }
 
+        console.log('Date range:', dateRange);
+
         // Gerar o histórico considerando as repetições
-        const history: MealHistory = {};
 
         dateRange.forEach(date => {
           history[date] = { meals: [] };
@@ -388,12 +445,13 @@ export const MealsApi: Endpoint[] = [
             if (isOriginalDay || isRepeatedDay) {
               history[date].meals.push({
                 id: meal.id,
-                mealType: meal.type,
-                scheduledTime: meal.scheduledTime,
-                orderIndex: meal.orderIndex,
+                diet_plan_day: meal.dietPlanDay,
+                meal_type: meal.type,
+                scheduled_time: meal.scheduledTime,
+                order_index: meal.orderIndex,
                 foods: meal.foods,
-                isRepeated: isRepeatedDay,
-                originalDate: isRepeatedDay ? dietDayDate.toISOString().split('T')[0] : undefined
+                is_repeated: isRepeatedDay,
+                original_date: isRepeatedDay ? dietDayDate.toISOString().split('T')[0] : undefined
               });
             }
           });

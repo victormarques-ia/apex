@@ -455,7 +455,7 @@ async function AuthButton() {
     return (
       <Button variant={'outline'}>
         <UserCircle />
-        <Link href="/home">Olá, {data.user.name.split(' ')[0]}</Link>
+        <Link href="home">Olá, {data.user.name.split(' ')[0]}</Link>
       </Button>
     )
   }
@@ -463,7 +463,7 @@ async function AuthButton() {
   return (
     <Button variant={'outline'}>
       <UserCircle />
-      <Link href="/auth/sign-in">Entrar</Link>
+      <Link href="auth/sign-in">Entrar</Link>
     </Button>
   )
 }

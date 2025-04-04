@@ -62,7 +62,7 @@ export function DietPlansList({
         console.log('Response getAthleteDietPlansAction in DietPlansList:', response);
 
         // For direct response from diet-plans endpoint
-        if (response.data.docs && Array.isArray(response.data.docs)) {
+        if (response.data?.docs && Array.isArray(response.data?.docs)) {
           // This handles the diet-plan-days with associated diet-plans
           if (response.data.totalDocs > 0) {
             // Extract unique diet plans from diet plan days

@@ -29,7 +29,6 @@ export const TrainerApi: Endpoint[] = [
           },
           depth: 2, // Include related fields
         });
-
         // Check if trainer profile exists
         if (!trainer.docs || trainer.docs.length === 0) {
           return Response.json(
@@ -85,13 +84,12 @@ export const TrainerApi: Endpoint[] = [
         // teste por ordem ascendente de meta
         // /api/trainer/my-athletes?sortOrder=asc&sortField=2
         // api/trainer/my-athletes?goal=emagrecimento
-
         const trainerAthletes = await req.payload.find({
           collection: 'trainer-athletes',
           where: {
             and: [
               {
-                trainer: {
+                'trainer.user': {
                   equals: idTrainer,
                 }
               },
@@ -116,11 +114,11 @@ export const TrainerApi: Endpoint[] = [
 
         // Extrai apenas os perfis de atletas da lista de relacionamentos
         const athletes = trainerAthletes.docs.map(relation => relation.athlete);
-
         return Response.json({
           data: {
             total: trainerAthletes.totalDocs,
             athletes: athletes,
+            id: idTrainer
           },
         });
 
@@ -134,5 +132,6 @@ export const TrainerApi: Endpoint[] = [
         );
       }
     },
-  }
+  },
+  
 ];

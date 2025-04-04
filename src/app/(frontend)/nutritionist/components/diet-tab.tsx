@@ -10,8 +10,14 @@ import { getMealHistoryAction } from '@/app/(frontend)/nutrition/actions/meals.a
 import { getAthleteDietPlansAction, getDietPlanAction } from '@/app/(frontend)/nutrition/actions/diet-plans.action';
 import { DietPlanForm } from './diet-plan-form';
 import { DietPlansList } from './diet-plans-list';
+import { RESPONSE_LIMIT_DEFAULT } from 'next/dist/server/api-utils';
 
-export function DietTabContent({ athleteId, nutritionistId }) {
+interface DietTabContentProps {
+  athleteId: string;
+  nutritionistId: string;
+}
+
+export function DietTabContent({ athleteId, nutritionistId }: DietTabContentProps) {
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [meals, setMeals] = useState([]);
   const [mealsHistory, setMealsHistory] = useState(null);
@@ -41,6 +47,7 @@ export function DietTabContent({ athleteId, nutritionistId }) {
 
           console.log('Response: ', response);
 
+          
           if (response.data && response.data?.totalDocs > 0) {
             // Set diet plan day
             setDietPlanDay(response.data.docs[0]);

@@ -28,71 +28,10 @@ async function getLoggedInTrainerId(req: PayloadRequest) {
 export const TrainerApi: Endpoint[] = [
   {
     method: 'get',
-    path: '/me',
-    handler: async (req: PayloadRequest) => {
-      try {
-        // Check if user is authenticated
-        if (!req.user) {
-          return Response.json(
-            {
-              errors: [{ message: 'Usuário não autenticado' }],
-            },
-            { status: 401 }
-          );
-        }
-
-        const userId = req.user.id;
-
-        // Find the trainer profile associated with the authenticated user
-        const trainer = await req.payload.find({
-          collection: 'trainers',
-          where: {
-            user: {
-              equals: userId,
-            },
-          },
-          depth: 2, // Include related fields
-        });
-
-        // Check if trainer profile exists
-        if (!trainer.docs || trainer.docs.length === 0) {
-          return Response.json(
-            {
-              errors: [{ message: 'Perfil de treinador não encontrado para este usuário' }],
-            },
-            { status: 404 }
-          );
-        }
-
-        // Return the first trainer profile found
-        return Response.json({
-          data: trainer.docs[0],
-        });
-
-      } catch (error) {
-        console.error('[TrainerApi][me]:', error);
-        return Response.json(
-          {
-            errors: [{ message: 'Erro inesperado ao buscar perfil de treinador' }],
-          },
-          { status: 500 }
-        );
-      }
-    },
-  },
-  {
-    method: 'get',
     path: '/athletes',
     handler: async (req: PayloadRequest) => {
       try {
-        const trainer = await fetchFromApi<any>('/api/trainers/me', {
-          method: 'GET',
-        });
-        const idTrainer : number = trainer.data?.data?.user?.id
-        if(idTrainer == undefined){
-          throw new Error();
-        }
-
+        const idTrainer = await getLoggedInTrainerId(req);
         const name = req.query.name as string || "";
         const sortOrder = req.query.sortOrder as string || "asc";
         // Você pode ordenar por nome, data da ultima atualizacao e meta.

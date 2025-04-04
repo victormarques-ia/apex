@@ -14,7 +14,7 @@ async function getLoggedInNutritionistId(req: PayloadRequest) {
         equals: userId,
       },
     },
-    limi: 1,
+    limit: 1,
   });
 
   if (!nutritionistProfiles.docs || nutritionistProfiles.docs.length === 0) {

@@ -228,39 +228,6 @@ export const TrainerApi: Endpoint[] = [
   },
   {
     method: 'post',
-    path: '/exercises',
-    handler: async (req: PayloadRequest) => {
-      try {
-        const data = await req.json?.();
-
-
-        if (!data.name) {
-          throw new Error('Diet name is required');
-        }
-
-        const exerciseData = {
-          name: data.name,
-          ...(data.description && { description: data.description }),
-          ...(data.muscleGroup && { muscle_group: data.muscleGroup }),
-        };
-
-        // Create the exercise
-        const meal = await req.payload.create({
-          collection: 'exercises',
-          data: exerciseData,
-        });
-
-        return Response.json(meal);
-      }
-      catch (error) {
-        console.error('[TrainerApi][create-exercise]:', error);
-        const errorMessage = error instanceof Error ? error.message : 'Erro inesperado ao criar exercício';
-        return Response.json({ errors: [{ message: errorMessage }] }, { status: 500 });
-      }
-    }
-  },
-  {
-    method: 'post',
     path: '/workout-plans',
     handler: async (req: PayloadRequest) => {
       try {
@@ -481,6 +448,147 @@ export const TrainerApi: Endpoint[] = [
       } catch (error) {
         console.error('[TrainerApi][create-exercise-workouts]:', error);
         const errorMessage = error instanceof Error ? error.message : 'Erro inesperado ao criar exercício de treino';
+        return Response.json({ errors: [{ message: errorMessage }] }, { status: 500 });
+      }
+    }
+  },
+  {
+    method: 'get',
+    path: '/exercises',
+    handler: async (req) => {
+      try {
+        const { name, muscleGroup } = req.query;
+        // list the exercises
+        const exercises = await req.payload.find({
+          collection: 'exercises',
+          where: {
+            and: [
+              name ? {
+                name: {
+                  like: name,
+                },
+              } : {},
+              muscleGroup ? {
+                muscle_group: {
+                  like: muscleGroup,
+                },
+              } : {}
+            ],
+          },
+          depth: 2,
+        });
+
+        return Response.json(exercises)
+
+      } catch (error) {
+        console.error('[TrainerApi][exercise]:', error);
+        return Response.json({
+          errors: [{ message: 'Erro inesperado ao buscar exercicios.' }]
+        }, { status: 500 })
+      }
+    }
+  },
+  {
+    method: 'post',
+    path: '/exercises',
+    handler: async (req: PayloadRequest) => {
+      try {
+        const data = await req.json?.();
+
+
+        if (!data.name) {
+          throw new Error('Diet name is required');
+        }
+
+        const exerciseData = {
+          name: data.name,
+          ...(data.description && { description: data.description }),
+          ...(data.muscleGroup && { muscle_group: data.muscleGroup }),
+        };
+
+        // Create the exercise
+        const meal = await req.payload.create({
+          collection: 'exercises',
+          data: exerciseData,
+        });
+
+        return Response.json(meal);
+      }
+      catch (error) {
+        console.error('[TrainerApi][create-exercise]:', error);
+        const errorMessage = error instanceof Error ? error.message : 'Erro inesperado ao criar exercício';
+        return Response.json({ errors: [{ message: errorMessage }] }, { status: 500 });
+      }
+    }
+  },
+  {
+    method: 'put',
+    path: '/exercises/:id',
+    handler: async (req: PayloadRequest) => {
+      try {
+        const exerciseId = req.routeParams?.id;
+
+        if (!exerciseId) {
+          return Response.json(
+            { errors: [{ message: 'ID do dia do exercício é obrigatório' }] },
+            { status: 400 }
+          );
+        }
+
+        const exerciseIdTransformed = parseInt(String(exerciseId), 10);
+
+        // Parse request body
+        const data = await req.json?.();
+
+        console.log('data exercise update:', data);
+        if (!data) {
+          return Response.json(
+            { errors: [{ message: 'Corpo da requisição inválido' }] },
+            { status: 400 }
+          );
+        }
+
+        // Verify the diet plan day exists and belongs to this nutritionist
+        const exercise = await req.payload.find({
+          collection: 'exercises',
+          where: {
+            and: [
+              {
+                id: { equals: exerciseIdTransformed }
+              }
+            ]
+          },
+          depth: 2
+        });
+
+        if (!exercise.docs || exercise.docs.length === 0) {
+          return Response.json(
+            { errors: [{ message: 'Exercício não encontrado' }] },
+            { status: 404 }
+          );
+        }
+
+        // Update the diet plan day with the provided data
+        const updateExerciseData = {
+          ...(data.name && { name: data.name }),
+          ...(data.description && { description: data.description }),
+          ...(data.muscleGroup && { muscle_group: data.muscleGroup }),
+        };
+
+        const updatedExercise = await req.payload.update({
+          collection: 'exercises',
+          id: exerciseIdTransformed,
+          data: updateExerciseData
+        });
+
+        return Response.json({
+          success: true,
+          data: updatedExercise
+        });
+
+      } catch (error) {
+        console.error('[TrainerApi][update-exercise]:', error);
+        const errorMessage = error instanceof Error ? error.message : 'Erro inesperado ao atualizar exercício';
         return Response.json({ errors: [{ message: errorMessage }] }, { status: 500 });
       }
     }

@@ -817,4 +817,58 @@ export const TrainerApi: Endpoint[] = [
       }
     }
   },
+  {
+    method: 'delete',
+    path: '/exercises/:id',
+    handler: async (req: PayloadRequest) => {
+      try {
+        const trainerId = await getLoggedInTrainerId(req);
+        const exerciseId = req.routeParams?.id;
+
+        if (!exerciseId) {
+          return Response.json(
+            { errors: [{ message: 'ID do exercício é obrigatório' }] },
+            { status: 400 }
+          );
+        }
+        const exerciseIdTransformed = parseInt(String(exerciseId), 10);
+
+        // Delete exerciseWorkouts associated with this exercise
+        await req.payload.delete({
+          collection: 'exercise-workouts',
+          where: {
+            and: [
+              {
+                exercise: { equals: exerciseIdTransformed },
+              },
+              {
+                "workout_plan.trainer": { equals: trainerId },
+              },
+            ],
+          },
+        });
+
+        // Delete exercise itself
+        await req.payload.delete({
+          collection: 'exercises',
+          where: {
+            and: [
+              {
+                id: { equals: exerciseIdTransformed },
+              }
+            ],
+          },
+        });
+
+        return Response.json({
+          success: true,
+          message: 'exercício excluído com sucesso'
+        });
+      } catch (error) {
+        console.error('[TrainerApi][delete-exercise]:', error);
+        const errorMessage = error instanceof Error ? error.message : 'Erro inesperado ao excluir exercício';
+        return Response.json({ errors: [{ message: errorMessage }] }, { status: 500 });
+      }
+    }
+  },
 ];

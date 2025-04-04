@@ -368,7 +368,7 @@ export const TrainerApi: Endpoint[] = [
         console.log('Existing workout plans:', existingWorkoutPlans);
 
         if (existingWorkoutPlans.totalDocs > 0) {
-          throw new Error('Plano de refeição já cadastrado');
+          throw new Error('Plano de treino já cadastrado');
         }
 
         const workoutPlan = await req.payload.create({
@@ -381,6 +381,106 @@ export const TrainerApi: Endpoint[] = [
       } catch (error) {
         console.error('[TrainerApi][create-workout-plan]:', error);
         const errorMessage = error instanceof Error ? error.message : 'Erro inesperado ao criar plano de treino';
+        return Response.json({ errors: [{ message: errorMessage }] }, { status: 500 });
+      }
+    }
+  },
+  {
+    method: 'post',
+    path: '/exercise-workouts',
+    handler: async (req: PayloadRequest) => {
+      try {
+        // Parse request body
+        const data = await req.json?.();
+        if (!data) {
+          return Response.json(
+            { errors: [{ message: 'Corpo da requisição inválido' }] },
+            { status: 400 }
+          );
+        }
+
+        // Validate required fields
+        if (!data.workoutPlanId) {
+          return Response.json(
+            { errors: [{ message: 'ID do plano de treino é obrigatório' }] },
+            { status: 400 }
+          );
+        }
+
+        if (!data.exerciseId) {
+          return Response.json(
+            { errors: [{ message: 'ID do exercício é obrigatório' }] },
+            { status: 400 }
+          );
+        }
+
+        if (!data.sets) {
+          return Response.json(
+            { errors: [{ message: 'conjuntos são obrigatórios' }] },
+            { status: 400 }
+          );
+        }
+
+        if (!data.reps) {
+          return Response.json(
+            { errors: [{ message: 'repetições são obrigatórios' }] },
+            { status: 400 }
+          );
+        }
+
+
+        const workoutPlanId = parseInt(String(data.workoutPlanId), 10);
+        const exerciseId = parseInt(String(data.exerciseId), 10);
+        const sets = parseInt(String(data.sets), 10);
+        const reps = parseInt(String(data.reps), 10);
+        const restSeconds = parseInt(String(data.restSeconds), 10);
+        
+        // Create new diet plan
+        const exerciseWorkoutData = {
+          workout_plan: workoutPlanId,
+          exercise: exerciseId,
+          sets: sets,
+          reps: reps,
+          rest_seconds: restSeconds || null,
+          notes: data.notes || null
+        };
+
+        // Search for existing diet plans in the same date range
+        const existingExerciseWorkout = await req.payload.find({
+          collection: 'exercise-workouts',
+          where: {
+            and: [
+              {
+                workout_plan: {
+                  equals: workoutPlanId,
+                },
+              },
+              {
+                exercise: {
+                  equals: exerciseId,
+                },
+              }
+            ],
+          },
+          depth: 2,
+        });
+
+        console.log('Existing Exercise Workouts:', existingExerciseWorkout);
+
+        if (existingExerciseWorkout.totalDocs > 0) {
+          throw new Error('Treino de Exercício já cadastrado');
+        }
+
+        const exerciseWorkout = await req.payload.create({
+          collection: 'exercise-workouts',
+          data: exerciseWorkoutData
+        });
+
+        // Return response with created entities
+        return Response.json(exerciseWorkout);
+      } catch (error) {
+        console.error('[TrainerApi][create-exercise-workouts]:', error);
+        const errorMessage = error instanceof Error ? error.message : 'Erro inesperado ao criar exercício de treino';
         return Response.json({ errors: [{ message: errorMessage }] }, { status: 500 });
       }
     }

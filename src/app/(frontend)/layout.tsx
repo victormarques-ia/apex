@@ -1,6 +1,6 @@
 import React, { Suspense } from 'react'
 import { cn } from '@/lib/utils'
-import { Inter as FontSans } from 'next/font/google'
+import { DM_Sans as FontSans } from 'next/font/google'
 import './globals.css'
 import { Toaster } from '@/components/ui/sonner'
 import { Metadata } from 'next'
@@ -19,6 +19,7 @@ export const metadata: Metadata = {
 const fontSans = FontSans({
   subsets: ['latin'],
   variable: '--font-sans',
+  weight: ['400', '500', '700'],
 })
 
 export default async function RootLayout(props: { children: React.ReactNode }) {
@@ -28,7 +29,7 @@ export default async function RootLayout(props: { children: React.ReactNode }) {
     <html lang="pt-br">
       <body
         className={cn(
-          'min-h-screen bg-background font-sans antialiased max-w-screen-2xl mx-auto',
+          'min-h-screen bg-background font-sans antialiased container max-w-screen-2xl mx-auto',
           fontSans.variable,
         )}
       >

@@ -23,11 +23,11 @@ export function AuthLayout({ children, title }: { children: React.ReactNode; tit
       </div>
 
       <div className="w-full md:w-1/2 flex flex-col">
-        <div className="flex justify-end p-4">
+        {/* <div className="flex justify-end p-4">
           <Link href="/ajuda" className="text-blue-600 hover:text-blue-800">
             Ajuda
           </Link>
-        </div>
+        </div> */}
 
         <div className="flex-grow flex items-center justify-center px-4 py-8 md:py-0">
           <div className="w-full max-w-md">

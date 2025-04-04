@@ -17,6 +17,7 @@ import * as migration_20250306_194203_add_mealFood from './20250306_194203_add_m
 import * as migration_20250306_194851_add_dailyConsumption from './20250306_194851_add_dailyConsumption';
 import * as migration_20250306_195233_add_hydrationLog from './20250306_195233_add_hydrationLog';
 import * as migration_20250308_215935_add_reports_nutritionits_feedback_agencyprofessional from './20250308_215935_add_reports_nutritionits_feedback_agencyprofessional';
+import * as migration_20250331_200110_add_interval_days from './20250331_200110_add_interval_days';
 
 export const migrations = [
   {
@@ -112,6 +113,11 @@ export const migrations = [
   {
     up: migration_20250308_215935_add_reports_nutritionits_feedback_agencyprofessional.up,
     down: migration_20250308_215935_add_reports_nutritionits_feedback_agencyprofessional.down,
-    name: '20250308_215935_add_reports_nutritionits_feedback_agencyprofessional'
+    name: '20250308_215935_add_reports_nutritionits_feedback_agencyprofessional',
+  },
+  {
+    up: migration_20250331_200110_add_interval_days.up,
+    down: migration_20250331_200110_add_interval_days.down,
+    name: '20250331_200110_add_interval_days'
   },
 ];

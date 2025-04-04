@@ -107,7 +107,7 @@ export const TrainerApi: Endpoint[] = [
         const trainerId = await getLoggedInTrainerId(req);
 
         // Check if it has a diet plan associated with it
-        const workoutPlan = await req.payload.find({
+        const workoutPlans = await req.payload.find({
           collection: 'workout-plans',
           where: {
             and: [
@@ -138,10 +138,10 @@ export const TrainerApi: Endpoint[] = [
 
         if (!athleteId) throw new Error('Athlete ID required');
 
-        return Response.json(workoutPlan)
+        return Response.json(workoutPlans)
 
       } catch (error) {
-        console.error('[TrainerApi][diet-plans-days]:', error);
+        console.error('[TrainerApi][workout-plans]:', error);
         return Response.json({
           errors: [{ message: 'Erro inesperado ao buscar planos de treino.' }]
         }, { status: 500 })
@@ -197,9 +197,45 @@ export const TrainerApi: Endpoint[] = [
         return Response.json(workoutPlan)
 
       } catch (error) {
-        console.error('[TrainerApi][diet-plans-days]:', error);
+        console.error('[TrainerApi][workout-plans]:', error);
         return Response.json({
-          errors: [{ message: 'Erro inesperado ao buscar planos de treino.' }]
+          errors: [{ message: 'Erro inesperado ao buscar planos de treino por id.' }]
+        }, { status: 500 })
+      }
+    }
+  },
+  {
+    method: 'get',
+    path: '/exercises',
+    handler: async (req) => {
+      try {
+        const { name, muscleGroup } = req.query;
+        // list the exercises
+        const exercises = await req.payload.find({
+          collection: 'exercises',
+          where: {
+            and: [
+              name ? {
+                name: {
+                  like: name,
+                },
+              } : {},
+              muscleGroup ? {
+                muscle_group: {
+                  like: muscleGroup,
+                },
+              } : {}
+            ],
+          },
+          depth: 2,
+        });
+
+        return Response.json(exercises)
+
+      } catch (error) {
+        console.error('[TrainerApi][exercise]:', error);
+        return Response.json({
+          errors: [{ message: 'Erro inesperado ao buscar exercicios.' }]
         }, { status: 500 })
       }
     }

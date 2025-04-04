@@ -103,7 +103,7 @@ export const TrainerApi: Endpoint[] = [
     path: '/workout-plans',
     handler: async (req) => {
       try {
-        const { athleteId, date } = req.query;
+        const { athleteId, date, workoutPlanId } = req.query;
         const trainerId = await getLoggedInTrainerId(req);
 
         // Check if it has a diet plan associated with it
@@ -111,6 +111,11 @@ export const TrainerApi: Endpoint[] = [
           collection: 'workout-plans',
           where: {
             and: [
+              workoutPlanId ? {
+                id: {
+                  equals: workoutPlanId
+                }
+              } : {},
               {
                 athlete: {
                   equals: athleteId,
@@ -144,62 +149,6 @@ export const TrainerApi: Endpoint[] = [
         console.error('[TrainerApi][workout-plans]:', error);
         return Response.json({
           errors: [{ message: 'Erro inesperado ao buscar planos de treino.' }]
-        }, { status: 500 })
-      }
-    }
-  },
-  {
-    method: 'get',
-    path: '/workout-plans/:id',
-    handler: async (req) => {
-      try {
-        const { athleteId, date } = req.query;
-        const trainerId = await getLoggedInTrainerId(req);
-        const workoutPlanId = req.routeParams?.id;
-
-        // Check if it has a diet plan associated with it
-        const workoutPlan = await req.payload.find({
-          collection: 'workout-plans',
-          where: {
-            and: [
-              {
-                id: {
-                  equals: workoutPlanId,
-                },
-              },
-              {
-                athlete: {
-                  equals: athleteId,
-                },
-              },
-              {
-                trainer: {
-                  equals: trainerId,
-                },
-              },
-              date ? {
-                start_date: {
-                  less_than_equal: date as string,
-                },
-              } : {},
-              date ? {
-                end_date: {
-                  greater_than_equal: date as string,
-                },
-              } : {}
-            ],
-          },
-          depth: 2,
-        });
-
-        if (!athleteId) throw new Error('Athlete ID required');
-
-        return Response.json(workoutPlan)
-
-      } catch (error) {
-        console.error('[TrainerApi][workout-plans]:', error);
-        return Response.json({
-          errors: [{ message: 'Erro inesperado ao buscar planos de treino por id.' }]
         }, { status: 500 })
       }
     }

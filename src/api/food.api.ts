@@ -22,7 +22,7 @@ export const FoodApi: Endpoint[] = [
             },
           },
           limit: validLimit,
-          page: page ? parseInt(page as string, 10) : undefined, // PayloadCMS handles pagination
+          page: page ? parseInt(page as unknown as string, 10) : undefined, // PayloadCMS handles pagination
           sort: 'name', // Sort by name
         });
 

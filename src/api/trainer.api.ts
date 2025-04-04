@@ -677,6 +677,48 @@ export const TrainerApi: Endpoint[] = [
     }
   },
   {
+    method: 'delete',
+    path: '/exercise-workouts/:id',
+    handler: async (req: PayloadRequest) => {
+      try {
+        const trainerId = await getLoggedInTrainerId(req);
+        const exerciseWorkoutId = req.routeParams?.id;
+
+        if (!exerciseWorkoutId) {
+          return Response.json(
+            { errors: [{ message: 'ID do exercício de treino é obrigatório' }] },
+            { status: 400 }
+          );
+        }
+        const exerciseWorkoutIdTransformed = parseInt(String(exerciseWorkoutId), 10);
+
+        // Delete exerciseWorkouts itself
+        await req.payload.delete({
+          collection: 'exercise-workouts',
+          where: {
+            and: [
+              {
+                id: { equals: exerciseWorkoutIdTransformed },
+              },
+              {
+                "workout_plan.trainer": { equals: trainerId },
+              },
+            ],
+          },
+        });
+
+        return Response.json({
+          success: true,
+          message: 'exercício de treino excluído com sucesso'
+        });
+      } catch (error) {
+        console.error('[TrainerApi][delete-exercise-workout]:', error);
+        const errorMessage = error instanceof Error ? error.message : 'Erro inesperado ao excluir exercício de treino';
+        return Response.json({ errors: [{ message: errorMessage }] }, { status: 500 });
+      }
+    }
+  },
+  {
     method: 'get',
     path: '/exercises',
     handler: async (req) => {

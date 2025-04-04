@@ -189,4 +189,41 @@ export const TrainerApi: Endpoint[] = [
       }
     }
   },
+  {
+    method: 'get',
+    path: '/exercise-workouts',
+    handler: async (req) => {
+      try {
+        const { exerciseId, workoutPlanId } = req.query;
+        
+        // Check if it has a diet plan associated with it
+        const exerciseWorkouts = await req.payload.find({
+          collection: 'exercise-workouts',
+          where: {
+            and: [
+              workoutPlanId ? {
+                workout_plan: {
+                  equals: workoutPlanId
+                }
+              } : {},
+              exerciseId ? {
+                exercise: {
+                  equals: exerciseId
+                }
+              } : {}
+            ],
+          },
+          depth: 2,
+        });
+
+        return Response.json(exerciseWorkouts)
+
+      } catch (error) {
+        console.error('[TrainerApi][exercise-workouts]:', error);
+        return Response.json({
+          errors: [{ message: 'Erro inesperado ao buscar exercicios de treino.' }]
+        }, { status: 500 })
+      }
+    }
+  },
 ];

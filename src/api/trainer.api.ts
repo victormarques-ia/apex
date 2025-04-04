@@ -280,6 +280,127 @@ export const TrainerApi: Endpoint[] = [
     }
   },
   {
+    method: 'put',
+    path: '/workout-plans/:id',
+    handler: async (req: PayloadRequest) => {
+      try {
+        const trainerId = await getLoggedInTrainerId(req);
+        const workoutPlanId = req.routeParams?.id;
+
+        if (!workoutPlanId) {
+          return Response.json(
+            { errors: [{ message: 'ID do plano de treino é obrigatório' }] },
+            { status: 400 }
+          );
+        }
+        const workoutPlanIdTransformed = parseInt(String(workoutPlanId), 10);
+        // Parse request body
+        const data = await req.json?.();
+
+        console.log('data workout-plan update:', data);
+        if (!data) {
+          return Response.json(
+            { errors: [{ message: 'Corpo da requisição inválido' }] },
+            { status: 400 }
+          );
+        }
+
+        // Verify the diet plan exists and belongs to this nutritionist
+        const workoutPlan = await req.payload.find({
+          collection: 'workout-plans',
+          where: {
+            and: [
+              {
+                id: { equals: workoutPlanIdTransformed }
+              },
+              {
+                trainer: { equals: trainerId }
+              }
+            ]
+          },
+          depth: 2
+        });
+
+        if (workoutPlan.totalDocs === 0) {
+          return Response.json(
+            { errors: [{ message: 'Plano de treino não encontrado' }] },
+            { status: 404 }
+          );
+        }
+
+        // Update the diet plan with the provided data
+        const updateData = {
+          ...(data.startDate && { start_date: data.startDate }),
+          ...(data.endDate && { end_date: data.endDate }),
+          ...(data.goal !== undefined && { goal: data.goal })
+        };
+
+        const existingWorkoutPlans = await req.payload.find({
+          collection: 'workout-plans',
+          where: {
+            and: [
+              { id: { not_equals: workoutPlanIdTransformed } },
+              {
+                or: [
+                  {
+                    and: [
+                      {
+                        start_date: {
+                          less_than_equal: data.startDate,
+                        },
+                      },
+                      {
+                        end_date: {
+                          greater_than_equal: data.endDate,
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    and: [
+                      {
+                        start_date: {
+                          less_than_equal: data.startDate,
+                        },
+                      },
+                      {
+                        end_date: {
+                          greater_than_equal: data.endDate,
+                        }
+                      }
+                    ]
+                  }
+                ]
+              },
+            ],
+          },
+          depth: 2,
+        });
+
+        if (existingWorkoutPlans.totalDocs > 0) {
+          throw new Error('Plano de treino já cadastrado');
+        }
+
+
+        const updatedTrainPlan = await req.payload.update({
+          collection: 'workout-plans',
+          id: workoutPlanIdTransformed,
+          data: updateData
+        });
+
+        return Response.json({
+          success: true,
+          dietPlan: updatedTrainPlan
+        });
+
+      } catch (error) {
+        console.error('[TrainerApi][update-workout-plan]:', error);
+        const errorMessage = error instanceof Error ? error.message : 'Erro inesperado ao atualizar plano de treino';
+        return Response.json({ errors: [{ message: errorMessage }] }, { status: 500 });
+      }
+    }
+  },
+  {
     method: 'get',
     path: '/exercise-workouts',
     handler: async (req) => {

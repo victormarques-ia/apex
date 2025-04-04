@@ -226,4 +226,37 @@ export const TrainerApi: Endpoint[] = [
       }
     }
   },
+  {
+    method: 'post',
+    path: '/exercises',
+    handler: async (req: PayloadRequest) => {
+      try {
+        const data = await req.json?.();
+
+
+        if (!data.name) {
+          throw new Error('Diet name is required');
+        }
+
+        const exerciseData = {
+          name: data.name,
+          ...(data.description && { description: data.description }),
+          ...(data.muscleGroup && { muscle_group: data.muscleGroup }),
+        };
+
+        // Create the exercise
+        const meal = await req.payload.create({
+          collection: 'exercises',
+          data: exerciseData,
+        });
+
+        return Response.json(meal);
+      }
+      catch (error) {
+        console.error('[TrainerApi][create-exercise]:', error);
+        const errorMessage = error instanceof Error ? error.message : 'Erro inesperado ao criar exercício';
+        return Response.json({ errors: [{ message: errorMessage }] }, { status: 500 });
+      }
+    }
+  },
 ];

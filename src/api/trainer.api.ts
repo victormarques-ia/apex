@@ -416,6 +416,21 @@ export const TrainerApi: Endpoint[] = [
         }
         const workoutPlanIdTransformed = parseInt(String(workoutPlanId), 10);
 
+        // Delete physical-activity-logs associated with this workout plan
+        await req.payload.delete({
+          collection: 'physical-activity-logs',
+          where: {
+            and: [
+              {
+                "workout_plan.trainer": { equals: trainerId },
+              },
+              {
+                workout_plan: { equals: workoutPlanIdTransformed },
+              },
+            ],
+          },
+        });
+
         // Delete exerciseWorkouts associated with this workout plan
         await req.payload.delete({
           collection: 'exercise-workouts',

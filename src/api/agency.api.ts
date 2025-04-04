@@ -543,11 +543,7 @@ export const AgencyApi: Endpoint[] = [
         const sortOrder = (req.query.sortOrder as string) || 'asc'
         // Você pode ordenar por nome, data da ultima atualizacao e meta.
         // Exemplo: user.name, updatedAt, specialization
-        const sortFields = [
-          'user.name',
-          'createdAt',
-          'specialization',
-        ]
+        const sortFields = ['user.name', 'createdAt', 'specialization']
         const sortField = (req.query.sortField as number) || 0
         const specialization = (req.query.specialization as string) || ''
 
@@ -655,11 +651,7 @@ export const AgencyApi: Endpoint[] = [
         const sortOrder = (req.query.sortOrder as string) || 'asc'
         // Você pode ordenar por nome, data da ultima atualizacao e meta.
         // Exemplo: user.name, updatedAt, specialization
-        const sortFields = [
-          'user.name',
-          'createdAt',
-          'specialization',
-        ]
+        const sortFields = ['user.name', 'createdAt', 'specialization']
         const sortField = (req.query.sortField as number) || 0
         const specialization = (req.query.specialization as string) || ''
 
@@ -767,11 +759,7 @@ export const AgencyApi: Endpoint[] = [
         const sortOrder = (req.query.sortOrder as string) || 'asc'
         // Você pode ordenar por nome, data da ultima atualizacao e meta.
         // Exemplo: user.name, createdAt, gender
-        const sortFields = [
-          'user.name',
-          'createdAt',
-          'gender',
-        ]
+        const sortFields = ['user.name', 'createdAt', 'gender']
         const sortField = (req.query.sortField as number) || 0
         const gender = (req.query.gender as string) || ''
 
@@ -794,14 +782,14 @@ export const AgencyApi: Endpoint[] = [
                   ]
                 : []),
               ...(gender.trim()
-              ? [
-                  {
-                    'gender': {
-                      like: gender,
+                ? [
+                    {
+                      gender: {
+                        like: gender,
+                      },
                     },
-                  },
-                ]
-              : []),
+                  ]
+                : []),
             ],
           },
           depth: 2,
@@ -818,7 +806,7 @@ export const AgencyApi: Endpoint[] = [
           return Response.json({
             data: {
               total: 0,
-              athletes: []
+              athletes: [],
             },
           })
         }
@@ -826,7 +814,7 @@ export const AgencyApi: Endpoint[] = [
         return Response.json({
           data: {
             total: athletesProfiles.totalDocs,
-            athletes: athletes
+            athletes: athletes,
           },
         })
       } catch (error) {

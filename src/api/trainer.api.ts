@@ -1,6 +1,30 @@
 import { fetchFromApi } from '@/app/utils/fetch-from-api';
 import { Endpoint, PayloadRequest } from 'payload'
 
+async function getLoggedInTrainerId(req: PayloadRequest) {
+  if (!req.user) {
+    throw new Error('Usuário não autenticado');
+  }
+
+  const userId = req.user.id;
+
+  const trainerProfiles = await req.payload.find({
+    collection: 'trainers',
+    where: {
+      user: {
+        equals: userId,
+      },
+    },
+    limit: 1,
+  });
+
+  if (!trainerProfiles.docs || trainerProfiles.docs.length === 0) {
+    throw new Error('Perfil de treinador não encontrado para este usuário');
+  }
+
+  return trainerProfiles.docs[0].id;
+}
+
 export const TrainerApi: Endpoint[] = [
   {
     method: 'get',

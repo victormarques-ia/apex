@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { toast } from 'sonner'
 import { z } from 'zod'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import {
   Form,
   FormControl,
@@ -35,6 +35,8 @@ const schema = z
   })
 export default function RedefinePasswordPage() {
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const token = searchParams.get('token') || ''
 
   const { pending, state, onSubmit, ...form } = useCustomForm({
     action: redefinePasswordAction,
@@ -42,7 +44,7 @@ export default function RedefinePasswordPage() {
     defaultValues: {
       password: '',
       confirmPassword: '',
-      token: new URLSearchParams(location.search).get('token') || '',
+      token: token,
     },
   })
   useEffect(() => {

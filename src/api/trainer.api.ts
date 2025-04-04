@@ -97,5 +97,55 @@ export const TrainerApi: Endpoint[] = [
         );
       }
     },
-  }
+  },
+  {
+    method: 'get',
+    path: '/wourkout-plans',
+    handler: async (req) => {
+      try {
+        const { athleteId, date } = req.query;
+        const trainerId = await getLoggedInTrainerId(req);
+
+        // Check if it has a diet plan associated with it
+        const workoutPlan = await req.payload.find({
+          collection: 'workout-plans',
+          where: {
+            and: [
+              {
+                athlete: {
+                  equals: athleteId,
+                },
+              },
+              {
+                trainer: {
+                  equals: trainerId,
+                },
+              },
+              date ? {
+                start_date: {
+                  less_than_equal: date as string,
+                },
+              } : {},
+              date ? {
+                end_date: {
+                  greater_than_equal: date as string,
+                },
+              } : {}
+            ],
+          },
+          depth: 2,
+        });
+
+        if (!athleteId) throw new Error('Athlete ID required');
+
+        return Response.json(workoutPlan)
+
+      } catch (error) {
+        console.error('[TrainerApi][diet-plans-days]:', error);
+        return Response.json({
+          errors: [{ message: 'Erro inesperado ao buscar planos de treino.' }]
+        }, { status: 500 })
+      }
+    }
+  },
 ];

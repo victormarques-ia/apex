@@ -1,115 +1,115 @@
 /*
-  * ATENÇÃO FRONTENDERS: Modifique o arquivo abaixo para atender às suas necessidades
-  * ATENÇÃO FRONTENDERS: Modifique o arquivo abaixo para atender às suas necessidades
-  * ATENÇÃO FRONTENDERS: Modifique o arquivo abaixo para atender às suas necessidades
-  * ATENÇÃO FRONTENDERS: Modifique o arquivo abaixo para atender às suas necessidades
-  * ATENÇÃO FRONTENDERS: Modifique o arquivo abaixo para atender às suas necessidades
-  * ATENÇÃO FRONTENDERS: Modifique o arquivo abaixo para atender às suas necessidades
-  * ATENÇÃO FRONTENDERS: Modifique o arquivo abaixo para atender às suas necessidades
-  * ATENÇÃO FRONTENDERS: Modifique o arquivo abaixo para atender às suas necessidades
-  * ATENÇÃO FRONTENDERS: Modifique o arquivo abaixo para atender às suas necessidades
-  * ATENÇÃO FRONTENDERS: Modifique o arquivo abaixo para atender às suas necessidades
-  * ATENÇÃO FRONTENDERS: Modifique o arquivo abaixo para atender às suas necessidades
-  * ATENÇÃO FRONTENDERS: Modifique o arquivo abaixo para atender às suas necessidades
-  * ATENÇÃO FRONTENDERS: Modifique o arquivo abaixo para atender às suas necessidades
-  * ATENÇÃO FRONTENDERS: Modifique o arquivo abaixo para atender às suas necessidades
-*/
-  
-'use client';
+ * ATENÇÃO FRONTENDERS: Modifique o arquivo abaixo para atender às suas necessidades
+ * ATENÇÃO FRONTENDERS: Modifique o arquivo abaixo para atender às suas necessidades
+ * ATENÇÃO FRONTENDERS: Modifique o arquivo abaixo para atender às suas necessidades
+ * ATENÇÃO FRONTENDERS: Modifique o arquivo abaixo para atender às suas necessidades
+ * ATENÇÃO FRONTENDERS: Modifique o arquivo abaixo para atender às suas necessidades
+ * ATENÇÃO FRONTENDERS: Modifique o arquivo abaixo para atender às suas necessidades
+ * ATENÇÃO FRONTENDERS: Modifique o arquivo abaixo para atender às suas necessidades
+ * ATENÇÃO FRONTENDERS: Modifique o arquivo abaixo para atender às suas necessidades
+ * ATENÇÃO FRONTENDERS: Modifique o arquivo abaixo para atender às suas necessidades
+ * ATENÇÃO FRONTENDERS: Modifique o arquivo abaixo para atender às suas necessidades
+ * ATENÇÃO FRONTENDERS: Modifique o arquivo abaixo para atender às suas necessidades
+ * ATENÇÃO FRONTENDERS: Modifique o arquivo abaixo para atender às suas necessidades
+ * ATENÇÃO FRONTENDERS: Modifique o arquivo abaixo para atender às suas necessidades
+ * ATENÇÃO FRONTENDERS: Modifique o arquivo abaixo para atender às suas necessidades
+ */
 
-import React, { useState, useEffect } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import { 
-  Select, 
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue 
-} from '@/components/ui/select';
-import { Button } from '@/components/ui/button';
-import NutritionDashboard from './components/NutritionDashboard';
-import { DietTabContent } from '@/app/(frontend)/nutritionist/components/diet-tab';
+'use client'
+
+import React, { useState, useEffect } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import { Button } from '@/components/ui/button'
+import NutritionDashboard from './components/NutritionDashboard'
+import { DietTabContent } from '@/components/ui/diet-tab'
 
 // Define the main tabs
 const TABS = {
   OVERVIEW: 'overview',
   DIET: 'dieta',
   TRAINING: 'treinos',
-  SETTINGS: 'configuracoes'
-};
+  SETTINGS: 'configuracoes',
+}
 
 // Types for athlete data
 type Athlete = {
-  id: string;
+  id: string
   user: {
-    id: string;
-    name: string;
-  };
-};
+    id: string
+    name: string
+  }
+}
 
 export default function NutritionistOverviewPage() {
-  const router = useRouter();
-  const searchParams = useSearchParams();
-  
+  const router = useRouter()
+  const searchParams = useSearchParams()
+
   // Get active tab and athlete from URL params
-  const activeTab = searchParams.get('tab') || TABS.OVERVIEW;
-  const athleteId = searchParams.get('athleteId') || '';
-  
+  const activeTab = searchParams.get('tab') || TABS.OVERVIEW
+  const athleteId = searchParams.get('athleteId') || ''
+
   // State variables
-  const [athletes, setAthletes] = useState<Athlete[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [selectedAthleteId, setSelectedAthleteId] = useState<string>(athleteId);
+  const [athletes, setAthletes] = useState<Athlete[]>([])
+  const [loading, setLoading] = useState<boolean>(true)
+  const [selectedAthleteId, setSelectedAthleteId] = useState<string>(athleteId)
 
   // Fetch the list of athletes assigned to the nutritionist
   useEffect(() => {
     const fetchAthletes = async () => {
       try {
-        const response = await fetch('/api/nutritionists/my-athletes');
-        
+        const response = await fetch('/api/nutritionists/my-athletes')
+
         if (!response.ok) {
-          throw new Error('Failed to fetch athletes');
+          throw new Error('Failed to fetch athletes')
         }
 
-        console.log(response);
-        
-        const data = await response.json();
-        setAthletes(data.data.athletes || []);
-        
+        console.log(response)
+
+        const data = await response.json()
+        setAthletes(data.data.athletes || [])
+
         // If no athlete is selected but we have athletes, auto-select the first one
         if (!selectedAthleteId && data.data.athletes?.length > 0) {
-          setSelectedAthleteId(data.data.athletes[0].id);
-          updateURLParams(activeTab, data.data.athletes[0].id);
+          setSelectedAthleteId(data.data.athletes[0].id)
+          updateURLParams(activeTab, data.data.athletes[0].id)
         }
       } catch (error) {
-        console.error('Error fetching athletes:', error);
+        console.error('Error fetching athletes:', error)
       } finally {
-        setLoading(false);
+        setLoading(false)
       }
-    };
+    }
 
-    fetchAthletes();
-  }, []);
+    fetchAthletes()
+  }, [])
 
   // Update URL params when tab or athlete changes
   const updateURLParams = (tab: string, athleteId: string) => {
-    const params = new URLSearchParams(searchParams.toString());
-    params.set('tab', tab);
-    params.set('athleteId', athleteId);
-    router.push(`?${params.toString()}`);
-  };
+    const params = new URLSearchParams(searchParams.toString())
+    params.set('tab', tab)
+    params.set('athleteId', athleteId)
+    router.push(`?${params.toString()}`)
+  }
 
   // Handle tab change
   const handleTabChange = (value: string) => {
-    updateURLParams(value, selectedAthleteId);
-  };
+    updateURLParams(value, selectedAthleteId)
+  }
 
   // Handle athlete selection change
   const handleAthleteChange = (value: string) => {
-    setSelectedAthleteId(value);
-    updateURLParams(activeTab, value);
-  };
+    setSelectedAthleteId(value)
+    updateURLParams(activeTab, value)
+  }
 
   // Loading state
   if (loading) {
@@ -123,7 +123,7 @@ export default function NutritionistOverviewPage() {
           </CardContent>
         </Card>
       </div>
-    );
+    )
   }
 
   // No athletes state
@@ -138,14 +138,14 @@ export default function NutritionistOverviewPage() {
           </CardContent>
         </Card>
       </div>
-    );
+    )
   }
 
   return (
     <div className="container mx-auto p-6">
       <div className="mb-6">
         <h1 className="text-2xl font-bold">Painel de Nutricionista</h1>
-        
+
         {/* Athlete selector */}
         <div className="mt-4">
           <Select value={selectedAthleteId} onValueChange={handleAthleteChange}>
@@ -186,7 +186,7 @@ export default function NutritionistOverviewPage() {
                 <DietTabContent athleteId={selectedAthleteId} />
               ) : (
                 <div className="min-h-[600px] flex items-center justify-center">
-                <p>Selecione um atleta para visualizar o plano alimentar</p>
+                  <p>Selecione um atleta para visualizar o plano alimentar</p>
                 </div>
               )}
             </TabsContent>
@@ -212,5 +212,5 @@ export default function NutritionistOverviewPage() {
         </Card>
       </Tabs>
     </div>
-  );
+  )
 }

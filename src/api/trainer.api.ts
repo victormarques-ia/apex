@@ -154,79 +154,6 @@ export const TrainerApi: Endpoint[] = [
     }
   },
   {
-    method: 'get',
-    path: '/exercises',
-    handler: async (req) => {
-      try {
-        const { name, muscleGroup } = req.query;
-        // list the exercises
-        const exercises = await req.payload.find({
-          collection: 'exercises',
-          where: {
-            and: [
-              name ? {
-                name: {
-                  like: name,
-                },
-              } : {},
-              muscleGroup ? {
-                muscle_group: {
-                  like: muscleGroup,
-                },
-              } : {}
-            ],
-          },
-          depth: 2,
-        });
-
-        return Response.json(exercises)
-
-      } catch (error) {
-        console.error('[TrainerApi][exercise]:', error);
-        return Response.json({
-          errors: [{ message: 'Erro inesperado ao buscar exercicios.' }]
-        }, { status: 500 })
-      }
-    }
-  },
-  {
-    method: 'get',
-    path: '/exercise-workouts',
-    handler: async (req) => {
-      try {
-        const { exerciseId, workoutPlanId } = req.query;
-        
-        // Check if it has a diet plan associated with it
-        const exerciseWorkouts = await req.payload.find({
-          collection: 'exercise-workouts',
-          where: {
-            and: [
-              workoutPlanId ? {
-                workout_plan: {
-                  equals: workoutPlanId
-                }
-              } : {},
-              exerciseId ? {
-                exercise: {
-                  equals: exerciseId
-                }
-              } : {}
-            ],
-          },
-          depth: 2,
-        });
-
-        return Response.json(exerciseWorkouts)
-
-      } catch (error) {
-        console.error('[TrainerApi][exercise-workouts]:', error);
-        return Response.json({
-          errors: [{ message: 'Erro inesperado ao buscar exercicios de treino.' }]
-        }, { status: 500 })
-      }
-    }
-  },
-  {
     method: 'post',
     path: '/workout-plans',
     handler: async (req: PayloadRequest) => {
@@ -349,6 +276,43 @@ export const TrainerApi: Endpoint[] = [
         console.error('[TrainerApi][create-workout-plan]:', error);
         const errorMessage = error instanceof Error ? error.message : 'Erro inesperado ao criar plano de treino';
         return Response.json({ errors: [{ message: errorMessage }] }, { status: 500 });
+      }
+    }
+  },
+  {
+    method: 'get',
+    path: '/exercise-workouts',
+    handler: async (req) => {
+      try {
+        const { exerciseId, workoutPlanId } = req.query;
+        
+        // Check if it has a diet plan associated with it
+        const exerciseWorkouts = await req.payload.find({
+          collection: 'exercise-workouts',
+          where: {
+            and: [
+              workoutPlanId ? {
+                workout_plan: {
+                  equals: workoutPlanId
+                }
+              } : {},
+              exerciseId ? {
+                exercise: {
+                  equals: exerciseId
+                }
+              } : {}
+            ],
+          },
+          depth: 2,
+        });
+
+        return Response.json(exerciseWorkouts)
+
+      } catch (error) {
+        console.error('[TrainerApi][exercise-workouts]:', error);
+        return Response.json({
+          errors: [{ message: 'Erro inesperado ao buscar exercicios de treino.' }]
+        }, { status: 500 })
       }
     }
   },

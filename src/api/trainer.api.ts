@@ -259,4 +259,130 @@ export const TrainerApi: Endpoint[] = [
       }
     }
   },
+  {
+    method: 'post',
+    path: '/workout-plans',
+    handler: async (req: PayloadRequest) => {
+      try {
+        // Authentication check
+        const trainerId = await getLoggedInTrainerId(req);
+
+        // Parse request body
+        const data = await req.json?.();
+        if (!data) {
+          return Response.json(
+            { errors: [{ message: 'Corpo da requisição inválido' }] },
+            { status: 400 }
+          );
+        }
+
+        // Validate required fields
+        if (!data.athleteId) {
+          return Response.json(
+            { errors: [{ message: 'ID do atleta é obrigatório' }] },
+            { status: 400 }
+          );
+        }
+
+        const athleteId = parseInt(String(data.athleteId), 10);
+
+        // Validate required date fields
+        if (!data.startDate) {
+          return Response.json(
+            { errors: [{ message: 'Data de início é obrigatória' }] },
+            { status: 400 }
+          );
+        }
+
+        if (!data.endDate) {
+          return Response.json(
+            { errors: [{ message: 'Data de término é obrigatória' }] },
+            { status: 400 }
+          );
+        }
+
+        const startDate = data.startDate;
+        const endDate = data.endDate;
+
+        // Create new diet plan
+        const workoutPlanData = {
+          athlete: athleteId,
+          trainer: trainerId,
+          start_date: startDate,
+          end_date: endDate,
+          goal: data.goal || null
+        };
+
+        // Search for existing diet plans in the same date range
+        const existingWorkoutPlans = await req.payload.find({
+          collection: 'workout-plans',
+          where: {
+            and: [
+              {
+                athlete: {
+                  equals: athleteId,
+                },
+              },
+              {
+                trainer: {
+                  equals: trainerId,
+                },
+              },
+              {
+                or: [
+                  {
+                    and: [
+                      {
+                        start_date: {
+                          less_than_equal: startDate,
+                        },
+                      },
+                      {
+                        end_date: {
+                          greater_than_equal: endDate,
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    and: [
+                      {
+                        start_date: {
+                          less_than_equal: startDate,
+                        },
+                      },
+                      {
+                        end_date: {
+                          greater_than_equal: endDate,
+                        }
+                      }
+                    ]
+                  }
+                ]
+              },
+            ],
+          },
+          depth: 2,
+        });
+
+        console.log('Existing workout plans:', existingWorkoutPlans);
+
+        if (existingWorkoutPlans.totalDocs > 0) {
+          throw new Error('Plano de refeição já cadastrado');
+        }
+
+        const workoutPlan = await req.payload.create({
+          collection: 'workout-plans',
+          data: workoutPlanData
+        });
+
+        // Return response with created entities
+        return Response.json(workoutPlan);
+      } catch (error) {
+        console.error('[TrainerApi][create-workout-plan]:', error);
+        const errorMessage = error instanceof Error ? error.message : 'Erro inesperado ao criar plano de treino';
+        return Response.json({ errors: [{ message: errorMessage }] }, { status: 500 });
+      }
+    }
+  },
 ];

@@ -12,7 +12,15 @@ export const metadata: Metadata = {
   openGraph: {
     title: 'Apex',
     description: 'Aprimore o desempenho da sua equipe com a Apex.',
-    images: '/assets/logo.svg',
+    images: [
+      {
+        url: '/assets/logo-media.png',
+        secureUrl: '/assets/logo-media.png',
+        width: 382,
+        height: 500,
+        alt: 'Apex logo',
+      },
+    ],
   },
 }
 

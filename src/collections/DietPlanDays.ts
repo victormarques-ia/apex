@@ -22,5 +22,10 @@ export const DietPlanDays: CollectionConfig = {
       type: 'text',
       required: false,
     },
+    {
+      name: 'repeat_interval_days',
+      type: 'number',
+      required: false,
+    },
   ],
 }

@@ -279,6 +279,7 @@ export interface DietPlanDay {
   diet_plan: number | DietPlan;
   date: string;
   day_of_week?: string | null;
+  repeat_interval_days?: number | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -698,6 +699,7 @@ export interface DietPlanDaysSelect<T extends boolean = true> {
   diet_plan?: T;
   date?: T;
   day_of_week?: T;
+  repeat_interval_days?: T;
   updatedAt?: T;
   createdAt?: T;
 }

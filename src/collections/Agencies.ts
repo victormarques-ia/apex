@@ -1,3 +1,4 @@
+import { AgencyApi } from '@/api/agency.api'
 import type { CollectionConfig } from 'payload'
 
 export const Agencies: CollectionConfig = {
@@ -22,4 +23,11 @@ export const Agencies: CollectionConfig = {
       type: 'text',
     },
   ],
+  endpoints: AgencyApi,
+  access: {
+    read: ({ req }) => !!req.user,
+    create: ({ req }) => !!req.user,
+    update: ({ req }) => !!req.user,
+    delete: ({}) => false,
+  },
 }

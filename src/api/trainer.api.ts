@@ -305,7 +305,7 @@ export const TrainerApi: Endpoint[] = [
           );
         }
 
-        // Verify the diet plan exists and belongs to this nutritionist
+        // Verify the diet plan exists and belongs to this trainer
         const workoutPlan = await req.payload.find({
           collection: 'workout-plans',
           where: {
@@ -497,7 +497,7 @@ export const TrainerApi: Endpoint[] = [
           notes: data.notes || null
         };
 
-        // Search for existing diet plans in the same date range
+        // Search for existing the same ExerciseWorkout
         const existingExerciseWorkout = await req.payload.find({
           collection: 'exercise-workouts',
           where: {
@@ -533,6 +533,88 @@ export const TrainerApi: Endpoint[] = [
       } catch (error) {
         console.error('[TrainerApi][create-exercise-workouts]:', error);
         const errorMessage = error instanceof Error ? error.message : 'Erro inesperado ao criar exercício de treino';
+        return Response.json({ errors: [{ message: errorMessage }] }, { status: 500 });
+      }
+    }
+  },
+  {
+    method: 'put',
+    path: '/exercise-workouts/:id',
+    handler: async (req: PayloadRequest) => {
+      try {
+        const trainerId = await getLoggedInTrainerId(req);
+        const exerciseWorkoutId = req.routeParams?.id;
+
+        if (!exerciseWorkoutId) {
+          return Response.json(
+            { errors: [{ message: 'ID do exercício de treino é obrigatório' }] },
+            { status: 400 }
+          );
+        }
+        const exerciseWorkoutIdTransformed = parseInt(String(exerciseWorkoutId), 10);
+        // Parse request body
+        const data = await req.json?.();
+
+        console.log('data exercise-workout update:', data);
+        if (!data) {
+          return Response.json(
+            { errors: [{ message: 'Corpo da requisição inválido' }] },
+            { status: 400 }
+          );
+        }
+
+        // Verify the exercise workout exists and belongs to this trainer
+        const exerciseWorkout = await req.payload.find({
+          collection: 'exercise-workouts',
+          where: {
+            and: [
+              {
+                id: { equals: exerciseWorkoutIdTransformed }
+              },
+              {
+                "workout_plan.trainer": { equals: trainerId }
+              }
+            ]
+          },
+          depth: 2
+        });
+
+        if (exerciseWorkout.totalDocs === 0) {
+          return Response.json(
+            { errors: [{ message: 'Exercício de treino não encontrado' }] },
+            { status: 404 }
+          );
+        }
+        const workoutPlanId = parseInt(String(data.workoutPlanId), 10);
+        const exerciseId = parseInt(String(data.exerciseId), 10);
+        const sets = parseInt(String(data.sets), 10);
+        const reps = parseInt(String(data.reps), 10);
+        const restSeconds = parseInt(String(data.restSeconds), 10);
+
+        // Update the exercise Workout with the provided data
+        const updateData = {
+          ...(workoutPlanId && { workout_plan: workoutPlanId }),
+          ...(exerciseId && { exercise: exerciseId }),
+          ...(sets && { sets: sets }),
+          ...(reps && { reps: reps }),
+          ...(restSeconds && { rest_seconds: restSeconds }),
+          ...(data.notes && { notes: data.notes }),
+        };
+
+        const updatedExerciseWorkout = await req.payload.update({
+          collection: 'exercise-workouts',
+          id: exerciseWorkoutIdTransformed,
+          data: updateData
+        });
+
+        return Response.json({
+          success: true,
+          dietPlan: updatedExerciseWorkout
+        });
+
+      } catch (error) {
+        console.error('[TrainerApi][update-exercise-workout]:', error);
+        const errorMessage = error instanceof Error ? error.message : 'Erro inesperado ao atualizar exercício de treino';
         return Response.json({ errors: [{ message: errorMessage }] }, { status: 500 });
       }
     }
@@ -633,7 +715,7 @@ export const TrainerApi: Endpoint[] = [
           );
         }
 
-        // Verify the diet plan day exists and belongs to this nutritionist
+        // Verify the diet plan day exists and belongs to this trainer
         const exercise = await req.payload.find({
           collection: 'exercises',
           where: {

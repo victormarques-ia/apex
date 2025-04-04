@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { Suspense } from 'react'
 import { cn } from '@/lib/utils'
 import { DM_Sans as FontSans } from 'next/font/google'
 import './globals.css'
@@ -33,7 +33,9 @@ export default async function RootLayout(props: { children: React.ReactNode }) {
           fontSans.variable,
         )}
       >
-        <main>{children}</main>
+        <main>
+          <Suspense>{children}</Suspense>
+        </main>
         <Toaster />
       </body>
     </html>

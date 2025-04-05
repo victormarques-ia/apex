@@ -1,5 +1,8 @@
+'use client'
+
 import Link from 'next/link'
 import Image from 'next/image'
+import { Suspense } from 'react'
 
 export function AuthLayout({ children, title }: { children: React.ReactNode; title: string }) {
   return (
@@ -42,8 +45,7 @@ export function AuthLayout({ children, title }: { children: React.ReactNode; tit
             <h2 className="text-xl md:text-2xl font-semibold text-gray-800 mb-6 md:mb-8 text-center">
               {title}
             </h2>
-
-            {children}
+            <Suspense>{children}</Suspense>
 
             <div className="mt-2 text-center text-xs md:text-sm text-gray-600 max-w-[280px] mx-auto">
               By clicking continue, you agree to our{' '}

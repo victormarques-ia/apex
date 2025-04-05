@@ -453,17 +453,21 @@ async function AuthButton() {
 
   if (data && data.user) {
     return (
-      <Button variant={'outline'}>
-        <UserCircle />
-        <Link href="/home">Olá, {data.user.name.split(' ')[0]}</Link>
+      <Button variant={'outline'} asChild>
+        <Link href="/home">
+          <UserCircle className="mr-2 h-4 w-4" />
+          Olá, {data.user.name.split(' ')[0]}
+        </Link>
       </Button>
     )
   }
 
   return (
-    <Button variant={'outline'}>
-      <UserCircle />
-      <Link href="/auth/sign-in">Entrar</Link>
+    <Button variant={'outline'} asChild>
+      <Link href="/auth/sign-in">
+        <UserCircle className="mr-2 h-4 w-4" />
+        Entrar
+      </Link>
     </Button>
   )
 }

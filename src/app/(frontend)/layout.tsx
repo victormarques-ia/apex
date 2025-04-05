@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { Suspense } from 'react'
 import { cn } from '@/lib/utils'
 import { DM_Sans as FontSans } from 'next/font/google'
 import './globals.css'
@@ -12,7 +12,15 @@ export const metadata: Metadata = {
   openGraph: {
     title: 'Apex',
     description: 'Aprimore o desempenho da sua equipe com a Apex.',
-    images: '/assets/logo.svg',
+    images: [
+      {
+        url: '/assets/logo-media.png',
+        secureUrl: '/assets/logo-media.png',
+        width: 382,
+        height: 500,
+        alt: 'Apex logo',
+      },
+    ],
   },
 }
 
@@ -33,7 +41,9 @@ export default async function RootLayout(props: { children: React.ReactNode }) {
           fontSans.variable,
         )}
       >
-        <main>{children}</main>
+        <main>
+          <Suspense>{children}</Suspense>
+        </main>
         <Toaster />
       </body>
     </html>

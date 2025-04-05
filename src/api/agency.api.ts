@@ -590,7 +590,7 @@ export const AgencyApi: Endpoint[] = [
             and: [
               {
                 user: {
-                  in: professionals.map((professional) => professional.id),
+                  in: professionals.map((professional) => typeof professional === 'object' && 'id' in professional ? professional.id : professional),
                 },
               },
               ...(specialization.trim()
@@ -696,7 +696,7 @@ export const AgencyApi: Endpoint[] = [
             and: [
               {
                 user: {
-                  in: professionals.map((professional) => professional.id),
+                  in: professionals.map((professional) => typeof professional === 'object' && 'id' in professional ? professional.id : professional),
                 },
               },
               ...(specialization.trim()

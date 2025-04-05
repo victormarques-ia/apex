@@ -1,10 +1,9 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState } from 'react'
 import Link from 'next/link'
 import { useRouter, usePathname, useSearchParams } from 'next/navigation'
 import { MessageSquare, Bell, LogOut } from 'lucide-react'
-import { cookies } from 'next/headers'
 import {
   Select,
   SelectContent,
@@ -33,6 +32,7 @@ type HeaderProps = {
   athleteId?: string
   athletes?: Athlete[]
   onAthleteChange?: (athleteId: string) => void
+  hideAthleteSelector?: boolean
 }
 
 const TABS = {
@@ -50,6 +50,7 @@ export default function Header({
   athleteId = '',
   athletes = [],
   onAthleteChange,
+  hideAthleteSelector = false, // New prop to hide the athlete selector for athlete view
 }: HeaderProps) {
   const router = useRouter()
   const pathname = usePathname()
@@ -60,6 +61,8 @@ export default function Header({
 
   // Check if user is nutritionist or trainer to show "Lista de Atletas"
   const isNutritionistOrTrainer = userRole === 'nutritionist' || userRole === 'trainer'
+  const shouldShowAthleteSelector =
+    isNutritionistOrTrainer && !hideAthleteSelector && athletes.length > 0
 
   const handleTabClick = (tab: string) => {
     if (onTabChange) {
@@ -126,7 +129,8 @@ export default function Header({
 
             {/* Navigation tabs */}
             <div className="flex items-center space-x-6">
-              {isNutritionistOrTrainer && athletes.length > 0 && (
+              {/* Only show athlete selector for nutritionists/trainers */}
+              {shouldShowAthleteSelector && (
                 <div className="px-4">
                   <Select value={athleteId} onValueChange={handleAthleteChange}>
                     <SelectTrigger className="w-48 h-8 text-sm border-gray-300">
@@ -142,14 +146,13 @@ export default function Header({
                   </Select>
                 </div>
               )}
+
               <button
                 className={`text-sm ${activeTab === TABS.OVERVIEW ? 'text-blue-700 font-medium' : 'text-gray-600'}`}
                 onClick={() => handleTabClick(TABS.OVERVIEW)}
               >
                 Overview
               </button>
-
-              {/* Athlete selector for nutritionists and trainers */}
 
               <button
                 className={`text-sm ${activeTab === TABS.DIET ? 'text-blue-700 font-medium' : 'text-gray-600'}`}

@@ -30,6 +30,7 @@ import {
 } from '@/components/ui/select'
 import NutritionDashboard from './components/trainerDashboard'
 import { DietTabContent } from '@/components/ui/diet-tab'
+import Header from '@/components/ui/header'
 
 // Define the main tabs
 const TABS = {
@@ -61,8 +62,26 @@ export default function TrainerOverviewPage() {
   const [loading, setLoading] = useState<boolean>(true)
   const [selectedAthleteId, setSelectedAthleteId] = useState<string>(athleteId)
 
-  // Fetch the list of athletes assigned to the nutritionist
+  const [userInfo, setUserInfo] = useState({ role: 'trainer', name: 'Treinador' }) // Default values
+
+  // Fetch the list of athletes assigned to the trainer
   useEffect(() => {
+    const fetchUserInfo = async () => {
+      try {
+        const response = await fetch('/api/users/me')
+        if (response.ok) {
+          const data = await response.json()
+          console.log('User info:', data)
+          setUserInfo({
+            role: data.user.role || 'trainer',
+            name: data.user.name || 'Treinador',
+          })
+        }
+      } catch (error) {
+        console.error('Error fetching user info:', error)
+      }
+    }
+
     const fetchAthletes = async () => {
       try {
         const response = await fetch('/api/trainers/athletes')
@@ -88,6 +107,7 @@ export default function TrainerOverviewPage() {
       }
     }
 
+    fetchUserInfo()
     fetchAthletes()
   }, [])
 
@@ -142,6 +162,15 @@ export default function TrainerOverviewPage() {
 
   return (
     <div className="container mx-auto p-6">
+      <Header
+        userRole={userInfo.role}
+        userName={userInfo.name}
+        activeTab={activeTab}
+        onTabChange={handleTabChange}
+        athleteId={selectedAthleteId}
+        athletes={athletes}
+        onAthleteChange={handleAthleteChange}
+      />
       <div className="mb-6">
         <h1 className="text-2xl font-bold">Painel de Treinador</h1>
 
@@ -182,7 +211,7 @@ export default function TrainerOverviewPage() {
 
             <TabsContent value={TABS.DIET} className="mt-0">
               {selectedAthleteId ? (
-                <DietTabContent athleteId={selectedAthleteId} nutritionistId={"2"}/>
+                <DietTabContent athleteId={selectedAthleteId} nutritionistId={'2'} />
               ) : (
                 <div className="min-h-[600px] flex items-center justify-center">
                   <p>Selecione um atleta para visualizar o plano alimentar</p>

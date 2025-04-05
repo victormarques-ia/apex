@@ -211,7 +211,7 @@ export default function TrainerOverviewPage() {
 
             <TabsContent value={TABS.DIET} className="mt-0">
               {selectedAthleteId ? (
-                <DietTabContent athleteId={selectedAthleteId} nutritionistId={'2'} />
+                <DietTabContent athleteId={selectedAthleteId} nutritionistId={'-1'} />
               ) : (
                 <div className="min-h-[600px] flex items-center justify-center">
                   <p>Selecione um atleta para visualizar o plano alimentar</p>

@@ -11,10 +11,9 @@ import { getMealHistoryAction } from '@/app/(frontend)/nutrition/actions/meals.a
 import { deleteMealAction } from '@/app/(frontend)/nutrition/actions/meal-plan.action';
 import { getAthleteDietPlansAction, getDietPlanAction } from '@/app/(frontend)/nutrition/actions/diet-plans.action';
 import { DietPlanForm } from './diet-plan-form';
-import { DietPlanDayForm } from './diet-plan-day-form';
-import { DietPlansList } from './diet-plans-list';
-import { CreateMealForm } from './create-meal-form';
-import { AddFoodToMeal } from './add-food-to-meal';
+import { DietPlansList } from '@/components/ui/diet-plans-list';
+import { CreateMealForm } from '@/components/ui/create-meal-form';
+import { AddFoodToMeal } from '@/components/ui/add-food-to-meal';
 import { EditMealFoods } from './edit-meal-foods';
 
 interface DietTabContentProps {

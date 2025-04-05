@@ -2,10 +2,10 @@ import { Endpoint, PayloadRequest } from 'payload'
 
 async function getLoggedInTrainerId(req: PayloadRequest) {
   if (!req.user) {
-    throw new Error('Usuário não autenticado');
+    throw new Error('Usuário não autenticado')
   }
 
-  const userId = req.user.id;
+  const userId = req.user.id
 
   const trainerProfiles = await req.payload.find({
     collection: 'trainers',
@@ -15,13 +15,13 @@ async function getLoggedInTrainerId(req: PayloadRequest) {
       },
     },
     limit: 1,
-  });
+  })
 
   if (!trainerProfiles.docs || trainerProfiles.docs.length === 0) {
-    throw new Error('Perfil de treinador não encontrado para este usuário');
+    throw new Error('Perfil de treinador não encontrado para este usuário')
   }
 
-  return trainerProfiles.docs[0].id;
+  return trainerProfiles.docs[0].id
 }
 
 export const TrainerApi: Endpoint[] = [
@@ -30,14 +30,14 @@ export const TrainerApi: Endpoint[] = [
     path: '/athletes',
     handler: async (req: PayloadRequest) => {
       try {
-        const idTrainer = await getLoggedInTrainerId(req);
-        const name = req.query.name as string || "";
-        const sortOrder = req.query.sortOrder as string || "asc";
+        const idTrainer = await getLoggedInTrainerId(req)
+        const name = (req.query.name as string) || ''
+        const sortOrder = (req.query.sortOrder as string) || 'asc'
         // Você pode ordenar por nome, data da ultima atualizacao e meta.
         // Exemplo: athlete.user.name, athlete.updatedAt, athlete.goal
-        const sortFields = [ 'athlete.user.name', 'athlete.updatedAt', 'athlete.goal' ];
-        const sortField = req.query.sortField as number || 0;
-        const goal = req.query.goal as string || "";
+        const sortFields = ['athlete.user.name', 'athlete.updatedAt', 'athlete.goal']
+        const sortField = (req.query.sortField as number) || 0
+        const goal = (req.query.goal as string) || ''
 
         // /api/trainer/my-athletes?name=renata
         // teste por ordem ascendente de nome
@@ -52,47 +52,55 @@ export const TrainerApi: Endpoint[] = [
           where: {
             and: [
               {
-                'trainer.user': {
+                trainer: {
                   equals: idTrainer,
-                }
+                },
               },
-              ...(name.trim() ? [{
-                'athlete.user.name': {
-                  like: name,
-                }
-              }] : []),
-              ...(goal.trim() ? [{
-                'athlete.goal': {
-                  like: goal,
-                }
-              }] : [])
-            ]
+              ...(name.trim()
+                ? [
+                    {
+                      'athlete.user.name': {
+                        like: name,
+                      },
+                    },
+                  ]
+                : []),
+              ...(goal.trim()
+                ? [
+                    {
+                      'athlete.goal': {
+                        like: goal,
+                      },
+                    },
+                  ]
+                : []),
+            ],
           },
           depth: 2,
-          sort: sortOrder.toLowerCase() === "desc" ? 
-            `-${sortFields[sortField] || sortFields[0]}` : 
-            (sortFields[sortField] || sortFields[0]),
+          sort:
+            sortOrder.toLowerCase() === 'desc'
+              ? `-${sortFields[sortField] || sortFields[0]}`
+              : sortFields[sortField] || sortFields[0],
           limit: 100,
-        });
+        })
 
         // Extrai apenas os perfis de atletas da lista de relacionamentos
-        const athletes = trainerAthletes.docs.map(relation => relation.athlete);
+        const athletes = trainerAthletes.docs.map((relation) => relation.athlete)
         return Response.json({
           data: {
             total: trainerAthletes.totalDocs,
             athletes: athletes,
-            id: idTrainer
+            id: idTrainer,
           },
-        });
-
+        })
       } catch (error) {
-        console.error('[TrainerApi][search]:', error);
+        console.error('[TrainerApi][search]:', error)
         return Response.json(
           {
             errors: [{ message: 'Erro inesperado ao pesquisar pacientes do treinador' }],
           },
-          { status: 500 }
-        );
+          { status: 500 },
+        )
       }
     },
   },
@@ -101,19 +109,21 @@ export const TrainerApi: Endpoint[] = [
     path: '/workout-plans',
     handler: async (req) => {
       try {
-        const { athleteId, date, workoutPlanId } = req.query;
-        const trainerId = await getLoggedInTrainerId(req);
+        const { athleteId, date, workoutPlanId } = req.query
+        const trainerId = await getLoggedInTrainerId(req)
 
         // Check if it has a diet plan associated with it
         const workoutPlans = await req.payload.find({
           collection: 'workout-plans',
           where: {
             and: [
-              workoutPlanId ? {
-                id: {
-                  equals: workoutPlanId
-                }
-              } : {},
+              workoutPlanId
+                ? {
+                    id: {
+                      equals: workoutPlanId,
+                    },
+                  }
+                : {},
               {
                 athlete: {
                   equals: athleteId,
@@ -124,32 +134,38 @@ export const TrainerApi: Endpoint[] = [
                   equals: trainerId,
                 },
               },
-              date ? {
-                start_date: {
-                  less_than_equal: date as string,
-                },
-              } : {},
-              date ? {
-                end_date: {
-                  greater_than_equal: date as string,
-                },
-              } : {}
+              date
+                ? {
+                    start_date: {
+                      less_than_equal: date as string,
+                    },
+                  }
+                : {},
+              date
+                ? {
+                    end_date: {
+                      greater_than_equal: date as string,
+                    },
+                  }
+                : {},
             ],
           },
           depth: 2,
-        });
+        })
 
-        if (!athleteId) throw new Error('Athlete ID required');
+        if (!athleteId) throw new Error('Athlete ID required')
 
         return Response.json(workoutPlans)
-
       } catch (error) {
-        console.error('[TrainerApi][workout-plans]:', error);
-        return Response.json({
-          errors: [{ message: 'Erro inesperado ao buscar planos de treino.' }]
-        }, { status: 500 })
+        console.error('[TrainerApi][workout-plans]:', error)
+        return Response.json(
+          {
+            errors: [{ message: 'Erro inesperado ao buscar planos de treino.' }],
+          },
+          { status: 500 },
+        )
       }
-    }
+    },
   },
   {
     method: 'post',
@@ -157,44 +173,44 @@ export const TrainerApi: Endpoint[] = [
     handler: async (req: PayloadRequest) => {
       try {
         // Authentication check
-        const trainerId = await getLoggedInTrainerId(req);
+        const trainerId = await getLoggedInTrainerId(req)
 
         // Parse request body
-        const data = await req.json?.();
+        const data = await req.json?.()
         if (!data) {
           return Response.json(
             { errors: [{ message: 'Corpo da requisição inválido' }] },
-            { status: 400 }
-          );
+            { status: 400 },
+          )
         }
 
         // Validate required fields
         if (!data.athleteId) {
           return Response.json(
             { errors: [{ message: 'ID do atleta é obrigatório' }] },
-            { status: 400 }
-          );
+            { status: 400 },
+          )
         }
 
-        const athleteId = parseInt(String(data.athleteId), 10);
+        const athleteId = parseInt(String(data.athleteId), 10)
 
         // Validate required date fields
         if (!data.startDate) {
           return Response.json(
             { errors: [{ message: 'Data de início é obrigatória' }] },
-            { status: 400 }
-          );
+            { status: 400 },
+          )
         }
 
         if (!data.endDate) {
           return Response.json(
             { errors: [{ message: 'Data de término é obrigatória' }] },
-            { status: 400 }
-          );
+            { status: 400 },
+          )
         }
 
-        const startDate = data.startDate;
-        const endDate = data.endDate;
+        const startDate = data.startDate
+        const endDate = data.endDate
 
         // Create new diet plan
         const workoutPlanData = {
@@ -202,8 +218,8 @@ export const TrainerApi: Endpoint[] = [
           trainer: trainerId,
           start_date: startDate,
           end_date: endDate,
-          goal: data.goal || null
-        };
+          goal: data.goal || null,
+        }
 
         // Search for existing diet plans in the same date range
         const existingWorkoutPlans = await req.payload.find({
@@ -232,9 +248,9 @@ export const TrainerApi: Endpoint[] = [
                       {
                         end_date: {
                           greater_than_equal: endDate,
-                        }
-                      }
-                    ]
+                        },
+                      },
+                    ],
                   },
                   {
                     and: [
@@ -246,61 +262,62 @@ export const TrainerApi: Endpoint[] = [
                       {
                         end_date: {
                           greater_than_equal: endDate,
-                        }
-                      }
-                    ]
-                  }
-                ]
+                        },
+                      },
+                    ],
+                  },
+                ],
               },
             ],
           },
           depth: 2,
-        });
+        })
 
-        console.log('Existing workout plans:', existingWorkoutPlans);
+        console.log('Existing workout plans:', existingWorkoutPlans)
 
         if (existingWorkoutPlans.totalDocs > 0) {
-          throw new Error('Plano de treino já cadastrado');
+          throw new Error('Plano de treino já cadastrado')
         }
 
         const workoutPlan = await req.payload.create({
           collection: 'workout-plans',
-          data: workoutPlanData
-        });
+          data: workoutPlanData,
+        })
 
         // Return response with created entities
-        return Response.json(workoutPlan);
+        return Response.json(workoutPlan)
       } catch (error) {
-        console.error('[TrainerApi][create-workout-plan]:', error);
-        const errorMessage = error instanceof Error ? error.message : 'Erro inesperado ao criar plano de treino';
-        return Response.json({ errors: [{ message: errorMessage }] }, { status: 500 });
+        console.error('[TrainerApi][create-workout-plan]:', error)
+        const errorMessage =
+          error instanceof Error ? error.message : 'Erro inesperado ao criar plano de treino'
+        return Response.json({ errors: [{ message: errorMessage }] }, { status: 500 })
       }
-    }
+    },
   },
   {
     method: 'put',
     path: '/workout-plans/:id',
     handler: async (req: PayloadRequest) => {
       try {
-        const trainerId = await getLoggedInTrainerId(req);
-        const workoutPlanId = req.routeParams?.id;
+        const trainerId = await getLoggedInTrainerId(req)
+        const workoutPlanId = req.routeParams?.id
 
         if (!workoutPlanId) {
           return Response.json(
             { errors: [{ message: 'ID do plano de treino é obrigatório' }] },
-            { status: 400 }
-          );
+            { status: 400 },
+          )
         }
-        const workoutPlanIdTransformed = parseInt(String(workoutPlanId), 10);
+        const workoutPlanIdTransformed = parseInt(String(workoutPlanId), 10)
         // Parse request body
-        const data = await req.json?.();
+        const data = await req.json?.()
 
-        console.log('data workout-plan update:', data);
+        console.log('data workout-plan update:', data)
         if (!data) {
           return Response.json(
             { errors: [{ message: 'Corpo da requisição inválido' }] },
-            { status: 400 }
-          );
+            { status: 400 },
+          )
         }
 
         // Verify the diet plan exists and belongs to this trainer
@@ -309,29 +326,29 @@ export const TrainerApi: Endpoint[] = [
           where: {
             and: [
               {
-                id: { equals: workoutPlanIdTransformed }
+                id: { equals: workoutPlanIdTransformed },
               },
               {
-                trainer: { equals: trainerId }
-              }
-            ]
+                trainer: { equals: trainerId },
+              },
+            ],
           },
-          depth: 2
-        });
+          depth: 2,
+        })
 
         if (workoutPlan.totalDocs === 0) {
           return Response.json(
             { errors: [{ message: 'Plano de treino não encontrado' }] },
-            { status: 404 }
-          );
+            { status: 404 },
+          )
         }
 
         // Update the diet plan with the provided data
         const updateData = {
           ...(data.startDate && { start_date: data.startDate }),
           ...(data.endDate && { end_date: data.endDate }),
-          ...(data.goal !== undefined && { goal: data.goal })
-        };
+          ...(data.goal !== undefined && { goal: data.goal }),
+        }
 
         const existingWorkoutPlans = await req.payload.find({
           collection: 'workout-plans',
@@ -350,9 +367,9 @@ export const TrainerApi: Endpoint[] = [
                       {
                         end_date: {
                           greater_than_equal: data.endDate,
-                        }
-                      }
-                    ]
+                        },
+                      },
+                    ],
                   },
                   {
                     and: [
@@ -364,55 +381,54 @@ export const TrainerApi: Endpoint[] = [
                       {
                         end_date: {
                           greater_than_equal: data.endDate,
-                        }
-                      }
-                    ]
-                  }
-                ]
+                        },
+                      },
+                    ],
+                  },
+                ],
               },
             ],
           },
           depth: 2,
-        });
+        })
 
         if (existingWorkoutPlans.totalDocs > 0) {
-          throw new Error('Plano de treino já cadastrado');
+          throw new Error('Plano de treino já cadastrado')
         }
-
 
         const updatedTrainPlan = await req.payload.update({
           collection: 'workout-plans',
           id: workoutPlanIdTransformed,
-          data: updateData
-        });
+          data: updateData,
+        })
 
         return Response.json({
           success: true,
-          dietPlan: updatedTrainPlan
-        });
-
+          dietPlan: updatedTrainPlan,
+        })
       } catch (error) {
-        console.error('[TrainerApi][update-workout-plan]:', error);
-        const errorMessage = error instanceof Error ? error.message : 'Erro inesperado ao atualizar plano de treino';
-        return Response.json({ errors: [{ message: errorMessage }] }, { status: 500 });
+        console.error('[TrainerApi][update-workout-plan]:', error)
+        const errorMessage =
+          error instanceof Error ? error.message : 'Erro inesperado ao atualizar plano de treino'
+        return Response.json({ errors: [{ message: errorMessage }] }, { status: 500 })
       }
-    }
+    },
   },
   {
     method: 'delete',
     path: '/workout-plans/:id',
     handler: async (req: PayloadRequest) => {
       try {
-        const trainerId = await getLoggedInTrainerId(req);
-        const workoutPlanId = req.routeParams?.id;
+        const trainerId = await getLoggedInTrainerId(req)
+        const workoutPlanId = req.routeParams?.id
 
         if (!workoutPlanId) {
           return Response.json(
             { errors: [{ message: 'ID do plano de treino é obrigatório' }] },
-            { status: 400 }
-          );
+            { status: 400 },
+          )
         }
-        const workoutPlanIdTransformed = parseInt(String(workoutPlanId), 10);
+        const workoutPlanIdTransformed = parseInt(String(workoutPlanId), 10)
 
         // Delete physical-activity-logs associated with this workout plan
         await req.payload.delete({
@@ -420,14 +436,14 @@ export const TrainerApi: Endpoint[] = [
           where: {
             and: [
               {
-                "workout_plan.trainer": { equals: trainerId },
+                'workout_plan.trainer': { equals: trainerId },
               },
               {
                 workout_plan: { equals: workoutPlanIdTransformed },
               },
             ],
           },
-        });
+        })
 
         // Delete exerciseWorkouts associated with this workout plan
         await req.payload.delete({
@@ -438,11 +454,11 @@ export const TrainerApi: Endpoint[] = [
                 workout_plan: { equals: workoutPlanIdTransformed },
               },
               {
-                "workout_plan.trainer": { equals: trainerId },
+                'workout_plan.trainer': { equals: trainerId },
               },
             ],
           },
-        });
+        })
 
         // Delete workoutPlan itself
         await req.payload.delete({
@@ -457,55 +473,62 @@ export const TrainerApi: Endpoint[] = [
               },
             ],
           },
-        });
+        })
 
         return Response.json({
           success: true,
-          message: 'Plano de treino excluído com sucesso'
-        });
+          message: 'Plano de treino excluído com sucesso',
+        })
       } catch (error) {
-        console.error('[TrainerApi][delete-workout-plan]:', error);
-        const errorMessage = error instanceof Error ? error.message : 'Erro inesperado ao excluir plano de treino';
-        return Response.json({ errors: [{ message: errorMessage }] }, { status: 500 });
+        console.error('[TrainerApi][delete-workout-plan]:', error)
+        const errorMessage =
+          error instanceof Error ? error.message : 'Erro inesperado ao excluir plano de treino'
+        return Response.json({ errors: [{ message: errorMessage }] }, { status: 500 })
       }
-    }
+    },
   },
   {
     method: 'get',
     path: '/exercise-workouts',
     handler: async (req) => {
       try {
-        const { exerciseId, workoutPlanId } = req.query;
-        
+        const { exerciseId, workoutPlanId } = req.query
+
         // Check if it has a diet plan associated with it
         const exerciseWorkouts = await req.payload.find({
           collection: 'exercise-workouts',
           where: {
             and: [
-              workoutPlanId ? {
-                workout_plan: {
-                  equals: workoutPlanId
-                }
-              } : {},
-              exerciseId ? {
-                exercise: {
-                  equals: exerciseId
-                }
-              } : {}
+              workoutPlanId
+                ? {
+                    workout_plan: {
+                      equals: workoutPlanId,
+                    },
+                  }
+                : {},
+              exerciseId
+                ? {
+                    exercise: {
+                      equals: exerciseId,
+                    },
+                  }
+                : {},
             ],
           },
           depth: 2,
-        });
+        })
 
         return Response.json(exerciseWorkouts)
-
       } catch (error) {
-        console.error('[TrainerApi][exercise-workouts]:', error);
-        return Response.json({
-          errors: [{ message: 'Erro inesperado ao buscar exercicios de treino.' }]
-        }, { status: 500 })
+        console.error('[TrainerApi][exercise-workouts]:', error)
+        return Response.json(
+          {
+            errors: [{ message: 'Erro inesperado ao buscar exercicios de treino.' }],
+          },
+          { status: 500 },
+        )
       }
-    }
+    },
   },
   {
     method: 'post',
@@ -513,50 +536,49 @@ export const TrainerApi: Endpoint[] = [
     handler: async (req: PayloadRequest) => {
       try {
         // Parse request body
-        const data = await req.json?.();
+        const data = await req.json?.()
         if (!data) {
           return Response.json(
             { errors: [{ message: 'Corpo da requisição inválido' }] },
-            { status: 400 }
-          );
+            { status: 400 },
+          )
         }
 
         // Validate required fields
         if (!data.workoutPlanId) {
           return Response.json(
             { errors: [{ message: 'ID do plano de treino é obrigatório' }] },
-            { status: 400 }
-          );
+            { status: 400 },
+          )
         }
 
         if (!data.exerciseId) {
           return Response.json(
             { errors: [{ message: 'ID do exercício é obrigatório' }] },
-            { status: 400 }
-          );
+            { status: 400 },
+          )
         }
 
         if (!data.sets) {
           return Response.json(
             { errors: [{ message: 'conjuntos são obrigatórios' }] },
-            { status: 400 }
-          );
+            { status: 400 },
+          )
         }
 
         if (!data.reps) {
           return Response.json(
             { errors: [{ message: 'repetições são obrigatórios' }] },
-            { status: 400 }
-          );
+            { status: 400 },
+          )
         }
 
+        const workoutPlanId = parseInt(String(data.workoutPlanId), 10)
+        const exerciseId = parseInt(String(data.exerciseId), 10)
+        const sets = parseInt(String(data.sets), 10)
+        const reps = parseInt(String(data.reps), 10)
+        const restSeconds = parseInt(String(data.restSeconds), 10)
 
-        const workoutPlanId = parseInt(String(data.workoutPlanId), 10);
-        const exerciseId = parseInt(String(data.exerciseId), 10);
-        const sets = parseInt(String(data.sets), 10);
-        const reps = parseInt(String(data.reps), 10);
-        const restSeconds = parseInt(String(data.restSeconds), 10);
-        
         // Create new diet plan
         const exerciseWorkoutData = {
           workout_plan: workoutPlanId,
@@ -564,8 +586,8 @@ export const TrainerApi: Endpoint[] = [
           sets: sets,
           reps: reps,
           rest_seconds: restSeconds || null,
-          notes: data.notes || null
-        };
+          notes: data.notes || null,
+        }
 
         // Search for existing the same ExerciseWorkout
         const existingExerciseWorkout = await req.payload.find({
@@ -581,56 +603,57 @@ export const TrainerApi: Endpoint[] = [
                 exercise: {
                   equals: exerciseId,
                 },
-              }
+              },
             ],
           },
           depth: 2,
-        });
+        })
 
-        console.log('Existing Exercise Workouts:', existingExerciseWorkout);
+        console.log('Existing Exercise Workouts:', existingExerciseWorkout)
 
         if (existingExerciseWorkout.totalDocs > 0) {
-          throw new Error('Treino de Exercício já cadastrado');
+          throw new Error('Treino de Exercício já cadastrado')
         }
 
         const exerciseWorkout = await req.payload.create({
           collection: 'exercise-workouts',
-          data: exerciseWorkoutData
-        });
+          data: exerciseWorkoutData,
+        })
 
         // Return response with created entities
-        return Response.json(exerciseWorkout);
+        return Response.json(exerciseWorkout)
       } catch (error) {
-        console.error('[TrainerApi][create-exercise-workouts]:', error);
-        const errorMessage = error instanceof Error ? error.message : 'Erro inesperado ao criar exercício de treino';
-        return Response.json({ errors: [{ message: errorMessage }] }, { status: 500 });
+        console.error('[TrainerApi][create-exercise-workouts]:', error)
+        const errorMessage =
+          error instanceof Error ? error.message : 'Erro inesperado ao criar exercício de treino'
+        return Response.json({ errors: [{ message: errorMessage }] }, { status: 500 })
       }
-    }
+    },
   },
   {
     method: 'put',
     path: '/exercise-workouts/:id',
     handler: async (req: PayloadRequest) => {
       try {
-        const trainerId = await getLoggedInTrainerId(req);
-        const exerciseWorkoutId = req.routeParams?.id;
+        const trainerId = await getLoggedInTrainerId(req)
+        const exerciseWorkoutId = req.routeParams?.id
 
         if (!exerciseWorkoutId) {
           return Response.json(
             { errors: [{ message: 'ID do exercício de treino é obrigatório' }] },
-            { status: 400 }
-          );
+            { status: 400 },
+          )
         }
-        const exerciseWorkoutIdTransformed = parseInt(String(exerciseWorkoutId), 10);
+        const exerciseWorkoutIdTransformed = parseInt(String(exerciseWorkoutId), 10)
         // Parse request body
-        const data = await req.json?.();
+        const data = await req.json?.()
 
-        console.log('data exercise-workout update:', data);
+        console.log('data exercise-workout update:', data)
         if (!data) {
           return Response.json(
             { errors: [{ message: 'Corpo da requisição inválido' }] },
-            { status: 400 }
-          );
+            { status: 400 },
+          )
         }
 
         // Verify the exercise workout exists and belongs to this trainer
@@ -639,27 +662,27 @@ export const TrainerApi: Endpoint[] = [
           where: {
             and: [
               {
-                id: { equals: exerciseWorkoutIdTransformed }
+                id: { equals: exerciseWorkoutIdTransformed },
               },
               {
-                "workout_plan.trainer": { equals: trainerId }
-              }
-            ]
+                'workout_plan.trainer': { equals: trainerId },
+              },
+            ],
           },
-          depth: 2
-        });
+          depth: 2,
+        })
 
         if (exerciseWorkout.totalDocs === 0) {
           return Response.json(
             { errors: [{ message: 'Exercício de treino não encontrado' }] },
-            { status: 404 }
-          );
+            { status: 404 },
+          )
         }
-        const workoutPlanId = parseInt(String(data.workoutPlanId), 10);
-        const exerciseId = parseInt(String(data.exerciseId), 10);
-        const sets = parseInt(String(data.sets), 10);
-        const reps = parseInt(String(data.reps), 10);
-        const restSeconds = parseInt(String(data.restSeconds), 10);
+        const workoutPlanId = parseInt(String(data.workoutPlanId), 10)
+        const exerciseId = parseInt(String(data.exerciseId), 10)
+        const sets = parseInt(String(data.sets), 10)
+        const reps = parseInt(String(data.reps), 10)
+        const restSeconds = parseInt(String(data.restSeconds), 10)
 
         // Update the exercise Workout with the provided data
         const updateData = {
@@ -669,41 +692,43 @@ export const TrainerApi: Endpoint[] = [
           ...(reps && { reps: reps }),
           ...(restSeconds && { rest_seconds: restSeconds }),
           ...(data.notes && { notes: data.notes }),
-        };
+        }
 
         const updatedExerciseWorkout = await req.payload.update({
           collection: 'exercise-workouts',
           id: exerciseWorkoutIdTransformed,
-          data: updateData
-        });
+          data: updateData,
+        })
 
         return Response.json({
           success: true,
-          dietPlan: updatedExerciseWorkout
-        });
-
+          dietPlan: updatedExerciseWorkout,
+        })
       } catch (error) {
-        console.error('[TrainerApi][update-exercise-workout]:', error);
-        const errorMessage = error instanceof Error ? error.message : 'Erro inesperado ao atualizar exercício de treino';
-        return Response.json({ errors: [{ message: errorMessage }] }, { status: 500 });
+        console.error('[TrainerApi][update-exercise-workout]:', error)
+        const errorMessage =
+          error instanceof Error
+            ? error.message
+            : 'Erro inesperado ao atualizar exercício de treino'
+        return Response.json({ errors: [{ message: errorMessage }] }, { status: 500 })
       }
-    }
+    },
   },
   {
     method: 'delete',
     path: '/exercise-workouts/:id',
     handler: async (req: PayloadRequest) => {
       try {
-        const trainerId = await getLoggedInTrainerId(req);
-        const exerciseWorkoutId = req.routeParams?.id;
+        const trainerId = await getLoggedInTrainerId(req)
+        const exerciseWorkoutId = req.routeParams?.id
 
         if (!exerciseWorkoutId) {
           return Response.json(
             { errors: [{ message: 'ID do exercício de treino é obrigatório' }] },
-            { status: 400 }
-          );
+            { status: 400 },
+          )
         }
-        const exerciseWorkoutIdTransformed = parseInt(String(exerciseWorkoutId), 10);
+        const exerciseWorkoutIdTransformed = parseInt(String(exerciseWorkoutId), 10)
 
         // Delete exerciseWorkouts itself
         await req.payload.delete({
@@ -714,117 +739,123 @@ export const TrainerApi: Endpoint[] = [
                 id: { equals: exerciseWorkoutIdTransformed },
               },
               {
-                "workout_plan.trainer": { equals: trainerId },
+                'workout_plan.trainer': { equals: trainerId },
               },
             ],
           },
-        });
+        })
 
         return Response.json({
           success: true,
-          message: 'exercício de treino excluído com sucesso'
-        });
+          message: 'exercício de treino excluído com sucesso',
+        })
       } catch (error) {
-        console.error('[TrainerApi][delete-exercise-workout]:', error);
-        const errorMessage = error instanceof Error ? error.message : 'Erro inesperado ao excluir exercício de treino';
-        return Response.json({ errors: [{ message: errorMessage }] }, { status: 500 });
+        console.error('[TrainerApi][delete-exercise-workout]:', error)
+        const errorMessage =
+          error instanceof Error ? error.message : 'Erro inesperado ao excluir exercício de treino'
+        return Response.json({ errors: [{ message: errorMessage }] }, { status: 500 })
       }
-    }
+    },
   },
   {
     method: 'get',
     path: '/exercises',
     handler: async (req) => {
       try {
-        const { name, muscleGroup } = req.query;
+        const { name, muscleGroup } = req.query
         // list the exercises
         const exercises = await req.payload.find({
           collection: 'exercises',
           where: {
             and: [
-              name ? {
-                name: {
-                  like: name,
-                },
-              } : {},
-              muscleGroup ? {
-                muscle_group: {
-                  like: muscleGroup,
-                },
-              } : {}
+              name
+                ? {
+                    name: {
+                      like: name,
+                    },
+                  }
+                : {},
+              muscleGroup
+                ? {
+                    muscle_group: {
+                      like: muscleGroup,
+                    },
+                  }
+                : {},
             ],
           },
           depth: 2,
-        });
+        })
 
         return Response.json(exercises)
-
       } catch (error) {
-        console.error('[TrainerApi][exercise]:', error);
-        return Response.json({
-          errors: [{ message: 'Erro inesperado ao buscar exercicios.' }]
-        }, { status: 500 })
+        console.error('[TrainerApi][exercise]:', error)
+        return Response.json(
+          {
+            errors: [{ message: 'Erro inesperado ao buscar exercicios.' }],
+          },
+          { status: 500 },
+        )
       }
-    }
+    },
   },
   {
     method: 'post',
     path: '/exercises',
     handler: async (req: PayloadRequest) => {
       try {
-        const data = await req.json?.();
-
+        const data = await req.json?.()
 
         if (!data.name) {
-          throw new Error('Diet name is required');
+          throw new Error('Diet name is required')
         }
 
         const exerciseData = {
           name: data.name,
           ...(data.description && { description: data.description }),
           ...(data.muscleGroup && { muscle_group: data.muscleGroup }),
-        };
+        }
 
         // Create the exercise
         const meal = await req.payload.create({
           collection: 'exercises',
           data: exerciseData,
-        });
+        })
 
-        return Response.json(meal);
+        return Response.json(meal)
+      } catch (error) {
+        console.error('[TrainerApi][create-exercise]:', error)
+        const errorMessage =
+          error instanceof Error ? error.message : 'Erro inesperado ao criar exercício'
+        return Response.json({ errors: [{ message: errorMessage }] }, { status: 500 })
       }
-      catch (error) {
-        console.error('[TrainerApi][create-exercise]:', error);
-        const errorMessage = error instanceof Error ? error.message : 'Erro inesperado ao criar exercício';
-        return Response.json({ errors: [{ message: errorMessage }] }, { status: 500 });
-      }
-    }
+    },
   },
   {
     method: 'put',
     path: '/exercises/:id',
     handler: async (req: PayloadRequest) => {
       try {
-        const exerciseId = req.routeParams?.id;
+        const exerciseId = req.routeParams?.id
 
         if (!exerciseId) {
           return Response.json(
             { errors: [{ message: 'ID do dia do exercício é obrigatório' }] },
-            { status: 400 }
-          );
+            { status: 400 },
+          )
         }
 
-        const exerciseIdTransformed = parseInt(String(exerciseId), 10);
+        const exerciseIdTransformed = parseInt(String(exerciseId), 10)
 
         // Parse request body
-        const data = await req.json?.();
+        const data = await req.json?.()
 
-        console.log('data exercise update:', data);
+        console.log('data exercise update:', data)
         if (!data) {
           return Response.json(
             { errors: [{ message: 'Corpo da requisição inválido' }] },
-            { status: 400 }
-          );
+            { status: 400 },
+          )
         }
 
         // Verify the diet plan day exists and belongs to this trainer
@@ -833,18 +864,18 @@ export const TrainerApi: Endpoint[] = [
           where: {
             and: [
               {
-                id: { equals: exerciseIdTransformed }
-              }
-            ]
+                id: { equals: exerciseIdTransformed },
+              },
+            ],
           },
-          depth: 2
-        });
+          depth: 2,
+        })
 
         if (!exercise.docs || exercise.docs.length === 0) {
           return Response.json(
             { errors: [{ message: 'Exercício não encontrado' }] },
-            { status: 404 }
-          );
+            { status: 404 },
+          )
         }
 
         // Update the diet plan day with the provided data
@@ -852,41 +883,41 @@ export const TrainerApi: Endpoint[] = [
           ...(data.name && { name: data.name }),
           ...(data.description && { description: data.description }),
           ...(data.muscleGroup && { muscle_group: data.muscleGroup }),
-        };
+        }
 
         const updatedExercise = await req.payload.update({
           collection: 'exercises',
           id: exerciseIdTransformed,
-          data: updateExerciseData
-        });
+          data: updateExerciseData,
+        })
 
         return Response.json({
           success: true,
-          data: updatedExercise
-        });
-
+          data: updatedExercise,
+        })
       } catch (error) {
-        console.error('[TrainerApi][update-exercise]:', error);
-        const errorMessage = error instanceof Error ? error.message : 'Erro inesperado ao atualizar exercício';
-        return Response.json({ errors: [{ message: errorMessage }] }, { status: 500 });
+        console.error('[TrainerApi][update-exercise]:', error)
+        const errorMessage =
+          error instanceof Error ? error.message : 'Erro inesperado ao atualizar exercício'
+        return Response.json({ errors: [{ message: errorMessage }] }, { status: 500 })
       }
-    }
+    },
   },
   {
     method: 'delete',
     path: '/exercises/:id',
     handler: async (req: PayloadRequest) => {
       try {
-        const trainerId = await getLoggedInTrainerId(req);
-        const exerciseId = req.routeParams?.id;
+        const trainerId = await getLoggedInTrainerId(req)
+        const exerciseId = req.routeParams?.id
 
         if (!exerciseId) {
           return Response.json(
             { errors: [{ message: 'ID do exercício é obrigatório' }] },
-            { status: 400 }
-          );
+            { status: 400 },
+          )
         }
-        const exerciseIdTransformed = parseInt(String(exerciseId), 10);
+        const exerciseIdTransformed = parseInt(String(exerciseId), 10)
 
         // Delete exerciseWorkouts associated with this exercise
         await req.payload.delete({
@@ -897,11 +928,11 @@ export const TrainerApi: Endpoint[] = [
                 exercise: { equals: exerciseIdTransformed },
               },
               {
-                "workout_plan.trainer": { equals: trainerId },
+                'workout_plan.trainer': { equals: trainerId },
               },
             ],
           },
-        });
+        })
 
         // Delete exercise itself
         await req.payload.delete({
@@ -910,20 +941,21 @@ export const TrainerApi: Endpoint[] = [
             and: [
               {
                 id: { equals: exerciseIdTransformed },
-              }
+              },
             ],
           },
-        });
+        })
 
         return Response.json({
           success: true,
-          message: 'exercício excluído com sucesso'
-        });
+          message: 'exercício excluído com sucesso',
+        })
       } catch (error) {
-        console.error('[TrainerApi][delete-exercise]:', error);
-        const errorMessage = error instanceof Error ? error.message : 'Erro inesperado ao excluir exercício';
-        return Response.json({ errors: [{ message: errorMessage }] }, { status: 500 });
+        console.error('[TrainerApi][delete-exercise]:', error)
+        const errorMessage =
+          error instanceof Error ? error.message : 'Erro inesperado ao excluir exercício'
+        return Response.json({ errors: [{ message: errorMessage }] }, { status: 500 })
       }
-    }
+    },
   },
-];
+]

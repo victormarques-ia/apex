@@ -29,7 +29,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import NutritionDashboard from './components/trainerDashboard'
-import { DietTabContent } from '@/app/(frontend)/nutritionist/components/diet-tab'
+import { DietTabContent } from '@/components/ui/diet-tab'
 
 // Define the main tabs
 const TABS = {

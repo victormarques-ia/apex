@@ -122,6 +122,23 @@ export default function RegisterAthletePage() {
         throw new Error(athleteResult.error || 'Erro ao registrar perfil do atleta')
       }
 
+      // Handle relationship warnings if needed
+      if (athleteResult.data) {
+        // Check trainer relationship
+        if (!athleteResult.data.trainerRelationship) {
+          toast.warning(
+            `Treinador com email ${data.trainerEmail} não encontrado ou não está disponível para esta agência`,
+          )
+        }
+
+        // Check nutritionist relationship
+        if (!athleteResult.data.nutritionistRelationship) {
+          toast.warning(
+            `Nutricionista com email ${data.nutritionistEmail} não encontrado ou não está disponível para esta agência`,
+          )
+        }
+      }
+
       // Success and redirect
       toast.success('Perfil do atleta registrado com sucesso')
       form.reset()

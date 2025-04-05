@@ -50,6 +50,22 @@ const AthleteDashboard = ({ athleteId }: { athleteId: string }) => {
             setAssessmentData(assessmentResult.data)
           }
         }
+        else{
+          setAssessmentData({
+            weight: 76.5,
+            bodyFat: 15.6,
+            abdominalFold: 20,
+            armMeasurement: 35,
+            thighFold: 35,
+            lastAssessment: {
+              weight: 80,
+              bodyFat: 18.3,
+              abdominalFold: 31,
+              armMeasurement: 33.5,
+              thighFold: 50,
+            },
+          })
+        }
 
         // Fetch activities data using the new endpoint
         const formattedDate = format(currentDate, 'yyyy-MM-dd')
@@ -73,22 +89,22 @@ const AthleteDashboard = ({ athleteId }: { athleteId: string }) => {
         }
 
         // If reports API call fails, set some mock data for development
-        if (!assessmentData) {
-          setAssessmentData({
-            weight: 76.5,
-            bodyFat: 15.6,
-            abdominalFold: 20,
-            armMeasurement: 35,
-            thighFold: 35,
-            lastAssessment: {
-              weight: 80,
-              bodyFat: 18.3,
-              abdominalFold: 31,
-              armMeasurement: 33.5,
-              thighFold: 50,
-            },
-          })
-        }
+        // if (!assessmentData) {
+        //   setAssessmentData({
+        //     weight: 76.5,
+        //     bodyFat: 15.6,
+        //     abdominalFold: 20,
+        //     armMeasurement: 35,
+        //     thighFold: 35,
+        //     lastAssessment: {
+        //       weight: 80,
+        //       bodyFat: 18.3,
+        //       abdominalFold: 31,
+        //       armMeasurement: 33.5,
+        //       thighFold: 50,
+        //     },
+        //   })
+        // }
 
         // If no activities were found, set some mock data
         if (scheduleData.length === 0) {

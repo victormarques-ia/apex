@@ -21,6 +21,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { BarChart } from '@mui/x-charts/BarChart';
 
 
 const TrainerDashboard = ({ athleteId }: { athleteId: string }) => {
@@ -200,6 +201,13 @@ const TrainerDashboard = ({ athleteId }: { athleteId: string }) => {
                   </CardHeader>
                   <CardContent>
                     <div className="text-2xl font-bold">{Math.round(totalActivityTime)} min</div>
+                    <div className="text-xs text-gray-600">{60}% da meta diária</div>
+                    <div className="w-full bg-gray-200 h-2 mt-2 rounded-full overflow-hidden">
+                      <div 
+                        className="bg-red-500 h-full rounded-full"
+                        style={{ width: `${Math.min(60, 100)}%` }}
+                      ></div>
+                      </div>
                   </CardContent>
                 </Card>
 
@@ -210,6 +218,14 @@ const TrainerDashboard = ({ athleteId }: { athleteId: string }) => {
                   </CardHeader>
                   <CardContent>
                     <div className="text-2xl font-bold">{Math.round(10)}</div>
+                    <div className="text-2xl font-bold">{Math.round(totalActivityTime)} min</div>
+                    <div className="text-xs text-gray-600">{50}% da meta diária</div>
+                    <div className="w-full bg-gray-200 h-2 mt-2 rounded-full overflow-hidden">
+                      <div 
+                        className="bg-red-500 h-full rounded-full"
+                        style={{ width: `${Math.min(50, 100)}%` }}
+                      ></div>
+                      </div>
                   </CardContent>
                 </Card>
               </div>
@@ -223,9 +239,24 @@ const TrainerDashboard = ({ athleteId }: { athleteId: string }) => {
                   <CardContent>
                     <div className="h-80 flex items-center justify-center">
                       {/* Chart placeholder */}
-                      <div className="w-full h-full flex items-center justify-center">
-                        <p className="text-gray-500">Gráfico de consumo será implementado aqui</p>
-                      </div>
+                        <div className="w-full h-full flex items-center justify-center">
+                        <BarChart
+                          series={[
+                          { data: [53, 55, 40, 70, 80, 80], color: '#EF444470', label: 'Calorias Queimadas ' }, // Calorias (red)
+                          { data: [70, 90, 100, 120, 80, 70], color: '#10B98170', label: 'Tempo de treino' }, // Carboidratos (green)
+                          { data: [50, 40, 42, 38, 56, 55], color: '#8B5CF670', label: 'Sets' }, // Proteínas (purple)
+                          ]}
+                          height={300}
+                          yAxis={[{label: 'meta (%)', tickSize: 10}]}
+                          xAxis={[{ data: ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sab'], scaleType: 'band' }]}
+                          margin={{ top: 40, bottom: 20, left: 40, right: 10 }}
+                          slotProps={{
+                          legend: {
+                            position:  { vertical: 'top', horizontal: 'middle' },
+                          },
+                          }}
+                        />                      
+                        </div>
                     </div>
                   </CardContent>
                 </Card>
@@ -250,7 +281,7 @@ const TrainerDashboard = ({ athleteId }: { athleteId: string }) => {
                 </Card>
               </div>
             </>
-          )
+          
         </TabsContent>
         
         <TabsContent value="avaliacao">

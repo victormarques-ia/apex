@@ -16,7 +16,10 @@
     "start": "cross-env NODE_OPTIONS=--no-deprecation next start"
   },
   "dependencies": {
+    "@emotion/styled": "^11.14.0",
     "@hookform/resolvers": "^4.1.3",
+    "@mui/material": "^7.0.1",
+    "@mui/x-charts": "^7.28.0",
     "@payloadcms/db-postgres": "3.20.0",
     "@payloadcms/email-nodemailer": "^3.29.0",
     "@payloadcms/next": "3.20.0",

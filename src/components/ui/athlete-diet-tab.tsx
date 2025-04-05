@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import { Calendar } from '@/components/ui/calendar'
-import { format, isSameDay, parseISO } from 'date-fns'
+import { format, isSameDay } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 
 type MealFood = {
@@ -251,7 +251,9 @@ export function AthleteReadOnlyDietTab({ athleteId }: { athleteId: string }) {
             )}
           </p>
           {dietPlanDay.diet_plan.notes && (
-            <p className="text-sm text-blue-600 mt-2 italic">"{dietPlanDay.diet_plan.notes}"</p>
+            <p className="text-sm text-blue-600 mt-2 italic">
+              &ldquo;{dietPlanDay.diet_plan.notes}&rdquo;
+            </p>
           )}
         </div>
       )}

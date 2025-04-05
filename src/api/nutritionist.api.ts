@@ -893,19 +893,6 @@ export const NutritionistApi: Endpoint[] = [
           limit: 1,
         });
 
-        const dietPlan = await req.payload.find({
-          collection: 'diet-plans',
-          where: {
-            id: {
-              equals: data.dietPlanId,
-            },
-          },
-        })
-
-        if (data.date < dietPlan.docs[0].start_date || data.date > dietPlan.docs[0].end_date) {
-          throw new Error('Data de início ou término da refeição não está dentro do período do plano alimentar');
-        }
-
         if (dietPlanDay.totalDocs === 0) {
 
           dietPlanDay = await req.payload.create({
@@ -916,6 +903,9 @@ export const NutritionistApi: Endpoint[] = [
             },
           });
         }
+
+        console.log('>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>');
+        console.log(dietPlanDay);
 
         const dietPlanDayId = dietPlanDay.id || dietPlanDay.docs[0].id;
 

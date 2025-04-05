@@ -289,7 +289,9 @@ export function DietTabContent({ athleteId, nutritionistId }) {
     setDietPlanDay(null);
     setSelectedPlanId(null);
     setIsCreatingNewPlan(true);
-    setShowDietPlanForm(true);
+    if (nutritionistId != -1){
+      setShowDietPlanForm(true);
+    }
   };
 
   if (loading) {
@@ -353,13 +355,15 @@ export function DietTabContent({ athleteId, nutritionistId }) {
                 >
                   {showDietPlanForm ? "Esconder Formulário" : "Editar Plano"}
                 </Button>
-              ) : (
+              ) : nutritionistId != -1 ? (
                 <Button
                   className="w-full"
                   onClick={handleAddNewPlan}
                 >
                   Adicionar Plano
                 </Button>
+              ): (
+                <div></div>
               )}
             </CardFooter>
           </Card>

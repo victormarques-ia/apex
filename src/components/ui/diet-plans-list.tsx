@@ -22,7 +22,7 @@ export function DietPlansList({
   onPlanDeleted,
   selectedPlanId
 }: DietPlansListProps) {
-  const [dietPlans, setDietPlans] = useState([]);
+  const [dietPlans, setDietPlans] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -62,14 +62,15 @@ export function DietPlansList({
         console.log('Response getAthleteDietPlansAction in DietPlansList:', response);
 
         // For direct response from diet-plans endpoint
-        if (response.data.docs && Array.isArray(response.data.docs)) {
+        const data = response.data as { docs: any[]; totalDocs: number }; // Add a type assertion
+        if (data?.docs && Array.isArray(data.docs)) {
           // This handles the diet-plan-days with associated diet-plans
-          if (response.data.totalDocs > 0) {
+          if ((response.data as { totalDocs: number }).totalDocs > 0) {
             // Extract unique diet plans from diet plan days
-            const uniquePlans = [];
+            const uniquePlans: any[] | ((prevState: never[]) => never[]) = [];
             const planIds = new Set();
 
-            response.data.docs.forEach(item => {
+            (response.data as { docs: any[] }).docs.forEach(item => {
               if (item.diet_plan && !planIds.has(item.diet_plan.id)) {
                 planIds.add(item.diet_plan.id);
                 uniquePlans.push(item.diet_plan);
@@ -80,8 +81,9 @@ export function DietPlansList({
             setDietPlans(uniquePlans);
           } else {
             // If the API returns diet plans directly
-            console.log(`Found ${response.data.docs.length} diet plans directly`);
-            setDietPlans(response.data.docs);
+            const directPlans = response.data as { docs: any[] };
+            console.log(`Found ${directPlans.docs.length} diet plans directly`);
+            setDietPlans((response.data as { docs: any[] }).docs);
           }
         } else {
           setDietPlans([]);
@@ -115,7 +117,7 @@ export function DietPlansList({
 
       console.log('Response deleteDietPlanAction:', response);
 
-      if (response.data.success) {
+      if (response.data && (response.data as { success: boolean }).success) {
         // Remove from local list
         setDietPlans(dietPlans.filter(plan => plan.id !== planId));
         // Notify parent component

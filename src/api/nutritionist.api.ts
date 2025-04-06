@@ -14,7 +14,7 @@ async function getLoggedInNutritionistId(req: PayloadRequest) {
         equals: userId,
       },
     },
-    limit: 1,
+    limi: 1,
   })
 
   if (!nutritionistProfiles.docs || nutritionistProfiles.docs.length === 0) {
@@ -158,7 +158,6 @@ export const NutritionistApi: Endpoint[] = [
     handler: async (req) => {
       try {
         const { athleteId, date } = req.query
-        const nutritionistId = await getLoggedInNutritionistId(req)
 
         // Check if it has a diet plan associated with it
         const dietPlan = await req.payload.find({
@@ -168,11 +167,6 @@ export const NutritionistApi: Endpoint[] = [
               {
                 athlete: {
                   equals: athleteId,
-                },
-              },
-              {
-                nutritionist: {
-                  equals: nutritionistId,
                 },
               },
               date
@@ -636,7 +630,7 @@ export const NutritionistApi: Endpoint[] = [
 
         const updatedDietPlan = await req.payload.update({
           collection: 'diet-plans',
-          id: String(dietPlanId),
+          id: dietPlanId,
           data: updateData,
         })
 
@@ -712,7 +706,7 @@ export const NutritionistApi: Endpoint[] = [
 
         const updatedDietPlanDay = await req.payload.update({
           collection: 'diet-plan-days',
-          id: String(dietPlanDayId),
+          id: dietPlanDayId,
           data: updateDayData,
         })
 
@@ -922,35 +916,20 @@ export const NutritionistApi: Endpoint[] = [
           limit: 1,
         })
 
-        const dietPlan = await req.payload.find({
-          collection: 'diet-plans',
-          where: {
-            id: {
-              equals: data.dietPlanId,
-            },
-          },
-        })
-
-        if (data.date < dietPlan.docs[0].start_date || data.date > dietPlan.docs[0].end_date) {
-          throw new Error(
-            'Data de início ou término da refeição não está dentro do período do plano alimentar',
-          )
-        }
-
         if (dietPlanDay.totalDocs === 0) {
-          const createdDietPlanDay = await req.payload.create({
+          dietPlanDay = await req.payload.create({
             collection: 'diet-plan-days',
             data: {
               diet_plan: parseInt(data.dietPlanId as string, 10),
               date: data.date,
             },
           })
-
-          // Aqui sobrescrevemos dietPlanDay com o tipo esperado
-          dietPlanDay = { docs: [createdDietPlanDay], totalDocs: 1 } as any
         }
 
-        const dietPlanDayId = dietPlanDay.docs[0].id
+        console.log('>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>')
+        console.log(dietPlanDay)
+
+        const dietPlanDayId = dietPlanDay.id || dietPlanDay.docs[0].id
 
         const mealData = {
           diet_plan_day: dietPlanDayId,

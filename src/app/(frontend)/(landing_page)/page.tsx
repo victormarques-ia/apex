@@ -1,7 +1,6 @@
 import Head from 'next/head'
 import Image from 'next/image'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
 import Link from 'next/link'
 import { SolutionCard } from './components/solution-card'
 import { FeatureItem } from './components/feature-item'
@@ -13,50 +12,53 @@ import {
   SheetTitle,
   SheetTrigger,
 } from '@/components/ui/sheet'
-import { Menu, Play, UserCircle } from 'lucide-react'
+import { ChartColumnStacked, Menu, Play, UserCircle, UserRoundPen, Watch } from 'lucide-react'
 import { fetchFromApi } from '@/app/utils/fetch-from-api'
 import { User } from '@/payload-types'
+import { NewsletterForm } from './components/newsletter-form'
+import { ChartNoAxesCombined } from 'lucide-react'
+import { LogoutButton } from './components/logout-button'
 
 export default function LandingPage() {
   const solutions = [
     {
-      iconSrc: '/assets/icons/shoe.svg',
+      iconSrc: '/assets/homepage/monitoring.jpg',
       title: 'Monitoramento Inteligente',
       description:
         'Acompanhe a evolução de seus atletas com métricas avançadas e insights personalizados.',
-      iconAlt: 'Sapato',
+      alt: 'Monitoramento',
     },
     {
-      iconSrc: '/assets/icons/dumbbell.svg',
+      iconSrc: '/assets/homepage/goals.jpg',
       title: 'Programação de Treinos e Metas',
       description:
         'Planejamento completo e personalizado para atingir os melhores resultados de forma sustentável.',
-      iconAlt: 'Halter',
+      alt: 'Treinos e Metas',
     },
     {
-      iconSrc: '/assets/icons/apple.svg',
+      iconSrc: '/assets/homepage/feedback.jpg',
       title: 'Feedback em Tempo Real',
       description:
         'Avaliações imediatas permitem ajustes rápidos e melhoria contínua da performance.',
-      iconAlt: 'Maça',
+      alt: 'Feedback',
     },
   ]
 
   const features = [
     {
-      iconSrc: '/assets/icons/shoe.svg',
+      iconSrc: <ChartNoAxesCombined className="h-8 w-8 text-primary" />,
       title: 'Dashboard Personalizado',
-      description: 'Acesso a dados de performance em tempo real para tomada de decisões',
+      description: 'Acesso a dados de performance em tempo real',
       iconAlt: 'Sapato',
     },
     {
-      iconSrc: '/assets/icons/dumbbell.svg',
+      iconSrc: <ChartColumnStacked className="h-8 w-8 text-primary" />,
       title: 'Análise Biomecânica',
       description: 'Avaliações detalhadas para otimizar a técnica e prevenir lesões',
       iconAlt: 'Halter',
     },
     {
-      iconSrc: '/assets/icons/apple.svg',
+      iconSrc: <Watch className="h-8 w-8 text-primary" />,
       title: 'Integração com Wearables',
       description: 'Compatível com os principais dispositivos do mercado',
       iconAlt: 'Maça',
@@ -64,7 +66,7 @@ export default function LandingPage() {
       iconHeight: 50,
     },
     {
-      iconSrc: '/assets/icons/bottle.svg',
+      iconSrc: <UserRoundPen className="h-8 w-8 text-primary" />,
       title: 'Gestão Completa de Atletas',
       description: 'Cadastro, histórico e acompanhamento de planos de treino',
       iconAlt: 'Garrafa',
@@ -275,8 +277,17 @@ export default function LandingPage() {
               Por que Escolher a Apex?
             </h3>
 
-            <div className="max-w-3xl mx-auto bg-gray-100 rounded-lg aspect-video flex items-center justify-center">
-              <button className="w-16 h-16 rounded-full bg-white flex items-center justify-center shadow-md">
+            <div className="max-w-3xl mx-auto bg-gray-100 rounded-lg aspect-video flex items-center justify-center relative overflow-hidden">
+              <div
+                className="absolute inset-0"
+                style={{
+                  backgroundImage: "url('/assets/homepage/video.jpg')",
+                  backgroundSize: 'cover',
+                  backgroundPosition: 'center',
+                  opacity: 0.7,
+                }}
+              ></div>
+              <button className="w-16 h-16 rounded-full bg-white flex items-center justify-center shadow-md z-10">
                 <Play className="w-8 h-8 text-primary" />
               </button>
             </div>
@@ -310,15 +321,12 @@ export default function LandingPage() {
               Assine nossa Newsletter e receba dicas exclusivas sobre performance esportiva!
             </p>
 
-            <div className="flex gap-8">
-              <Input type="email" placeholder="Seu Email" className="flex-grow" />
-              <Button className="bg-primary hover:bg-primary-800 text-white w-32">Assinar</Button>
-            </div>
+            <NewsletterForm />
           </div>
         </section>
 
         {/* Partners/Gallery Section */}
-        <section className="py-12 bg-gray-200">
+        {/* <section className="py-12 bg-gray-200">
           <div className="container mx-auto px-4 md:px-10">
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               {[1, 2, 3, 4].map((item) => (
@@ -341,7 +349,7 @@ export default function LandingPage() {
               ))}
             </div>
           </div>
-        </section>
+        </section> */}
       </main>
 
       <footer id="contact" className="bg-gray-100 py-12">
@@ -453,12 +461,15 @@ async function AuthButton() {
 
   if (data && data.user) {
     return (
-      <Button variant={'outline'} asChild>
-        <Link href="/home">
-          <UserCircle className="mr-2 h-4 w-4" />
-          Olá, {data.user.name.split(' ')[0]}
-        </Link>
-      </Button>
+      <div className="flex gap-2">
+        <Button variant={'outline'} asChild>
+          <Link href="/home">
+            <UserCircle className="mr-2 h-4 w-4" />
+            Olá, {data.user.name.split(' ')[0]}
+          </Link>
+        </Button>
+        <LogoutButton />
+      </div>
     )
   }
 

@@ -45,15 +45,15 @@ api_call "POST" "users" '{"email":"agency@test.com", "password": "password123", 
 AGENCY_USER_ID=$id
 
 # Nutritionist User
-api_call "POST" "users" '{"email":"nutritionist@test.com", "password": "password123", "role": "nutritionist", "name": "Test Nutritionist"}'
+api_call "POST" "users" '{"email":"nutritionist@test.com", "password": "password123", "role": "nutritionist", "name": "Jéssica"}'
 NUTRITIONIST_USER_ID=$id
 
 # Athlete User
-api_call "POST" "users" '{"email":"athlete@test.com", "password": "password123", "role": "athlete", "name": "Test Athlete"}'
+api_call "POST" "users" '{"email":"athlete@test.com", "password": "password123", "role": "athlete", "name": "Bianca"}'
 ATHLETE_USER_ID=$id
 
 # Trainer User
-api_call "POST" "users" '{"email":"trainer@test.com", "password": "password123", "role": "trainer", "name": "Test Trainer"}'
+api_call "POST" "users" '{"email":"trainer@test.com", "password": "password123", "role": "trainer", "name": "Paulo"}'
 TRAINER_USER_ID=$id
 
 # Step 2: Create Agency
@@ -66,6 +66,11 @@ echo -e "\n🥗 Creating Nutritionist..."
 api_call "POST" "nutritionists" "{\"user\": $NUTRITIONIST_USER_ID, \"license_number\": \"NUT12345\", \"specialization\": \"Sports Nutrition\"}"
 NUTRITIONIST_ID=$id
 
+# Step 3: Create Trainer profile
+echo -e "\n🥗 Creating Trainer..."
+api_call "POST" "trainers" "{\"user\": $TRAINER_USER_ID, \"certification\": \"EF12345\", \"specialization\": \"high performance\"}"
+TRAINER_ID=$id
+
 # Step 4: Create Athlete profile
 echo -e "\n🏋️ Creating Athlete Profile..."
 api_call "POST" "athlete-profiles" "{\"user\": $ATHLETE_USER_ID, \"agency\": $AGENCY_ID, \"weight\": 75, \"height\": 180, \"dietary_habits\": \"Prefers high-protein meals\", \"physical_activity_habits\": \"Trains 5 days a week\", \"birth_date\": \"1995-05-15\", \"gender\": \"Male\", \"goal\": \"Muscle gain and performance improvement\"}"
@@ -75,11 +80,19 @@ ATHLETE_ID=$id
 echo -e "\n🔗 Creating Agency-Professional Relationship..."
 api_call "POST" "agency-professionals" "{\"agency\": $AGENCY_ID, \"professional\": $NUTRITIONIST_USER_ID, \"role\": \"Lead Nutritionist\"}"
 
-# Step 6: Create Nutritionist-Athlete relationship
+# Step 7: Create Nutritionist-Athlete relationship
 echo -e "\n🔗 Creating Nutritionist-Athlete Relationship..."
 api_call "POST" "nutritionist-athletes" "{\"nutritionist\": $NUTRITIONIST_ID, \"athlete\": $ATHLETE_ID}"
 
-# Step 7: Create Food items
+# Step 6: Create Agency-Professional relationship - Trainer
+echo -e "\n🔗 Creating Agency-Professional Relationship for trainer..."
+api_call "POST" "agency-professionals" "{\"agency\": $AGENCY_ID, \"professional\": $TRAINER_USER_ID, \"role\": \"trainer\"}"
+
+# Step 7: Create Trainer-Athlete relationship
+echo -e "\n🔗 Creating Trainer-Athlete Relationship..."
+api_call "POST" "trainer-athletes" "{\"trainer\": $TRAINER_ID, \"athlete\": $ATHLETE_ID}"
+
+# Step 8: Create Food items
 echo -e "\n🍗 Creating Food Items..."
 api_call "POST" "food" '{"name": "Chicken Breast", "calories_per_100g": 165, "protein_per_100g": 31, "carbs_per_100g": 0, "fat_per_100g": 3.6}'
 FOOD1_ID=$id
@@ -127,6 +140,36 @@ api_call "POST" "meal-food" "{\"meal\": $MEAL2_ID, \"food\": $FOOD3_ID, \"quanti
 echo -e "\n🍴 Creating Daily Consumption Records..."
 api_call "POST" "daily-consumption" "{\"athlete\": $ATHLETE_ID, \"food\": $FOOD1_ID, \"date\": \"$TODAY\", \"quantity_grams\": 125}"
 api_call "POST" "daily-consumption" "{\"athlete\": $ATHLETE_ID, \"food\": $FOOD2_ID, \"date\": \"$TODAY\", \"quantity_grams\": 175}"
+
+# Step 13: Create Exercicies
+echo -e "\n🍴 Creating Exercicies..."
+api_call "POST" "exercises" "{\"name\": \"Avanço com Halteres\", \"description\": \"Fortalece glúteos, quadríceps e isquiotibiais, ajudando na estabilidade e impulsão na corrida.\", \"muscle_group\": \"Pernas\"}"
+EXERCISE1_ID=$id
+
+api_call "POST" "exercises" "{\"name\": \"Prancha Abdominal\", \"description\": \"Exercício isométrico para fortalecimento do core, essencial para manter a postura durante a corrida.\", \"muscle_group\": \"Abdômen\"}"
+EXERCISE2_ID=$id
+
+api_call "POST" "exercises" "{\"name\": \"Elevação de Panturrilhas\", \"description\": \"Trabalha os músculos da panturrilha, importantes para a propulsão e absorção de impacto.\", \"muscle_group\": \"Panturrilhas\"}"
+EXERCISE3_ID=$id
+
+# Step 14: Create Workout Plan
+echo -e "\n🏃 Creating Workout Plans..."
+
+api_call "POST" "workout-plans" "{\"athlete\": $ATHLETE_ID, \"trainer\": $TRAINER_ID, \"start_date\": \"$TODAY\", \"end_date\": \"$NEXT_MONTH\", \"goal\": \"Preparação para prova de 10 km. Foco em resistência, técnica e prevenção de lesões.\"}"
+WORKOUT_PLAN_ID=$id
+
+# Step 15: Add Exercise to Workout Plan
+echo -e "\n📌 Adding Exercise to Workout Plan..."
+
+api_call "POST" "exercise-workouts" "{\"workout_plan\": $WORKOUT_PLAN_ID, \"exercise\": $EXERCISE1_ID, \"sets\": 3, \"reps\": 12, \"rest_seconds\": 60, \"notes\": \"Manter boa postura durante o movimento. Foco em controle e estabilidade.\"}"
+
+api_call "POST" "exercise-workouts" "{\"workout_plan\": $WORKOUT_PLAN_ID, \"exercise\": $EXERCISE2_ID, \"sets\": 3, \"reps\": 1, \"rest_seconds\": 30, \"notes\": \"Segurar posição por 30 segundos em cada série.\"}"
+
+api_call "POST" "exercise-workouts" "{\"workout_plan\": $WORKOUT_PLAN_ID, \"exercise\": $EXERCISE3_ID, \"sets\": 4, \"reps\": 15, \"rest_seconds\": 45, \"notes\": \"Executar lentamente. Foco no alongamento e contração da panturrilha.\"}"
+
+# Step X: Log Physical Activity
+echo -e "\n🗓️ Logging Physical Activity..."
+api_call "POST" "physical-activity-logs" "{\"athlete\": $ATHLETE_ID, \"workout_plan\": $WORKOUT_PLAN_ID, \"date\": \"$TODAY\", \"duration_minutes\": 45, \"calories_burned\": 520}"
 
 echo -e "\n✅ Mock data generation complete!"
 echo -e "Created:"

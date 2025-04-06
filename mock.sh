@@ -66,6 +66,11 @@ echo -e "\n🥗 Creating Nutritionist..."
 api_call "POST" "nutritionists" "{\"user\": $NUTRITIONIST_USER_ID, \"license_number\": \"NUT12345\", \"specialization\": \"Sports Nutrition\"}"
 NUTRITIONIST_ID=$id
 
+# Step 3: Create Trainer profile
+echo -e "\n🥗 Creating Trainer..."
+api_call "POST" "trainers" "{\"user\": $TRAINER_USER_ID, \"certification\": \"EF12345\", \"specialization\": \"high performance\"}"
+TRAINER_ID=$id
+
 # Step 4: Create Athlete profile
 echo -e "\n🏋️ Creating Athlete Profile..."
 api_call "POST" "athlete-profiles" "{\"user\": $ATHLETE_USER_ID, \"agency\": $AGENCY_ID, \"weight\": 75, \"height\": 180, \"dietary_habits\": \"Prefers high-protein meals\", \"physical_activity_habits\": \"Trains 5 days a week\", \"birth_date\": \"1995-05-15\", \"gender\": \"Male\", \"goal\": \"Muscle gain and performance improvement\"}"
@@ -75,11 +80,19 @@ ATHLETE_ID=$id
 echo -e "\n🔗 Creating Agency-Professional Relationship..."
 api_call "POST" "agency-professionals" "{\"agency\": $AGENCY_ID, \"professional\": $NUTRITIONIST_USER_ID, \"role\": \"Lead Nutritionist\"}"
 
-# Step 6: Create Nutritionist-Athlete relationship
+# Step 7: Create Nutritionist-Athlete relationship
 echo -e "\n🔗 Creating Nutritionist-Athlete Relationship..."
 api_call "POST" "nutritionist-athletes" "{\"nutritionist\": $NUTRITIONIST_ID, \"athlete\": $ATHLETE_ID}"
 
-# Step 7: Create Food items
+# Step 6: Create Agency-Professional relationship - Trainer
+echo -e "\n🔗 Creating Agency-Professional Relationship for trainer..."
+api_call "POST" "agency-professionals" "{\"agency\": $AGENCY_ID, \"professional\": $TRAINER_USER_ID, \"role\": \"trainer\"}"
+
+# Step 7: Create Trainer-Athlete relationship
+echo -e "\n🔗 Creating Trainer-Athlete Relationship..."
+api_call "POST" "trainer-athletes" "{\"trainer\": $TRAINER_ID, \"athlete\": $ATHLETE_ID}"
+
+# Step 8: Create Food items
 echo -e "\n🍗 Creating Food Items..."
 api_call "POST" "food" '{"name": "Chicken Breast", "calories_per_100g": 165, "protein_per_100g": 31, "carbs_per_100g": 0, "fat_per_100g": 3.6}'
 FOOD1_ID=$id

@@ -261,4 +261,97 @@ export const AthleteApi: Endpoint[] = [
       }
     },
   },
+  {
+    method: 'get',
+    path: '/reports/latest',
+    handler: async (req: PayloadRequest) => {
+      try {
+        if (!req.user) {
+          return Response.json(
+            { errors: [{ message: 'Usuário não autenticado' }] },
+            { status: 401 }
+          )
+        }
+
+        console.log(req.query?.date)
+  
+        const userId = req.user.id
+  
+        const athleteProfile = await req.payload.find({
+          collection: 'athlete-profiles',
+          where: { user: { equals: userId } },
+          depth: 0,
+        })
+  
+        if (!athleteProfile.docs?.length) {
+          return Response.json(
+            { errors: [{ message: 'Perfil de atleta não encontrado' }] },
+            { status: 404 }
+          )
+        }
+  
+        const athleteId = athleteProfile.docs[0].id
+  
+        const dateParam = req.query?.date
+        const filterDate = dateParam ? new Date(dateParam as string) : new Date()
+        filterDate.setHours(23, 59, 59, 999)
+
+        const reports = await req.payload.find({
+          collection: 'reports',
+          where: {
+            and: [
+              { athlete: { equals: athleteId } },
+              { createdAt: { less_than_equal: filterDate.toISOString() } },
+            ],
+          },
+          sort: '-createdAt',
+          limit: 2,
+        })
+
+  
+        var [latest, previous] = reports.docs
+  
+        if (!latest) {
+          return Response.json(
+            { errors: [{ message: 'Nenhum relatório encontrado' }] },
+            { status: 404 }
+          )
+        }
+
+        if(!previous){
+          previous = latest
+        }
+  
+        // Parse dos dados principais
+        const currentContent = JSON.parse(latest.content)
+        const lastContent = previous ? JSON.parse(previous.content) : null
+  
+        const responseData = {
+          weight: currentContent.weight,
+          bodyFat: currentContent.bodyFat,
+          abdominalFold: currentContent.abdominalFold,
+          armMeasurement: currentContent.armMeasurement,
+          thighFold: currentContent.thighFold,
+          lastAssessment: lastContent
+            ? {
+                weight: lastContent.weight,
+                bodyFat: lastContent.bodyFat,
+                abdominalFold: lastContent.abdominalFold,
+                armMeasurement: lastContent.armMeasurement,
+                thighFold: lastContent.thighFold,
+              }
+            : undefined,
+        }
+  
+        return Response.json({ data: responseData })
+      } catch (error) {
+        console.error('[AthleteApi][reports/latest]:', error)
+        return Response.json(
+          { errors: [{ message: 'Erro inesperado ao buscar relatórios' }] },
+          { status: 500 }
+        )
+      }
+    },
+  }
+  
 ]

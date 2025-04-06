@@ -28,7 +28,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import NutritionDashboard from './components/trainerDashboard'
+import TrainerDashboard from './components/trainerDashboard'
 import { DietTabContent } from '@/components/ui/diet-tab'
 import Header from '@/components/ui/header'
 
@@ -204,13 +204,13 @@ export default function TrainerOverviewPage() {
           <CardContent className="p-6">
             <TabsContent value={TABS.OVERVIEW} className="mt-0">
               <div className="min-h-[600px]">
-                {selectedAthleteId && <NutritionDashboard athleteId={selectedAthleteId} />}
+                {selectedAthleteId && <TrainerDashboard athleteId={selectedAthleteId} />}
               </div>
             </TabsContent>
 
             <TabsContent value={TABS.DIET} className="mt-0">
               {selectedAthleteId ? (
-                <DietTabContent athleteId={selectedAthleteId} nutritionistId={'-1'} />
+                <DietTabContent athleteId={selectedAthleteId} nutritionistId={'-1'} onlyView={true} />
               ) : (
                 <div className="min-h-[600px] flex items-center justify-center">
                   <p>Selecione um atleta para visualizar o plano alimentar</p>

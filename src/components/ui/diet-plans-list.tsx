@@ -12,6 +12,7 @@ interface DietPlansListProps {
   onSelectPlan: (plan: any) => void;
   onAddNewPlan: () => void;
   onPlanDeleted: () => void;
+  onlyView?: boolean;
   selectedPlanId: string | null;
 }
 
@@ -19,6 +20,7 @@ export function DietPlansList({
   athleteId,
   onSelectPlan,
   onAddNewPlan,
+  onlyView = false,
   onPlanDeleted,
   selectedPlanId
 }: DietPlansListProps) {
@@ -152,13 +154,15 @@ export function DietPlansList({
       <CardHeader className="pb-2">
         <div className="flex justify-between items-center">
           <CardTitle className="text-lg">Planos Alimentares</CardTitle>
-          <Button
-            size="sm"
-            onClick={onAddNewPlan}
-            variant="outline"
-          >
-            <PlusIcon className="h-4 w-4 mr-1" /> Novo Plano
-          </Button>
+          {!onlyView ? (
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={onAddNewPlan}
+            >
+              <PlusIcon className="h-4 w-4 mr-1" /> Novo Plano
+            </Button>
+          ) : null}
         </div>
       </CardHeader>
       <CardContent>
@@ -171,13 +175,14 @@ export function DietPlansList({
         {dietPlans.length === 0 ? (
           <div className="text-center py-6 bg-gray-50 rounded-lg border border-dashed border-gray-200">
             <p className="text-gray-500 mb-2">Nenhum plano alimentar encontrado</p>
-            <Button
+            {!onlyView ? (<Button
               variant="outline"
               size="sm"
               onClick={onAddNewPlan}
             >
               <PlusIcon className="h-4 w-4 mr-1" /> Criar Plano Alimentar
-            </Button>
+            </Button>) : null}
+
           </div>
         ) : (
           <div className="space-y-2">

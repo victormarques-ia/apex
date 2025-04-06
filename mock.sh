@@ -141,6 +141,36 @@ echo -e "\n🍴 Creating Daily Consumption Records..."
 api_call "POST" "daily-consumption" "{\"athlete\": $ATHLETE_ID, \"food\": $FOOD1_ID, \"date\": \"$TODAY\", \"quantity_grams\": 125}"
 api_call "POST" "daily-consumption" "{\"athlete\": $ATHLETE_ID, \"food\": $FOOD2_ID, \"date\": \"$TODAY\", \"quantity_grams\": 175}"
 
+# Step 13: Create Exercicies
+echo -e "\n🍴 Creating Exercicies..."
+api_call "POST" "exercises" "{\"name\": \"Avanço com Halteres\", \"description\": \"Fortalece glúteos, quadríceps e isquiotibiais, ajudando na estabilidade e impulsão na corrida.\", \"muscle_group\": \"Pernas\"}"
+EXERCISE1_ID=$id
+
+api_call "POST" "exercises" "{\"name\": \"Prancha Abdominal\", \"description\": \"Exercício isométrico para fortalecimento do core, essencial para manter a postura durante a corrida.\", \"muscle_group\": \"Abdômen\"}"
+EXERCISE2_ID=$id
+
+api_call "POST" "exercises" "{\"name\": \"Elevação de Panturrilhas\", \"description\": \"Trabalha os músculos da panturrilha, importantes para a propulsão e absorção de impacto.\", \"muscle_group\": \"Panturrilhas\"}"
+EXERCISE3_ID=$id
+
+# Step 14: Create Workout Plan
+echo -e "\n🏃 Creating Workout Plans..."
+
+api_call "POST" "workout-plans" "{\"athlete\": $ATHLETE_ID, \"trainer\": $TRAINER_ID, \"start_date\": \"$TODAY\", \"end_date\": \"$NEXT_MONTH\", \"goal\": \"Preparação para prova de 10 km. Foco em resistência, técnica e prevenção de lesões.\"}"
+WORKOUT_PLAN_ID=$id
+
+# Step 15: Add Exercise to Workout Plan
+echo -e "\n📌 Adding Exercise to Workout Plan..."
+
+api_call "POST" "exercise-workouts" "{\"workout_plan\": $WORKOUT_PLAN_ID, \"exercise\": $EXERCISE1_ID, \"sets\": 3, \"reps\": 12, \"rest_seconds\": 60, \"notes\": \"Manter boa postura durante o movimento. Foco em controle e estabilidade.\"}"
+
+api_call "POST" "exercise-workouts" "{\"workout_plan\": $WORKOUT_PLAN_ID, \"exercise\": $EXERCISE2_ID, \"sets\": 3, \"reps\": 1, \"rest_seconds\": 30, \"notes\": \"Segurar posição por 30 segundos em cada série.\"}"
+
+api_call "POST" "exercise-workouts" "{\"workout_plan\": $WORKOUT_PLAN_ID, \"exercise\": $EXERCISE3_ID, \"sets\": 4, \"reps\": 15, \"rest_seconds\": 45, \"notes\": \"Executar lentamente. Foco no alongamento e contração da panturrilha.\"}"
+
+# Step X: Log Physical Activity
+echo -e "\n🗓️ Logging Physical Activity..."
+api_call "POST" "physical-activity-logs" "{\"athlete\": $ATHLETE_ID, \"workout_plan\": $WORKOUT_PLAN_ID, \"date\": \"$TODAY\", \"duration_minutes\": 45, \"calories_burned\": 520}"
+
 echo -e "\n✅ Mock data generation complete!"
 echo -e "Created:"
 echo "- Users: Agency, Nutritionist, Athlete, Trainer"

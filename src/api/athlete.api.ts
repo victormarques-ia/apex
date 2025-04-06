@@ -272,6 +272,8 @@ export const AthleteApi: Endpoint[] = [
             { status: 401 }
           )
         }
+
+        console.log(req.query?.date)
   
         const userId = req.user.id
   
@@ -290,20 +292,34 @@ export const AthleteApi: Endpoint[] = [
   
         const athleteId = athleteProfile.docs[0].id
   
+        const dateParam = req.query?.date
+        const filterDate = dateParam ? new Date(dateParam as string) : new Date()
+        filterDate.setHours(23, 59, 59, 999)
+
         const reports = await req.payload.find({
           collection: 'reports',
-          where: { athlete: { equals: athleteId } },
+          where: {
+            and: [
+              { athlete: { equals: athleteId } },
+              { createdAt: { less_than_equal: filterDate.toISOString() } },
+            ],
+          },
           sort: '-createdAt',
           limit: 2,
         })
+
   
-        const [latest, previous] = reports.docs
+        var [latest, previous] = reports.docs
   
         if (!latest) {
           return Response.json(
             { errors: [{ message: 'Nenhum relatório encontrado' }] },
             { status: 404 }
           )
+        }
+
+        if(!previous){
+          previous = latest
         }
   
         // Parse dos dados principais

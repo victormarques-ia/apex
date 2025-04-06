@@ -5,7 +5,7 @@
 
 # Define variables
 API_URL="http://localhost:3000/api"
-PAYLOAD_TOKEN=${1:-"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwiY29sbGVjdGlvbiI6InVzZXJzIiwiZW1haWwiOiJ0ZXN0ZUB0ZXN0ZS5jb20iLCJpYXQiOjE3NDMzODEzMTEsImV4cCI6MTc0MzM4ODUxMX0.Gyq19ls5ygWdo_CjU0pRN2vf3GT9Bmf7afu6UoCmEzM"}
+PAYLOAD_TOKEN=${1:-"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwiY29sbGVjdGlvbiI6InVzZXJzIiwiZW1haWwiOiJ0ZXN0ZUB0ZXN0ZS5jb20iLCJpYXQiOjE3NDM5Nzg0ODQsImV4cCI6MTc0Mzk4NTY4NH0.jz70HUPODSetn2OxxIRrVSk3TkjBWCdJW7Rz_Vt4pCM"}
 AUTH_HEADER="Cookie: payload-token=$PAYLOAD_TOKEN"
 CONTENT_TYPE="Content-Type: application/json"
 
@@ -33,9 +33,56 @@ api_call() {
 
 # Clear terminal
 clear
+
+echo -e "\n🧹 Cleaning up existing database records..."
+
+docker exec -i $(docker ps -qf "name=postgres") psql -U postgres -d admin <<EOF
+DO \$\$
+DECLARE
+    stmt text;
+BEGIN
+    -- Desativa temporariamente as constraints
+    EXECUTE 'SET session_replication_role = replica';
+
+    -- Trunca todas as tabelas do schema public
+    FOR stmt IN
+        SELECT 'TRUNCATE TABLE "' || tablename || '" RESTART IDENTITY CASCADE;' 
+        FROM pg_tables 
+        WHERE schemaname = 'public'
+    LOOP
+        EXECUTE stmt;
+    END LOOP;
+
+    -- Reativa constraints
+    EXECUTE 'SET session_replication_role = origin';
+END;
+\$\$;
+EOF
+
 echo "=== PayloadCMS Mock Data Generator ==="
 echo "Using token: ${PAYLOAD_TOKEN:0:20}..."
 echo "======================================="
+
+
+# Step 0: Create first user and get token
+echo -e "\n🆕 Creating First User..."
+
+first_register_response=$(curl -s -X POST "$API_URL/users/first-register" \
+  -H "Content-Type: multipart/form-data" \
+  -F '_payload={"role":"athlete","name":"test","email":"test@test.com","password":"1234","confirm-password":"1234"}')
+
+# Extrai o token da resposta
+PAYLOAD_TOKEN=$(echo $first_register_response | grep -o '"token":"[^"]*' | cut -d':' -f2 | tr -d '"')
+AUTH_HEADER="Cookie: payload-token=$PAYLOAD_TOKEN"
+
+if [ -z "$PAYLOAD_TOKEN" ]; then
+    echo "❌ Failed to register first user"
+    echo $first_register_response
+    exit 1
+else
+    echo "✅ First user created and token retrieved"
+fi
+
 
 # Step 1: Create Users
 echo -e "\n🧑 Creating Users..."

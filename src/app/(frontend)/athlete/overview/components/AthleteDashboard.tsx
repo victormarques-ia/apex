@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import DailySchedule from './daily-schedule'
+import { number } from 'zod'
 
 type AssessmentData = {
   weight: number
@@ -25,106 +26,67 @@ type ScheduleItem = {
   time: string
   activity: string
   details?: string
+  diet_plan?: number
+  foods?: {
+    name: string
+    quantity: number
+  }
   type: string
   status: 'completed' | 'pending' | 'modifiable'
 }
 
-const AthleteDashboard = ({ athleteId }: { athleteId: string }) => {
+const AthleteDashboard = () => {
   const [loading, setLoading] = useState(true)
   const [assessmentData, setAssessmentData] = useState<AssessmentData | null>(null)
   const [scheduleData, setScheduleData] = useState<ScheduleItem[]>([])
   const [currentDate, setCurrentDate] = useState(new Date())
 
   useEffect(() => {
-    if (!athleteId) return
-
     const fetchDashboardData = async () => {
       try {
         setLoading(true)
 
         // Fetch reports data
-        const assessmentResponse = await fetch(`/api/athlete-profiles/reports/latest`)
-        if (assessmentResponse.ok) {
-          const assessmentResult = await assessmentResponse.json()
-          if (assessmentResult.data) {
-            setAssessmentData(assessmentResult.data)
-          }
-        }
-
-        // Fetch activities data using the new endpoint
-        const formattedDate = format(currentDate, 'yyyy-MM-dd')
-        const activitiesResponse = await fetch(
-          `/api/athlete-profiles/get-activities?date=${formattedDate}`,
-        )
-
-        if (activitiesResponse.ok) {
-          const activitiesResult = await activitiesResponse.json()
-          if (activitiesResult.data && activitiesResult.data.activities) {
-            // Set schedule data with the activities from the API
-            setScheduleData(activitiesResult.data.activities)
-            console.log('Fetched activities:', activitiesResult.data)
+        try {
+          const assessmentResponse = await fetch('/api/athlete-profiles/reports/latest')
+          if (assessmentResponse.ok) {
+            const assessmentResult = await assessmentResponse.json()
+            if (assessmentResult.data) {
+              setAssessmentData(assessmentResult.data)
+            }
           } else {
-            setScheduleData([])
-            console.log('No activities found for the selected date')
+            console.error('Failed to fetch assessment data:', await assessmentResponse.text())
           }
-        } else {
-          console.error('Failed to fetch activities:', await activitiesResponse.text())
+        } catch (error) {
+          console.error('Error fetching assessment data:', error)
+        }
+
+        // Fetch activities data using the endpoint
+        console.log('Fetching activities for date:', currentDate)
+        const formattedDate = format(currentDate, 'yyyy-MM-dd')
+        try {
+          const activitiesResponse = await fetch(
+            `/api/athlete-profiles/get-activities?date=${formattedDate}`,
+          )
+
+          if (activitiesResponse.ok) {
+            const activitiesResult = await activitiesResponse.json()
+            if (activitiesResult.data && activitiesResult.data.activities) {
+              // Set schedule data with the activities from the API
+              setScheduleData(activitiesResult.data.activities)
+              console.log('Fetched activities:', activitiesResult.data)
+            } else {
+              // No activities found for this date
+              setScheduleData([])
+              console.log('No activities found for the selected date')
+            }
+          } else {
+            console.error('Failed to fetch activities:', await activitiesResponse.text())
+            setScheduleData([])
+          }
+        } catch (error) {
+          console.error('Error fetching activities:', error)
           setScheduleData([])
-        }
-
-        // If reports API call fails, set some mock data for development
-        if (!assessmentData) {
-          setAssessmentData({
-            weight: 76.5,
-            bodyFat: 15.6,
-            abdominalFold: 20,
-            armMeasurement: 35,
-            thighFold: 35,
-            lastAssessment: {
-              weight: 80,
-              bodyFat: 18.3,
-              abdominalFold: 31,
-              armMeasurement: 33.5,
-              thighFold: 50,
-            },
-          })
-        }
-
-        // If no activities were found, set some mock data
-        if (scheduleData.length === 0) {
-          setScheduleData([
-            {
-              time: '07:00',
-              activity: 'Café da manhã',
-              type: 'meal',
-              status: 'completed',
-            },
-            {
-              time: '08:00',
-              activity: 'Treino de Fortalecimento',
-              type: 'workout',
-              status: 'completed',
-            },
-            {
-              time: '09:00',
-              activity: 'Lanche da manhã',
-              type: 'meal',
-              status: 'pending',
-            },
-            {
-              time: '10:00',
-              activity: '2000ml Água - Para ser tomada durante a manhã toda',
-              type: 'hydration',
-              status: 'pending',
-            },
-            {
-              time: '12:00',
-              activity: 'Almoço',
-              details: 'Salada à vontade\n100g de arroz\n150g de frango\n50g de feijão',
-              type: 'meal',
-              status: 'completed',
-            },
-          ])
         }
       } catch (err) {
         console.error('Error in dashboard component:', err)
@@ -134,7 +96,7 @@ const AthleteDashboard = ({ athleteId }: { athleteId: string }) => {
     }
 
     fetchDashboardData()
-  }, [athleteId, currentDate])
+  }, [currentDate])
 
   // Calculate difference from last report
   const calculateDifference = (current: number, previous: number | undefined): string => {
@@ -150,9 +112,6 @@ const AthleteDashboard = ({ athleteId }: { athleteId: string }) => {
       </div>
     )
   }
-
-  // Format date for display
-  const formattedDate = format(currentDate, "'Hoje | 'd 'de' MMMM 'de' yyyy", { locale: ptBR })
 
   // Handle date change
   const handleDateChange = (newDate: Date) => {
@@ -250,7 +209,7 @@ const AthleteDashboard = ({ athleteId }: { athleteId: string }) => {
         </div>
       </div>
 
-      {/* reports cards */}
+      {/* Assessment cards */}
       <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
         {/* Weight card */}
         <Card className="bg-red-100">
@@ -363,7 +322,7 @@ const AthleteDashboard = ({ athleteId }: { athleteId: string }) => {
         {/* Thigh fold card */}
         <Card className="bg-cyan-100">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Dobra coxa</CardTitle>
+            <CardTitle className="text-sm font-medium">Dobra da coxa</CardTitle>
           </CardHeader>
           <CardContent>
             {assessmentData ? (
@@ -389,7 +348,7 @@ const AthleteDashboard = ({ athleteId }: { athleteId: string }) => {
       </div>
 
       {/* Daily schedule using the existing component */}
-      <DailySchedule scheduleData={scheduleData} />
+      <DailySchedule scheduleData={scheduleData} currentDate={currentDate} />
     </div>
   )
 }

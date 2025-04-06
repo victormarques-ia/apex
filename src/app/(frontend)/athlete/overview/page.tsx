@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import Header from '@/components/ui/header'
 import AthleteDashboard from './components/AthleteDashboard'
 import { AthleteReadOnlyDietTab } from '@/components/ui/athlete-diet-tab'
+import DailyConsumptionComponent from './components/daily-consumption'
 
 // Define the main tabs
 const TABS = {
@@ -22,6 +23,12 @@ const OVERVIEW_TABS = {
   REPORT: 'relatorio',
 }
 
+// Define diet sub-tabs
+const DIET_TABS = {
+  CONSUMPTION: 'consumo',
+  DIET_PLAN: 'plano',
+}
+
 export default function AthleteOverviewPage() {
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -29,6 +36,7 @@ export default function AthleteOverviewPage() {
   // Get active tab and athlete from URL params
   const activeTab = searchParams.get('tab') || TABS.OVERVIEW
   const activeOverviewTab = searchParams.get('overviewTab') || OVERVIEW_TABS.OVERVIEW
+  const activeDietTab = searchParams.get('dietTab') || DIET_TABS.CONSUMPTION
 
   // State variables
   const [loading, setLoading] = useState<boolean>(true)
@@ -78,11 +86,13 @@ export default function AthleteOverviewPage() {
   }, [])
 
   // Update URL params when tab changes
-  const updateURLParams = (tab: string, overviewTab?: string) => {
+  const updateURLParams = (tab: string, subTab?: string) => {
     const params = new URLSearchParams(searchParams.toString())
     params.set('tab', tab)
-    if (tab === TABS.OVERVIEW && overviewTab) {
-      params.set('overviewTab', overviewTab)
+    if (tab === TABS.OVERVIEW && subTab) {
+      params.set('overviewTab', subTab)
+    } else if (tab === TABS.DIET && subTab) {
+      params.set('dietTab', subTab)
     }
     router.push(`?${params.toString()}`)
   }
@@ -95,6 +105,11 @@ export default function AthleteOverviewPage() {
   // Handle overview sub-tab change
   const handleOverviewTabChange = (value: string) => {
     updateURLParams(TABS.OVERVIEW, value)
+  }
+
+  // Handle diet sub-tab change
+  const handleDietTabChange = (value: string) => {
+    updateURLParams(TABS.DIET, value)
   }
 
   // Loading state
@@ -167,12 +182,6 @@ export default function AthleteOverviewPage() {
                 >
                   Avaliação
                 </button>
-                <button
-                  className={`px-6 py-2 text-sm font-medium rounded-md ${activeOverviewTab === OVERVIEW_TABS.REPORT ? 'bg-white shadow-sm' : 'text-gray-500'}`}
-                  onClick={() => handleOverviewTabChange(OVERVIEW_TABS.REPORT)}
-                >
-                  Relatório
-                </button>
               </div>
             </div>
           </CardHeader>
@@ -189,25 +198,38 @@ export default function AthleteOverviewPage() {
                 <p>Conteúdo da avaliação será exibido aqui.</p>
               </div>
             )}
-
-            {activeOverviewTab === OVERVIEW_TABS.REPORT && (
-              <div className="p-4">
-                <h2 className="text-xl font-semibold mb-4">Relatório</h2>
-                <p>Conteúdo do relatório será exibido aqui.</p>
-              </div>
-            )}
           </CardContent>
         </Card>
       )
     } else if (activeTab === TABS.DIET) {
-      // Render diet tab
+      // Render diet tab with sub-tabs for Registro de Refeição and Dietas
       return (
         <Card>
-          <CardHeader>
-            <CardTitle className="text-lg font-semibold">Plano Alimentar</CardTitle>
+          <CardHeader className="pb-0">
+            <div className="flex justify-between items-center">
+              {/* Diet sub-tabs */}
+              <div className="bg-gray-100 p-1 rounded-lg inline-flex">
+                <button
+                  className={`px-6 py-2 text-sm font-medium rounded-md ${activeDietTab === DIET_TABS.CONSUMPTION ? 'bg-white shadow-sm' : 'text-gray-500'}`}
+                  onClick={() => handleDietTabChange(DIET_TABS.CONSUMPTION)}
+                >
+                  Registro de Refeição
+                </button>
+                <button
+                  className={`px-6 py-2 text-sm font-medium rounded-md ${activeDietTab === DIET_TABS.DIET_PLAN ? 'bg-white shadow-sm' : 'text-gray-500'}`}
+                  onClick={() => handleDietTabChange(DIET_TABS.DIET_PLAN)}
+                >
+                  Dietas
+                </button>
+              </div>
+            </div>
           </CardHeader>
           <CardContent className="p-6">
-            <AthleteReadOnlyDietTab athleteId={athleteId} />
+            {activeDietTab === DIET_TABS.CONSUMPTION ? (
+              <DailyConsumptionComponent athleteId={athleteId} />
+            ) : (
+              <AthleteReadOnlyDietTab athleteId={athleteId} />
+            )}
           </CardContent>
         </Card>
       )
@@ -221,20 +243,6 @@ export default function AthleteOverviewPage() {
           <CardContent className="p-6">
             <div className="min-h-[600px]">
               <p>Visualização dos seus treinos programados.</p>
-            </div>
-          </CardContent>
-        </Card>
-      )
-    } else if (activeTab === TABS.SETTINGS) {
-      // Render settings tab
-      return (
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg font-semibold">Configurações</CardTitle>
-          </CardHeader>
-          <CardContent className="p-6">
-            <div className="min-h-[600px]">
-              <p>Configurações da sua conta.</p>
             </div>
           </CardContent>
         </Card>

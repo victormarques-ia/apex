@@ -210,13 +210,6 @@ export default function NutritionistOverviewPage() {
                 <p>Conteúdo dos treinos para o atleta selecionado. ID: {selectedAthleteId}</p>
               </div>
             )}
-
-            {activeTab === TABS.SETTINGS && (
-              <div className="min-h-[600px]">
-                <h2 className="text-xl font-semibold mb-4">Configurações</h2>
-                <p>Configurações para o atleta selecionado. ID: {selectedAthleteId}</p>
-              </div>
-            )}
           </CardContent>
         </Card>
       </div>

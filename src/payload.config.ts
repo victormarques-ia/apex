@@ -89,19 +89,19 @@ export default buildConfig({
     },
   }),
   sharp,
-  email: nodemailerAdapter({
-    defaultFromAddress: 'info@apex.com',
-    defaultFromName: 'Apex',
-    transport: nodemailer.createTransport({
-      host: process.env.SMTP_HOST,
-      port: 587,
-      secure: false,
-      auth: {
-        user: process.env.SMTP_USER,
-        pass: process.env.SMTP_PASS,
-      },
-    }),
-  }),
+  // email: nodemailerAdapter({
+  //   defaultFromAddress: 'info@apex.com',
+  //   defaultFromName: 'Apex',
+  //   transport: nodemailer.createTransport({
+  //     host: process.env.SMTP_HOST,
+  //     port: 587,
+  //     secure: false,
+  //     auth: {
+  //       user: process.env.SMTP_USER,
+  //       pass: process.env.SMTP_PASS,
+  //     },
+  //   }),
+  // }),
   plugins: [
     payloadCloudPlugin(),
     // storage-adapter-placeholder

@@ -197,7 +197,6 @@ export default function TrainerOverviewPage() {
           <TabsTrigger value={TABS.OVERVIEW}>Overview</TabsTrigger>
           <TabsTrigger value={TABS.DIET}>Dieta</TabsTrigger>
           <TabsTrigger value={TABS.TRAINING}>Treinos</TabsTrigger>
-          <TabsTrigger value={TABS.SETTINGS}>Configurações</TabsTrigger>
         </TabsList>
 
         {/* Tab contents - will be filled with actual components later */}
@@ -225,15 +224,6 @@ export default function TrainerOverviewPage() {
                 <h2 className="text-xl font-semibold mb-4">Treinos</h2>
                 <p>Conteúdo dos treinos para o atleta selecionado. ID: {selectedAthleteId}</p>
                 {/* Training component will be loaded here */}
-              </div>
-            </TabsContent>
-
-            <TabsContent value={TABS.SETTINGS} className="mt-0">
-              {/* Settings component will be placed here */}
-              <div className="min-h-[600px]">
-                <h2 className="text-xl font-semibold mb-4">Configurações</h2>
-                <p>Configurações para o atleta selecionado. ID: {selectedAthleteId}</p>
-                {/* Settings component will be loaded here */}
               </div>
             </TabsContent>
           </CardContent>

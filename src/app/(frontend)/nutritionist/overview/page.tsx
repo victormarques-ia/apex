@@ -132,9 +132,30 @@ export default function NutritionistOverviewPage() {
       <div className="container mx-auto p-6">
         <Card>
           <CardContent className="p-6">
-            <div className="flex items-center justify-center h-64">
-              <p>Nenhum atleta encontrado. Adicione atletas para visualizar seus dados.</p>
-            </div>
+            {activeTab === TABS.OVERVIEW && (
+              <div className="min-h-[600px]">
+                {selectedAthleteId && <NutritionDashboard athleteId={selectedAthleteId} />}
+              </div>
+            )}
+
+            {activeTab === TABS.DIET && (
+              <div>
+                {selectedAthleteId ? (
+                  <DietTabContent athleteId={selectedAthleteId} />
+                ) : (
+                  <div className="min-h-[600px] flex items-center justify-center">
+                    <p>Selecione um atleta para visualizar o plano alimentar</p>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {activeTab === TABS.TRAINING && (
+              <div className="min-h-[600px]">
+                <h2 className="text-xl font-semibold mb-4">Treinos</h2>
+                <p>Conteúdo dos treinos para o atleta selecionado. ID: {selectedAthleteId}</p>
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>

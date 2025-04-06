@@ -10,7 +10,7 @@ import { format } from 'date-fns';
 import { updateDietPlanDayAction } from '@/app/(frontend)/nutrition/actions/diet-plans.action';
 import { getMealsByDietPlanDayAction } from '@/app/(frontend)/nutrition/actions/meals.action';
 import { CreateMealForm } from './create-meal-form';
-import { MealCard } from './meal-card';
+import { MealCard } from '@/components/ui/meal-card';
 import { PlusIcon } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 

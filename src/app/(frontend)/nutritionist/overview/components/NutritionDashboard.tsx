@@ -16,11 +16,11 @@
 */
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import { format, subDays, parseISO } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
+import React, { useState, useEffect } from 'react'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { format } from 'date-fns'
+import { ptBR } from 'date-fns/locale'
+import { BarChart } from '@mui/x-charts/BarChart';
 
 // Types for dashboard data
 type NutrientTotals = {
@@ -305,22 +305,37 @@ const NutritionDashboard = ({ athleteId }: { athleteId: string }) => {
                   </CardContent>
                 </Card>
 
-                {/* Carbs */}
-                <Card className="bg-green-100">
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-sm font-medium">Carboidratos</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-2xl font-bold">{Math.round(consumptionData.totals.carbs)} gramas</div>
-                    <div className="text-xs text-gray-600">{consumptionData.percentage.carbs}% da meta diária</div>
-                    <div className="w-full bg-gray-200 h-2 mt-2 rounded-full overflow-hidden">
-                      <div 
-                        className="bg-green-500 h-full rounded-full"
-                        style={{ width: `${Math.min(consumptionData.percentage.carbs, 100)}%` }}
-                      ></div>
+          {/* Statistics and chart */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <Card className="md:col-span-2">
+              <CardHeader>
+                <CardTitle>Gráfico</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="h-80 flex items-center justify-center">
+                  {/* Chart placeholder */}
+                    <div className="w-full h-full flex items-center justify-center">
+                    <BarChart
+                      series={[
+                      { data: [53, 55, 40, 70, 80, 80], color: '#EF444470', label: 'Calorias ' }, // Calorias (red)
+                      { data: [70, 90, 100, 120, 80, 70], color: '#10B98170', label: 'Carboidratos' }, // Carboidratos (green)
+                      { data: [50, 40, 42, 38, 56, 55], color: '#8B5CF670', label: 'Proteínas' }, // Proteínas (purple)
+                      { data: [30, 35, 28, 40, 45, 50], color: '#F59E0B70', label: 'Gorduras' } // Gorduras (yellow)
+                    ]}
+                      height={300}
+                      yAxis={[{label: 'meta (%)', tickSize: 10}]}
+                      xAxis={[{ data: ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sab'], scaleType: 'band' }]}
+                      margin={{ top: 40, bottom: 20, left: 40, right: 10 }}
+                      slotProps={{
+                      legend: {
+                        position:  { vertical: 'top', horizontal: 'middle' },
+                      },
+                      }}
+                    />                 
                     </div>
-                  </CardContent>
-                </Card>
+                </div>
+              </CardContent>
+            </Card>
 
                 {/* Protein */}
                 <Card className="bg-purple-100">

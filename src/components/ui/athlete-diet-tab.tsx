@@ -3,8 +3,9 @@
 import React, { useState, useEffect } from 'react'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import { Calendar } from '@/components/ui/calendar'
-import { format, isSameDay } from 'date-fns'
+import { format, isSameDay, parseISO } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
+import { Loader } from 'lucide-react'
 
 type MealFood = {
   id: string
@@ -16,245 +17,256 @@ type MealFood = {
 }
 
 type Meal = {
-  id: string
-  mealType: string
+  id?: string
+  meal_type?: string
+  mealType?: string
+  scheduled_time?: string
   scheduledTime?: string
-  foods: MealFood[]
-  isRepeated?: boolean
+  foods?: MealFood[]
+  notes?: string
+  status?: string
+  time?: string
+  activity?: string
+  details?: string
+  type?: string
+  dietPlanId?: string
+  diet_plan?: any
 }
 
-type DietPlanDay = {
+type DietPlan = {
   id: string
-  date: string
-  meals: Meal[]
-  nutritionalSummary?: {
-    calories: number
-    protein: number
-    carbs: number
-    fat: number
-    notes?: string
-  }
-  diet_plan: {
-    id: string
-    name?: string
-    start_date?: string
-    end_date?: string
-    notes?: string
-  }
+  name?: string
+  start_date: string
+  end_date: string
+  notes?: string
+  nutritionist?: any
+  total_daily_calories?: number
+  color?: any
 }
 
-export function AthleteReadOnlyDietTab({ athleteId }: { athleteId: string }) {
+// Define an array of colors for different diet plans
+const DIET_PLAN_COLORS = [
+  { bg: 'bg-blue-50', text: 'text-blue-700', border: 'border-blue-200' },
+  { bg: 'bg-green-50', text: 'text-green-700', border: 'border-green-200' },
+  { bg: 'bg-purple-50', text: 'text-purple-700', border: 'border-purple-200' },
+  { bg: 'bg-amber-50', text: 'text-amber-700', border: 'border-amber-200' },
+  { bg: 'bg-rose-50', text: 'text-rose-700', border: 'border-rose-200' },
+]
+
+export function AthleteReadOnlyDietTab() {
   const [selectedDate, setSelectedDate] = useState(new Date())
   const [meals, setMeals] = useState<Meal[]>([])
-  const [dietDays, setDietDays] = useState<string[]>([])
   const [loading, setLoading] = useState(true)
-  const [dietPlanDay, setDietPlanDay] = useState<DietPlanDay | null>(null)
+  const [dietPlans, setDietPlans] = useState<DietPlan[]>([])
+  const [error, setError] = useState<string | null>(null)
+  const [coloredMeals, setColoredMeals] = useState<any[]>([])
+
+  const onDateChange = (date: Date) => {
+    setSelectedDate(date)
+  }
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         setLoading(true)
+        setError(null)
 
-        if (athleteId) {
-          const dateStr = selectedDate.toISOString().split('T')[0]
+        // Format the date for the API
+        const formattedDate = format(selectedDate, 'yyyy-MM-dd')
 
-          // Fetch diet plan day for the selected date
-          const response = await fetch(`/api/athlete-profiles/${athleteId}/diet?date=${dateStr}`)
-          const data = await response.json()
+        // Fetch activities data from the API
+        const response = await fetch(`/api/athlete-profiles/get-activities?date=${formattedDate}`)
+        if (!response.ok) {
+          throw new Error(`Error fetching diet data: ${response.status} ${response.statusText}`)
+        }
 
-          if (data.success && data.data) {
-            setDietPlanDay(data.data)
-            setMeals(data.data.meals || [])
+        const data = await response.json()
 
-            // Extract dates with meals for calendar highlighting
-            if (data.data.availableDates) {
-              setDietDays(data.data.availableDates)
+        if (data?.data) {
+          // Get diet plans data and assign colors to each plan
+          const fetchedDietPlans = data.data.dietPlans || []
+          const coloredDietPlans = fetchedDietPlans.map((plan: DietPlan, index: number) => ({
+            ...plan,
+            color: DIET_PLAN_COLORS[index % DIET_PLAN_COLORS.length],
+          }))
+
+          // Create a dietPlanMap for quick lookup by ID
+          const dietPlanMap: Record<string, DietPlan> = {}
+          coloredDietPlans.forEach((plan) => {
+            dietPlanMap[plan.id] = plan
+          })
+
+          setDietPlans(coloredDietPlans)
+
+          // Extract meals from activities
+          const mealActivities = data.data.activities.filter(
+            (activity: any) => activity.type === 'meal',
+          )
+
+          // Transform activities and assign colors
+          const processed = mealActivities.map((activity: any) => {
+            // Get diet plan ID from activity
+            let dietPlanId = ''
+
+            // If diet_plan is an object with id property
+            if (
+              activity.diet_plan &&
+              typeof activity.diet_plan === 'object' &&
+              activity.diet_plan.id
+            ) {
+              dietPlanId = activity.diet_plan.id
             }
-          } else {
-            setDietPlanDay(null)
-            setMeals([])
-          }
+            // If diet_plan is a string ID
+            else if (activity.diet_plan && typeof activity.diet_plan === 'string') {
+              dietPlanId = activity.diet_plan
+            }
+
+            // Lookup diet plan to get color
+            const dietPlan = dietPlanMap[dietPlanId]
+            const color = dietPlan?.color || DIET_PLAN_COLORS[0]
+
+            console.log(`Meal ${activity.activity} has diet plan ID ${dietPlanId}, color:`, color)
+
+            return {
+              ...activity,
+              dietPlanId: dietPlanId,
+              mealType: activity.activity,
+              scheduledTime: activity.time,
+              color: color,
+            }
+          })
+
+          setColoredMeals(processed)
+          setMeals(processed)
+        } else {
+          setDietPlans([])
+          setMeals([])
+          setColoredMeals([])
         }
       } catch (error) {
         console.error('Error fetching diet data:', error)
-        setDietPlanDay(null)
+        setError('Falha ao carregar dados do plano alimentar')
+        setDietPlans([])
         setMeals([])
+        setColoredMeals([])
       } finally {
         setLoading(false)
       }
     }
 
-    // If no actual data is returned from API, use mock data
-    const setMockData = () => {
-      const mockDietPlanDay: DietPlanDay = {
-        id: 'mock-1',
-        date: selectedDate.toISOString().split('T')[0],
-        meals: [
-          {
-            id: 'meal-1',
-            mealType: 'breakfast',
-            scheduledTime: '07:00:00',
-            foods: [
-              {
-                id: 'food-1',
-                food: { id: 'f1', name: 'Aveia' },
-                quantity: 40,
-              },
-              {
-                id: 'food-2',
-                food: { id: 'f2', name: 'Banana' },
-                quantity: 100,
-              },
-            ],
-          },
-          {
-            id: 'meal-2',
-            mealType: 'lunch',
-            scheduledTime: '12:00:00',
-            foods: [
-              {
-                id: 'food-3',
-                food: { id: 'f3', name: 'Arroz integral' },
-                quantity: 150,
-              },
-              {
-                id: 'food-4',
-                food: { id: 'f4', name: 'Frango grelhado' },
-                quantity: 120,
-              },
-              {
-                id: 'food-5',
-                food: { id: 'f5', name: 'Salada verde' },
-                quantity: 100,
-              },
-            ],
-          },
-          {
-            id: 'meal-3',
-            mealType: 'afternoon_snack',
-            scheduledTime: '16:00:00',
-            foods: [
-              {
-                id: 'food-6',
-                food: { id: 'f6', name: 'Iogurte natural' },
-                quantity: 170,
-              },
-              {
-                id: 'food-7',
-                food: { id: 'f7', name: 'Granola' },
-                quantity: 30,
-              },
-            ],
-          },
-          {
-            id: 'meal-4',
-            mealType: 'dinner',
-            scheduledTime: '20:00:00',
-            foods: [
-              {
-                id: 'food-8',
-                food: { id: 'f8', name: 'Batata doce' },
-                quantity: 150,
-              },
-              {
-                id: 'food-9',
-                food: { id: 'f9', name: 'Ovo cozido' },
-                quantity: 100,
-              },
-            ],
-          },
-        ],
-        nutritionalSummary: {
-          calories: 1850,
-          protein: 95,
-          carbs: 220,
-          fat: 45,
-          notes: 'Mantenha-se hidratado e consuma as refeições nos horários estabelecidos.',
-        },
-        diet_plan: {
-          id: 'plan-1',
-          name: 'Plano para definição muscular',
-          start_date: '2025-03-01',
-          end_date: '2025-06-30',
-          notes: 'Plano baseado na necessidade de preparação para competição',
-        },
-      }
-
-      setDietPlanDay(mockDietPlanDay)
-      setMeals(mockDietPlanDay.meals)
-
-      // Mock dates with meals for calendar
-      const mockDates = []
-      const currentDate = new Date()
-      for (let i = -5; i < 10; i++) {
-        const date = new Date()
-        date.setDate(currentDate.getDate() + i)
-        if (i % 2 === 0) {
-          // Only add every other day
-          mockDates.push(date.toISOString().split('T')[0])
-        }
-      }
-      setDietDays(mockDates)
-    }
-
-    if (athleteId) {
-      fetchData().catch((error) => {
-        console.error('Failed to fetch diet data, using mock data', error)
-        setMockData()
-      })
-    } else {
-      setMockData()
-    }
-  }, [athleteId, selectedDate])
-
-  const translateMealType = (type: string): string => {
-    const types: Record<string, string> = {
-      breakfast: 'Café da manhã',
-      morning_snack: 'Lanche da manhã',
-      lunch: 'Almoço',
-      afternoon_snack: 'Lanche da tarde',
-      dinner: 'Jantar',
-      supper: 'Ceia',
-    }
-    return types[type] || type
-  }
+    fetchData()
+  }, [selectedDate])
 
   const formatTime = (timeString?: string): string => {
     if (!timeString) return ''
+
+    // Handle cases where the timeString might be just "HH:MM"
+    if (timeString.length === 5) {
+      return timeString
+    }
+
     try {
       const date = new Date(`2025-01-01T${timeString}`)
       return format(date, 'HH:mm')
     } catch {
-      return ''
+      return timeString
     }
   }
 
-  if (loading) {
-    return <div className="min-h-[600px] flex items-center justify-center">Carregando...</div>
+  // Group meals by diet plan and type
+  const groupMealsByDietPlanAndType = () => {
+    const grouped: Record<string, Record<string, any[]>> = {}
+
+    // Initialize all diet plans in the structure
+    dietPlans.forEach((plan) => {
+      grouped[plan.id] = {}
+    })
+
+    coloredMeals.forEach((meal) => {
+      // Use the dietPlanId that was assigned during processing
+      const dietPlanId = meal.dietPlanId || 'unknown'
+      const mealType = meal.mealType || 'unknown'
+
+      if (!grouped[dietPlanId]) {
+        grouped[dietPlanId] = {}
+      }
+
+      if (!grouped[dietPlanId][mealType]) {
+        grouped[dietPlanId][mealType] = []
+      }
+
+      grouped[dietPlanId][mealType].push(meal)
+    })
+
+    return grouped
   }
 
-  // Dates with meals for calendar highlighting
-  const datesWithMeals = dietDays.map((dateStr) => new Date(dateStr))
+  if (loading) {
+    return (
+      <div className="min-h-[600px] flex items-center justify-center">
+        <Loader className="h-6 w-6 animate-spin mr-2" />
+        <span>Carregando...</span>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-[600px] flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-red-500 mb-2">{error}</p>
+          <button onClick={() => window.location.reload()} className="text-blue-500 underline">
+            Tentar novamente
+          </button>
+        </div>
+      </div>
+    )
+  }
+
+  const groupedMeals = groupMealsByDietPlanAndType()
 
   return (
     <div className="space-y-6">
-      {dietPlanDay?.diet_plan && (
-        <div className="bg-blue-50 p-4 rounded-lg">
-          <h3 className="font-medium text-blue-800">Plano Alimentar Atual</h3>
-          <p className="text-sm text-blue-700 mt-1">
-            {dietPlanDay.diet_plan.name || 'Plano personalizado'}
-            {dietPlanDay.diet_plan.start_date && dietPlanDay.diet_plan.end_date && (
-              <span className="ml-2 text-blue-600">
-                ({format(new Date(dietPlanDay.diet_plan.start_date), 'dd/MM/yyyy')} -{' '}
-                {format(new Date(dietPlanDay.diet_plan.end_date), 'dd/MM/yyyy')})
-              </span>
-            )}
+      {/* Diet Plans */}
+      {dietPlans.length > 0 ? (
+        <div className="space-y-4">
+          {dietPlans.map((plan, index) => (
+            <div
+              key={plan.id}
+              className={`${plan.color?.bg} p-4 rounded-lg border ${plan.color?.border}`}
+            >
+              <div className="flex justify-between items-start">
+                <div>
+                  <h3 className={`font-medium ${plan.color?.text}`}>
+                    Plano Alimentar {index + 1}
+                    {plan.name && `: ${plan.name}`}
+                  </h3>
+                  {plan.start_date && plan.end_date && (
+                    <p className={`text-sm ${plan.color?.text} mt-1`}>
+                      {format(new Date(plan.start_date), 'dd/MM/yyyy')} -{' '}
+                      {format(new Date(plan.end_date), 'dd/MM/yyyy')}
+                    </p>
+                  )}
+                </div>
+                {plan.total_daily_calories && (
+                  <div className={`text-sm font-medium ${plan.color?.text}`}>
+                    {plan.total_daily_calories} calorias/dia
+                  </div>
+                )}
+              </div>
+              {plan.notes && (
+                <p className={`text-sm ${plan.color?.text} mt-2 italic`}>
+                  &ldquo;{plan.notes}&rdquo;
+                </p>
+              )}
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
+          <p className="text-sm text-gray-600">
+            Nenhum plano alimentar encontrado para o período selecionado.
           </p>
-          {dietPlanDay.diet_plan.notes && (
-            <p className="text-sm text-blue-600 mt-2 italic">
-              &ldquo;{dietPlanDay.diet_plan.notes}&rdquo;
-            </p>
-          )}
         </div>
       )}
 
@@ -268,25 +280,10 @@ export function AthleteReadOnlyDietTab({ athleteId }: { athleteId: string }) {
             <CardContent>
               <Calendar
                 selectedDate={selectedDate}
-                onDateChange={setSelectedDate}
-                modifiers={{
-                  hasMeals: (date) => datesWithMeals.some((d) => isSameDay(d, date)),
-                }}
-                modifiersStyles={{
-                  hasMeals: {
-                    border: '2px solid #10B981',
-                  },
-                }}
+                onDateChange={onDateChange}
+                defaultMonth={selectedDate}
+                locale={ptBR}
               />
-              <div className="mt-4 text-xs text-gray-500">
-                <div className="flex items-center mb-1">
-                  <div className="w-3 h-3 border-2 border-green-500 rounded-full mr-2"></div>
-                  <span>Dias com refeições planejadas</span>
-                </div>
-                <p className="mt-2">
-                  Selecione uma data para visualizar seu plano alimentar para aquele dia.
-                </p>
-              </div>
             </CardContent>
           </Card>
         </div>
@@ -300,56 +297,90 @@ export function AthleteReadOnlyDietTab({ athleteId }: { athleteId: string }) {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-6">
-              {meals.length === 0 ? (
+              {Object.keys(groupedMeals).length === 0 ? (
                 <p className="text-sm text-muted-foreground">
                   Nenhuma refeição registrada para esta data
                 </p>
               ) : (
-                meals.map((meal) => (
-                  <div key={meal.id}>
-                    <h3 className="font-medium mb-2">{translateMealType(meal.mealType)}</h3>
-                    <div
-                      className={`${meal.isRepeated ? 'bg-gray-50' : 'bg-blue-50'} p-3 rounded-md`}
-                    >
-                      <div className="flex justify-between items-start">
-                        <div>
-                          <span className="font-medium capitalize">
-                            {translateMealType(meal.mealType)}
-                          </span>
-                          {meal.isRepeated && (
-                            <span className="ml-2 text-xs bg-gray-200 px-1.5 py-0.5 rounded-full">
-                              Repetida
-                            </span>
-                          )}
-                        </div>
-                        {meal.scheduledTime && (
-                          <span className="text-xs text-muted-foreground">
-                            {formatTime(meal.scheduledTime)}
-                          </span>
-                        )}
-                      </div>
+                Object.entries(groupedMeals).map(([dietPlanId, mealsByType]) => {
+                  const plan = dietPlans.find((p) => p.id === dietPlanId)
 
-                      {/* Food items */}
-                      {meal.foods && meal.foods.length > 0 && (
-                        <div className="mt-2 text-sm">
-                          <p className="text-xs font-medium mb-1">Alimentos:</p>
-                          <ul className="space-y-1 pl-2">
-                            {meal.foods.map((foodItem) => (
-                              <li key={foodItem.id} className="flex justify-between">
-                                <span>{foodItem.food.name}</span>
-                                <span className="text-muted-foreground">{foodItem.quantity}g</span>
-                              </li>
-                            ))}
-                          </ul>
+                  return (
+                    <div key={dietPlanId} className="mb-6">
+                      {plan && (
+                        <div
+                          className={`${plan.color?.bg} p-2 rounded-md mb-2 border ${plan.color?.border}`}
+                        >
+                          <span className={`text-sm font-medium ${plan.color?.text}`}>
+                            {plan.name ||
+                              `Plano Alimentar ${dietPlans.findIndex((p) => p.id === dietPlanId) + 1}`}
+                          </span>
                         </div>
                       )}
+
+                      {Object.entries(mealsByType).map(([mealType, mealList]) => (
+                        <div key={`${dietPlanId}-${mealType}`}>
+                          {mealList.map((meal, index) => {
+                            // Use the color directly from the meal object
+                            const mealColor = meal.color
+
+                            return (
+                              <div
+                                key={index}
+                                className={`${mealColor.bg} p-3 rounded-md mb-3 border ${mealColor.border}`}
+                              >
+                                <div className="flex justify-between items-start">
+                                  <div>
+                                    <span className={`font-medium capitalize ${mealColor.text}`}>
+                                      {mealType}
+                                    </span>
+                                  </div>
+                                  {meal.scheduledTime && (
+                                    <span className="text-xs text-muted-foreground">
+                                      {formatTime(meal.scheduledTime)}
+                                    </span>
+                                  )}
+                                </div>
+
+                                {/* Food items */}
+                                {meal.foods && meal.foods.length > 0 ? (
+                                  <div className="mt-2 text-sm">
+                                    <p className={`text-xs font-medium mb-1 ${mealColor.text}`}>
+                                      Alimentos:
+                                    </p>
+                                    <ul className="space-y-1 pl-2">
+                                      {meal.foods.map((foodItem, idx) => (
+                                        <li key={idx} className="flex justify-between">
+                                          <span>{foodItem.food?.name || foodItem.name}</span>
+                                          <span className="text-muted-foreground">
+                                            {foodItem.quantity}g
+                                          </span>
+                                        </li>
+                                      ))}
+                                    </ul>
+                                  </div>
+                                ) : meal.details ? (
+                                  <div className="mt-2 text-sm">
+                                    <p className={`text-xs font-medium mb-1 ${mealColor.text}`}>
+                                      Detalhes:
+                                    </p>
+                                    <p className="text-gray-600 whitespace-pre-line">
+                                      {meal.details}
+                                    </p>
+                                  </div>
+                                ) : null}
+                              </div>
+                            )
+                          })}
+                        </div>
+                      ))}
                     </div>
-                  </div>
-                ))
+                  )
+                })
               )}
 
               {/* Additional information to help the athlete */}
-              {meals.length === 0 && (
+              {Object.keys(groupedMeals).length === 0 && (
                 <div className="mt-8 space-y-4">
                   <div className="p-4 bg-gray-50 rounded-lg border border-gray-100">
                     <h4 className="text-sm font-medium text-gray-700 mb-2">Informação</h4>
@@ -359,61 +390,12 @@ export function AthleteReadOnlyDietTab({ athleteId }: { athleteId: string }) {
                       nutricionista para mais informações.
                     </p>
                   </div>
-
-                  <div className="p-4 bg-blue-50 rounded-lg border border-blue-100">
-                    <h4 className="text-sm font-medium text-blue-700 mb-2">Dica</h4>
-                    <p className="text-xs text-blue-600">
-                      Lembre-se de seguir o plano alimentar recomendado todos os dias, mesmo para
-                      datas sem detalhamento. Mantenha uma rotina de alimentação saudável e
-                      hidratação adequada.
-                    </p>
-                  </div>
                 </div>
               )}
             </CardContent>
           </Card>
         </div>
       </div>
-
-      {/* Display Daily Nutrition Summary if available */}
-      {dietPlanDay?.nutritionalSummary && (
-        <Card className="mt-6">
-          <CardHeader>
-            <CardTitle className="text-lg font-semibold">Resumo Nutricional do Dia</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-              <div className="bg-red-50 p-3 rounded-md">
-                <p className="text-xs text-red-700 mb-1">Calorias</p>
-                <p className="text-lg font-medium">
-                  {dietPlanDay.nutritionalSummary.calories || 0} kcal
-                </p>
-              </div>
-              <div className="bg-purple-50 p-3 rounded-md">
-                <p className="text-xs text-purple-700 mb-1">Proteínas</p>
-                <p className="text-lg font-medium">
-                  {dietPlanDay.nutritionalSummary.protein || 0}g
-                </p>
-              </div>
-              <div className="bg-green-50 p-3 rounded-md">
-                <p className="text-xs text-green-700 mb-1">Carboidratos</p>
-                <p className="text-lg font-medium">{dietPlanDay.nutritionalSummary.carbs || 0}g</p>
-              </div>
-              <div className="bg-yellow-50 p-3 rounded-md">
-                <p className="text-xs text-yellow-700 mb-1">Gorduras</p>
-                <p className="text-lg font-medium">{dietPlanDay.nutritionalSummary.fat || 0}g</p>
-              </div>
-            </div>
-
-            {dietPlanDay.nutritionalSummary.notes && (
-              <div className="mt-4 p-3 bg-gray-50 rounded-md">
-                <p className="text-xs font-medium mb-1">Notas do Nutricionista:</p>
-                <p className="text-sm">{dietPlanDay.nutritionalSummary.notes}</p>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      )}
     </div>
   )
 }

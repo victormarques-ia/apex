@@ -7,6 +7,7 @@ import Header from '@/components/ui/header'
 import AthleteDashboard from './components/AthleteDashboard'
 import AthleteReportDashboard from './components/AthleteReportDashboard'
 import { AthleteReadOnlyDietTab } from '@/components/ui/athlete-diet-tab'
+import DailyConsumptionComponent from './components/daily-consumption'
 
 // Define the main tabs
 const TABS = {
@@ -20,7 +21,12 @@ const TABS = {
 const OVERVIEW_TABS = {
   OVERVIEW: 'overview',
   REPORTS: 'avaliacao',
-  REPORT: 'relatorio',
+}
+
+// Define diet sub-tabs
+const DIET_TABS = {
+  CONSUMPTION: 'consumo',
+  DIET_PLAN: 'plano',
 }
 
 export default function AthleteOverviewPage() {
@@ -29,6 +35,7 @@ export default function AthleteOverviewPage() {
 
   const activeTab = searchParams.get('tab') || TABS.OVERVIEW
   const activeOverviewTab = searchParams.get('overviewTab') || OVERVIEW_TABS.OVERVIEW
+  const activeDietTab = searchParams.get('dietTab') || DIET_TABS.CONSUMPTION
 
   const [loading, setLoading] = useState<boolean>(true)
   const [athleteId, setAthleteId] = useState<string>('')
@@ -67,20 +74,36 @@ export default function AthleteOverviewPage() {
     fetchAthleteProfile()
   }, [])
 
-  const updateURLParams = (tab: string, overviewTab?: string) => {
+  // Update URL params when tab changes
+  const updateURLParams = (tab: string, subTab?: string) => {
     const params = new URLSearchParams(searchParams.toString())
     params.set('tab', tab)
-    if (tab === TABS.OVERVIEW && overviewTab) params.set('overviewTab', overviewTab)
+    if (tab === TABS.OVERVIEW && subTab) {
+      params.set('overviewTab', subTab)
+    } else if (tab === TABS.DIET && subTab) {
+      params.set('dietTab', subTab)
+    }
     router.push(`?${params.toString()}`)
   }
 
   const handleTabChange = (value: string) => updateURLParams(value)
   const handleOverviewTabChange = (value: string) => updateURLParams(TABS.OVERVIEW, value)
 
+  const handleDietTabChange = (value: string) => {
+    updateURLParams(TABS.DIET, value)
+  }
+
+  // Loading state
   if (loading) {
     return (
       <div>
-        <Header userRole={userInfo.role} userName={userInfo.name} activeTab={activeTab} onTabChange={handleTabChange} hideAthleteSelector={true} />
+        <Header
+          userRole={userInfo.role}
+          userName={userInfo.name}
+          activeTab={activeTab}
+          onTabChange={handleTabChange}
+          hideAthleteSelector={true}
+        />
         <div className="container mx-auto p-6 mt-20">
           <Card>
             <CardContent className="p-6">
@@ -97,7 +120,13 @@ export default function AthleteOverviewPage() {
   if (!athleteId) {
     return (
       <div>
-        <Header userRole={userInfo.role} userName={userInfo.name} activeTab={activeTab} onTabChange={handleTabChange} hideAthleteSelector={true} />
+        <Header
+          userRole={userInfo.role}
+          userName={userInfo.name}
+          activeTab={activeTab}
+          onTabChange={handleTabChange}
+          hideAthleteSelector={true}
+        />
         <div className="container mx-auto p-6 mt-20">
           <Card>
             <CardContent className="p-6">
@@ -118,25 +147,29 @@ export default function AthleteOverviewPage() {
           <CardHeader className="pb-0">
             <div className="flex justify-between items-center">
               <div className="bg-gray-100 p-1 rounded-lg inline-flex">
-                <button className={`px-6 py-2 text-sm font-medium rounded-md ${activeOverviewTab === OVERVIEW_TABS.OVERVIEW ? 'bg-white shadow-sm' : 'text-gray-500'}`} onClick={() => handleOverviewTabChange(OVERVIEW_TABS.OVERVIEW)}>Overview</button>
-                <button className={`px-6 py-2 text-sm font-medium rounded-md ${activeOverviewTab === OVERVIEW_TABS.REPORTS ? 'bg-white shadow-sm' : 'text-gray-500'}`} onClick={() => handleOverviewTabChange(OVERVIEW_TABS.REPORTS)}>Avaliação</button>
-                <button className={`px-6 py-2 text-sm font-medium rounded-md ${activeOverviewTab === OVERVIEW_TABS.REPORT ? 'bg-white shadow-sm' : 'text-gray-500'}`} onClick={() => handleOverviewTabChange(OVERVIEW_TABS.REPORT)}>Relatório</button>
+                <button
+                  className={`px-6 py-2 text-sm font-medium rounded-md ${activeOverviewTab === OVERVIEW_TABS.OVERVIEW ? 'bg-white shadow-sm' : 'text-gray-500'}`}
+                  onClick={() => handleOverviewTabChange(OVERVIEW_TABS.OVERVIEW)}
+                >
+                  Overview
+                </button>
+                <button
+                  className={`px-6 py-2 text-sm font-medium rounded-md ${activeOverviewTab === OVERVIEW_TABS.REPORTS ? 'bg-white shadow-sm' : 'text-gray-500'}`}
+                  onClick={() => handleOverviewTabChange(OVERVIEW_TABS.REPORTS)}
+                >
+                  Avaliação
+                </button>
               </div>
             </div>
           </CardHeader>
 
           <CardContent className="p-6">
-            {activeOverviewTab === OVERVIEW_TABS.OVERVIEW && <AthleteDashboard athleteId={athleteId} />}
+            {activeOverviewTab === OVERVIEW_TABS.OVERVIEW && (
+              <AthleteDashboard athleteId={athleteId} />
+            )}
 
             {activeOverviewTab === OVERVIEW_TABS.REPORTS && (
               <AthleteReportDashboard athleteId={athleteId} />
-            )}
-
-            {activeOverviewTab === OVERVIEW_TABS.REPORT && (
-              <div className="p-4">
-                <h2 className="text-xl font-semibold mb-4">Relatório</h2>
-                <p>Conteúdo do relatório será exibido aqui.</p>
-              </div>
             )}
           </CardContent>
         </Card>
@@ -144,11 +177,31 @@ export default function AthleteOverviewPage() {
     } else if (activeTab === TABS.DIET) {
       return (
         <Card>
-          <CardHeader>
-            <CardTitle className="text-lg font-semibold">Plano Alimentar</CardTitle>
+          <CardHeader className="pb-0">
+            <div className="flex justify-between items-center">
+              {/* Diet sub-tabs */}
+              <div className="bg-gray-100 p-1 rounded-lg inline-flex">
+                <button
+                  className={`px-6 py-2 text-sm font-medium rounded-md ${activeDietTab === DIET_TABS.CONSUMPTION ? 'bg-white shadow-sm' : 'text-gray-500'}`}
+                  onClick={() => handleDietTabChange(DIET_TABS.CONSUMPTION)}
+                >
+                  Registro de Refeição
+                </button>
+                <button
+                  className={`px-6 py-2 text-sm font-medium rounded-md ${activeDietTab === DIET_TABS.DIET_PLAN ? 'bg-white shadow-sm' : 'text-gray-500'}`}
+                  onClick={() => handleDietTabChange(DIET_TABS.DIET_PLAN)}
+                >
+                  Dietas
+                </button>
+              </div>
+            </div>
           </CardHeader>
           <CardContent className="p-6">
-            <AthleteReadOnlyDietTab athleteId={athleteId} />
+            {activeDietTab === DIET_TABS.CONSUMPTION ? (
+              <DailyConsumptionComponent athleteId={athleteId} />
+            ) : (
+              <AthleteReadOnlyDietTab athleteId={athleteId} />
+            )}
           </CardContent>
         </Card>
       )
@@ -165,25 +218,18 @@ export default function AthleteOverviewPage() {
           </CardContent>
         </Card>
       )
-    } else if (activeTab === TABS.SETTINGS) {
-      return (
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg font-semibold">Configurações</CardTitle>
-          </CardHeader>
-          <CardContent className="p-6">
-            <div className="min-h-[600px]">
-              <p>Configurações da sua conta.</p>
-            </div>
-          </CardContent>
-        </Card>
-      )
     }
   }
 
   return (
     <div>
-      <Header userRole={userInfo.role} userName={userInfo.name} activeTab={activeTab} onTabChange={handleTabChange} hideAthleteSelector={true} />
+      <Header
+        userRole={userInfo.role}
+        userName={userInfo.name}
+        activeTab={activeTab}
+        onTabChange={handleTabChange}
+        hideAthleteSelector={true}
+      />
       <div className="container mx-auto p-6 mt-20">{renderContent()}</div>
     </div>
   )

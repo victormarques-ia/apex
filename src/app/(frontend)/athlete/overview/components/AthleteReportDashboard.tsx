@@ -5,6 +5,15 @@ import { format, addDays, parseISO } from 'date-fns'
 import { LineChart } from '@mui/x-charts/LineChart'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 
+interface Assessment {
+  date: string;
+  weight: number;
+  bodyFat: number;
+  abdominalFold: number;
+  armMeasurement: number;
+  thighFold: number;
+}
+
 const metricOptions = [
   { key: 'weight', label: 'Peso (kg)', color: '#EF444470' },
   { key: 'bodyFat', label: 'Gordura (%)', color: '#10B98170' },
@@ -111,6 +120,129 @@ const AthleteReportDashboard = ({ athleteId }: { athleteId: string }) => {
             margin={{ top: 40, bottom: 20, left: 40, right: 10 }}
             slotProps={{ legend: { position: { vertical: 'top', horizontal: 'middle' } } }}
           />
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Nova Avaliação</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <form
+            className="space-y-4"
+            onSubmit={async (e) => {
+              e.preventDefault()
+              const form = e.currentTarget as HTMLFormElement
+
+              const payload: Assessment = {
+                date: (form.elements.namedItem('date') as HTMLInputElement).value,
+                weight: Number(
+                  (form.elements.namedItem('weight') as HTMLInputElement).value,
+                ),
+                bodyFat: Number(
+                  (form.elements.namedItem('bodyFat') as HTMLInputElement).value,
+                ),
+                abdominalFold: Number(
+                  (form.elements.namedItem('abdominalFold') as HTMLInputElement)
+                    .value,
+                ),
+                armMeasurement: Number(
+                  (form.elements.namedItem('armMeasurement') as HTMLInputElement)
+                    .value,
+                ),
+                thighFold: Number(
+                  (form.elements.namedItem('thighFold') as HTMLInputElement).value,
+                ),
+              }
+
+              const res = await fetch(
+                `/api/athlete-profiles/reports/create?athleteId=${athleteId}`,
+                {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify(payload),
+                },
+              )
+
+              if (res.ok) {
+                form.reset()
+                // adiciona localmente e reordena por data
+                setAssessmentHistory((prev) =>
+                  [...prev, payload].sort((a, b) => a.date.localeCompare(b.date)),
+                )
+                alert('Avaliação salva com sucesso!')
+              } else {
+                const { error } = await res.json()
+                alert(error ?? 'Não foi possível salvar a avaliação.')
+              }
+            }}
+          >
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <label className="flex flex-col text-sm">
+                Data da avaliação:
+                <input
+                  name="date"
+                  type="date"
+                  required
+                  defaultValue={format(new Date(), 'yyyy-MM-dd')}
+                  className="border px-2 py-1 rounded"
+                />
+              </label>
+              <label className="flex flex-col text-sm">
+                Peso (kg):
+                <input
+                  name="weight"
+                  type="number"
+                  step="0.1"
+                  required
+                  className="border px-2 py-1 rounded"
+                />
+              </label>
+              <label className="flex flex-col text-sm">
+                Percentual de gordura (%):
+                <input
+                  name="bodyFat"
+                  type="number"
+                  step="0.1"
+                  required
+                  className="border px-2 py-1 rounded"
+                />
+              </label>
+              <label className="flex flex-col text-sm">
+                Dobra abdominal (mm):
+                <input
+                  name="abdominalFold"
+                  type="number"
+                  required
+                  className="border px-2 py-1 rounded"
+                />
+              </label>
+              <label className="flex flex-col text-sm">
+                Circunferência do braço (cm):
+                <input
+                  name="armMeasurement"
+                  type="number"
+                  required
+                  className="border px-2 py-1 rounded"
+                />
+              </label>
+              <label className="flex flex-col text-sm">
+                Dobra da coxa (mm):
+                <input
+                  name="thighFold"
+                  type="number"
+                  required
+                  className="border px-2 py-1 rounded"
+                />
+              </label>
+            </div>
+            <button
+              type="submit"
+              className="mt-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+            >
+              Enviar avaliação
+            </button>
+          </form>
         </CardContent>
       </Card>
     </div>

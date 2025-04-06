@@ -28,7 +28,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import NutritionDashboard from './components/trainerDashboard'
+import TrainerDashboard from './components/trainerDashboard'
 import { DietTabContent } from '@/components/ui/diet-tab'
 import Header from '@/components/ui/header'
 
@@ -197,7 +197,6 @@ export default function TrainerOverviewPage() {
           <TabsTrigger value={TABS.OVERVIEW}>Overview</TabsTrigger>
           <TabsTrigger value={TABS.DIET}>Dieta</TabsTrigger>
           <TabsTrigger value={TABS.TRAINING}>Treinos</TabsTrigger>
-          <TabsTrigger value={TABS.SETTINGS}>Configurações</TabsTrigger>
         </TabsList>
 
         {/* Tab contents - will be filled with actual components later */}
@@ -205,13 +204,13 @@ export default function TrainerOverviewPage() {
           <CardContent className="p-6">
             <TabsContent value={TABS.OVERVIEW} className="mt-0">
               <div className="min-h-[600px]">
-                {selectedAthleteId && <NutritionDashboard athleteId={selectedAthleteId} />}
+                {selectedAthleteId && <TrainerDashboard athleteId={selectedAthleteId} />}
               </div>
             </TabsContent>
 
             <TabsContent value={TABS.DIET} className="mt-0">
               {selectedAthleteId ? (
-                <DietTabContent athleteId={selectedAthleteId} nutritionistId={'-1'} />
+                <DietTabContent athleteId={selectedAthleteId} nutritionistId={'-1'} onlyView={true} />
               ) : (
                 <div className="min-h-[600px] flex items-center justify-center">
                   <p>Selecione um atleta para visualizar o plano alimentar</p>
@@ -225,15 +224,6 @@ export default function TrainerOverviewPage() {
                 <h2 className="text-xl font-semibold mb-4">Treinos</h2>
                 <p>Conteúdo dos treinos para o atleta selecionado. ID: {selectedAthleteId}</p>
                 {/* Training component will be loaded here */}
-              </div>
-            </TabsContent>
-
-            <TabsContent value={TABS.SETTINGS} className="mt-0">
-              {/* Settings component will be placed here */}
-              <div className="min-h-[600px]">
-                <h2 className="text-xl font-semibold mb-4">Configurações</h2>
-                <p>Configurações para o atleta selecionado. ID: {selectedAthleteId}</p>
-                {/* Settings component will be loaded here */}
               </div>
             </TabsContent>
           </CardContent>

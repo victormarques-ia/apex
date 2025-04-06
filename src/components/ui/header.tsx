@@ -166,12 +166,6 @@ export default function Header({
               >
                 Treinos
               </button>
-              <button
-                className={`text-sm ${activeTab === TABS.SETTINGS ? 'text-blue-700 font-medium' : 'text-gray-600'}`}
-                onClick={() => handleTabClick(TABS.SETTINGS)}
-              >
-                Configurações
-              </button>
             </div>
           </div>
 

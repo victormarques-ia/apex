@@ -21,7 +21,6 @@ const TABS = {
 const OVERVIEW_TABS = {
   OVERVIEW: 'overview',
   REPORTS: 'avaliacao',
-  REPORT: 'relatorio',
 }
 
 // Define diet sub-tabs
@@ -98,7 +97,13 @@ export default function AthleteOverviewPage() {
   if (loading) {
     return (
       <div>
-        <Header userRole={userInfo.role} userName={userInfo.name} activeTab={activeTab} onTabChange={handleTabChange} hideAthleteSelector={true} />
+        <Header
+          userRole={userInfo.role}
+          userName={userInfo.name}
+          activeTab={activeTab}
+          onTabChange={handleTabChange}
+          hideAthleteSelector={true}
+        />
         <div className="container mx-auto p-6 mt-20">
           <Card>
             <CardContent className="p-6">
@@ -115,7 +120,13 @@ export default function AthleteOverviewPage() {
   if (!athleteId) {
     return (
       <div>
-        <Header userRole={userInfo.role} userName={userInfo.name} activeTab={activeTab} onTabChange={handleTabChange} hideAthleteSelector={true} />
+        <Header
+          userRole={userInfo.role}
+          userName={userInfo.name}
+          activeTab={activeTab}
+          onTabChange={handleTabChange}
+          hideAthleteSelector={true}
+        />
         <div className="container mx-auto p-6 mt-20">
           <Card>
             <CardContent className="p-6">
@@ -136,15 +147,26 @@ export default function AthleteOverviewPage() {
           <CardHeader className="pb-0">
             <div className="flex justify-between items-center">
               <div className="bg-gray-100 p-1 rounded-lg inline-flex">
-                <button className={`px-6 py-2 text-sm font-medium rounded-md ${activeOverviewTab === OVERVIEW_TABS.OVERVIEW ? 'bg-white shadow-sm' : 'text-gray-500'}`} onClick={() => handleOverviewTabChange(OVERVIEW_TABS.OVERVIEW)}>Overview</button>
-                <button className={`px-6 py-2 text-sm font-medium rounded-md ${activeOverviewTab === OVERVIEW_TABS.REPORTS ? 'bg-white shadow-sm' : 'text-gray-500'}`} onClick={() => handleOverviewTabChange(OVERVIEW_TABS.REPORTS)}>Avaliação</button>
-                <button className={`px-6 py-2 text-sm font-medium rounded-md ${activeOverviewTab === OVERVIEW_TABS.REPORT ? 'bg-white shadow-sm' : 'text-gray-500'}`} onClick={() => handleOverviewTabChange(OVERVIEW_TABS.REPORT)}>Relatório</button>
+                <button
+                  className={`px-6 py-2 text-sm font-medium rounded-md ${activeOverviewTab === OVERVIEW_TABS.OVERVIEW ? 'bg-white shadow-sm' : 'text-gray-500'}`}
+                  onClick={() => handleOverviewTabChange(OVERVIEW_TABS.OVERVIEW)}
+                >
+                  Overview
+                </button>
+                <button
+                  className={`px-6 py-2 text-sm font-medium rounded-md ${activeOverviewTab === OVERVIEW_TABS.REPORTS ? 'bg-white shadow-sm' : 'text-gray-500'}`}
+                  onClick={() => handleOverviewTabChange(OVERVIEW_TABS.REPORTS)}
+                >
+                  Avaliação
+                </button>
               </div>
             </div>
           </CardHeader>
 
           <CardContent className="p-6">
-            {activeOverviewTab === OVERVIEW_TABS.OVERVIEW && <AthleteDashboard athleteId={athleteId} />}
+            {activeOverviewTab === OVERVIEW_TABS.OVERVIEW && (
+              <AthleteDashboard athleteId={athleteId} />
+            )}
 
             {activeOverviewTab === OVERVIEW_TABS.REPORTS && (
               <AthleteReportDashboard athleteId={athleteId} />
@@ -201,7 +223,13 @@ export default function AthleteOverviewPage() {
 
   return (
     <div>
-      <Header userRole={userInfo.role} userName={userInfo.name} activeTab={activeTab} onTabChange={handleTabChange} hideAthleteSelector={true} />
+      <Header
+        userRole={userInfo.role}
+        userName={userInfo.name}
+        activeTab={activeTab}
+        onTabChange={handleTabChange}
+        hideAthleteSelector={true}
+      />
       <div className="container mx-auto p-6 mt-20">{renderContent()}</div>
     </div>
   )

@@ -35,48 +35,33 @@ type ScheduleItem = {
   status: 'completed' | 'pending' | 'modifiable'
 }
 
-const AthleteDashboard = () => {
+const AthleteDashboard = ({ athleteId }: { athleteId: string }) => {
   const [loading, setLoading] = useState(true)
   const [assessmentData, setAssessmentData] = useState<AssessmentData | null>(null)
   const [scheduleData, setScheduleData] = useState<ScheduleItem[]>([])
   const [currentDate, setCurrentDate] = useState(new Date())
-  
-  useEffect(() => {
 
+  useEffect(() => {
     if (!athleteId) return
     const fetchDashboardData = async () => {
       try {
         setLoading(true)
-        
+
         // Fetch reports data
         try {
-          const formattedDate = format(currentDate, 'yyyy-MM-dd')
-          const assessmentResponse = await fetch(`/api/athlete-profiles/reports/latest?date=${formattedDate}`)
+          const assessmentResponse = await fetch('/api/athlete-profiles/reports/latest')
           if (assessmentResponse.ok) {
             const assessmentResult = await assessmentResponse.json()
             if (assessmentResult.data) {
               setAssessmentData(assessmentResult.data)
+            }
+          } else {
+            console.error('Failed to fetch assessment data:', await assessmentResponse.text())
           }
         } catch (error) {
           console.error('Error fetching assessment data:', error)
         }
-        else{
-          // If the API call fails, set mock data
-          setAssessmentData({
-            weight: 76.5,
-            bodyFat: 15.6,
-            abdominalFold: 20,
-            armMeasurement: 35,
-            thighFold: 35,
-            lastAssessment: {
-              weight: 80,
-              bodyFat: 18.3,
-              abdominalFold: 31,
-              armMeasurement: 33.5,
-              thighFold: 50,
-            },
-          })
-        }
+
         // Fetch activities data using the endpoint
         console.log('Fetching activities for date:', currentDate)
         const formattedDate = format(currentDate, 'yyyy-MM-dd')
@@ -96,6 +81,10 @@ const AthleteDashboard = () => {
               setScheduleData([])
               console.log('No activities found for the selected date')
             }
+          } else {
+            console.error('Failed to fetch activities:', await activitiesResponse.text())
+            setScheduleData([])
+          }
         } catch (error) {
           console.error('Error fetching activities:', error)
           setScheduleData([])
@@ -108,7 +97,7 @@ const AthleteDashboard = () => {
     }
 
     fetchDashboardData()
-  }, [currentDate])
+  }, [athleteId, currentDate])
 
   // Calculate difference from last report
   const calculateDifference = (current: number, previous: number | undefined): string => {

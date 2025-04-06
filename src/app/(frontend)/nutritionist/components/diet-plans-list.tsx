@@ -30,14 +30,7 @@ export function DietPlansList({
   selectedPlanId,
   selectedPlanDaysId
 }: DietPlansListProps) {
-  interface DietPlan {
-    id: string;
-    start_date: string;
-    end_date: string;
-    total_daily_calories?: number;
-  }
-  
-  const [dietPlans, setDietPlans] = useState<DietPlan[]>([]);
+  const [dietPlans, setDietPlans] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [dietPlanDays, setDietPlanDays] = useState([]);
@@ -104,10 +97,9 @@ export function DietPlansList({
         const response = await getAthleteDietPlansAction(null, formData);
         console.log('Response getAthleteDietPlansAction in DietPlansList:', response);
 
-        // Explicitly type response.data
-        const data = response.data as { docs: any[] };
-        if (data.docs && Array.isArray(data.docs)) {
-          setDietPlans(data.docs);
+        // For direct response from diet-plans endpoint
+        if (response.data.docs && Array.isArray(response.data.docs)) {
+          setDietPlans(response.data.docs);
         } else {
           setDietPlans([]);
         }

@@ -11,17 +11,13 @@ import { getMealHistoryAction } from '@/app/(frontend)/nutrition/actions/meals.a
 import { deleteMealAction } from '@/app/(frontend)/nutrition/actions/meal-plan.action';
 import { getAthleteDietPlansAction, getDietPlanAction } from '@/app/(frontend)/nutrition/actions/diet-plans.action';
 import { DietPlanForm } from './diet-plan-form';
-import { DietPlansList } from '@/components/ui/diet-plans-list';
-import { CreateMealForm } from '@/components/ui/create-meal-form';
-import { AddFoodToMeal } from '@/components/ui/add-food-to-meal';
+import { DietPlanDayForm } from './diet-plan-day-form';
+import { DietPlansList } from './diet-plans-list';
+import { CreateMealForm } from './create-meal-form';
+import { AddFoodToMeal } from './add-food-to-meal';
 import { EditMealFoods } from './edit-meal-foods';
 
-interface DietTabContentProps {
-  athleteId: string;
-  nutritionistId: string;
-}
-
-export function DietTabContent({ athleteId, nutritionistId }: DietTabContentProps) {
+export function DietTabContent({ athleteId, nutritionistId }) {
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [meals, setMeals] = useState([]);
   const [mealsHistory, setMealsHistory] = useState(null);
@@ -56,7 +52,6 @@ export function DietTabContent({ athleteId, nutritionistId }: DietTabContentProp
 
           console.log('Response: ', response);
 
-          
           if (response.data && response.data?.totalDocs > 0) {
             // Set diet plan day
             setDietPlanDay(response.data.docs[0]);

@@ -173,32 +173,10 @@ export default function TrainerOverviewPage() {
       />
       <div className="mb-6">
         <h1 className="text-2xl font-bold">Painel de Treinador</h1>
-
-        {/* Athlete selector */}
-        <div className="mt-4">
-          <Select value={selectedAthleteId} onValueChange={handleAthleteChange}>
-            <SelectTrigger className="w-full max-w-xs">
-              <SelectValue placeholder="Selecione um atleta" />
-            </SelectTrigger>
-            <SelectContent>
-              {athletes.map((athlete) => (
-                <SelectItem key={athlete.id} value={athlete.id}>
-                  {athlete.user.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
       </div>
 
       {/* Main content with tabs */}
       <Tabs value={activeTab} onValueChange={handleTabChange}>
-        <TabsList className="mb-4">
-          <TabsTrigger value={TABS.OVERVIEW}>Overview</TabsTrigger>
-          <TabsTrigger value={TABS.DIET}>Dieta</TabsTrigger>
-          <TabsTrigger value={TABS.TRAINING}>Treinos</TabsTrigger>
-        </TabsList>
-
         {/* Tab contents - will be filled with actual components later */}
         <Card>
           <CardContent className="p-6">

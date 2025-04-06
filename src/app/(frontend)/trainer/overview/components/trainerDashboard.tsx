@@ -218,7 +218,6 @@ const TrainerDashboard = ({ athleteId }: { athleteId: string }) => {
                   </CardHeader>
                   <CardContent>
                     <div className="text-2xl font-bold">{Math.round(10)}</div>
-                    <div className="text-2xl font-bold">{Math.round(totalActivityTime)} min</div>
                     <div className="text-xs text-gray-600">{50}% da meta diária</div>
                     <div className="w-full bg-gray-200 h-2 mt-2 rounded-full overflow-hidden">
                       <div 
@@ -274,7 +273,7 @@ const TrainerDashboard = ({ athleteId }: { athleteId: string }) => {
                       </div>
                       <div className="flex justify-between">
                         <span>Tempo de exercício</span>
-                        <span className="font-bold">4h 20m</span>
+                        <span className="font-bold">{Math.round(totalActivityTime)} min</span>
                       </div>
                     </div>
                   </CardContent>

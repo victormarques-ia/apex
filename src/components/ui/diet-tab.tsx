@@ -11,7 +11,7 @@ import { getAthleteDietPlansAction, getDietPlanAction } from '@/app/(frontend)/n
 import { DietPlanForm } from './diet-plan-form';
 import { DietPlansList } from './diet-plans-list';
 
-export function DietTabContent({ athleteId, nutritionistId }) {
+export function DietTabContent({ athleteId, nutritionistId, onlyView=false }) {
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [meals, setMeals] = useState([]);
   const [mealsHistory, setMealsHistory] = useState(null);
@@ -289,7 +289,7 @@ export function DietTabContent({ athleteId, nutritionistId }) {
     setDietPlanDay(null);
     setSelectedPlanId(null);
     setIsCreatingNewPlan(true);
-    if (nutritionistId != -1){
+    if (!onlyView){
       setShowDietPlanForm(true);
     }
   };
@@ -309,6 +309,7 @@ export function DietTabContent({ athleteId, nutritionistId }) {
       {athleteId && (
         <DietPlansList
           athleteId={athleteId}
+          onlyView={onlyView}
           onSelectPlan={handleSelectPlan}
           onAddNewPlan={handleAddNewPlan}
           onPlanDeleted={handleDietPlanDayDeleted}
@@ -341,6 +342,7 @@ export function DietTabContent({ athleteId, nutritionistId }) {
               {isCreatingNewPlan ? (
                 <Button
                   className="w-full"
+                  hidden={onlyView}
                   onClick={() => {
                     setShowDietPlanForm(false);
                     setIsCreatingNewPlan(false);
@@ -355,7 +357,7 @@ export function DietTabContent({ athleteId, nutritionistId }) {
                 >
                   {showDietPlanForm ? "Esconder Formulário" : "Editar Plano"}
                 </Button>
-              ) : nutritionistId != -1 ? (
+              ) : !onlyView ? (
                 <Button
                   className="w-full"
                   onClick={handleAddNewPlan}

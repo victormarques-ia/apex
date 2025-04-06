@@ -106,7 +106,7 @@ const AthleteReportDashboard = ({ athleteId }: { athleteId: string }) => {
               color,
             }))}
             height={300}
-            xAxis={[{ data: assessmentHistory.map((a) => format(new Date(a.date), 'dd/MM')), scaleType: 'point' }]}
+            xAxis={[{ data: assessmentHistory.map((a) => format(addDays(new Date(a.date), 1), 'dd/MM')), scaleType: 'point' }]}
             yAxis={[{ label: 'Valores' }]}
             margin={{ top: 40, bottom: 20, left: 40, right: 10 }}
             slotProps={{ legend: { position: { vertical: 'top', horizontal: 'middle' } } }}

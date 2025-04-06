@@ -26,17 +26,40 @@ export async function fetchFromApi<T>(
   })
 
   if (!res.ok) {
-    return {
-      error: {
-        messages: (await res.json()).errors.map((error: { message: string }) => error.message),
-        status: res.status,
-      },
-      data: null,
+    try {
+      const response = await res.json()
+      const errorMessages =
+        response.errors?.map((error: { message: string }) => error.message) || []
+      return {
+        error: {
+          messages: errorMessages,
+          status: res.status,
+        },
+        data: null,
+      }
+    } catch (error) {
+      return {
+        error: {
+          messages: [`Failed to parse error response: ${res.statusText || 'Unknown error'}`],
+          status: res.status,
+        },
+        data: null,
+      }
     }
   } else {
-    return {
-      error: null,
-      data: await res.json(),
+    try {
+      return {
+        error: null,
+        data: await res.json(),
+      }
+    } catch (error) {
+      return {
+        error: {
+          messages: ['Failed to parse success response as JSON'],
+          status: res.status,
+        },
+        data: null,
+      }
     }
   }
 }

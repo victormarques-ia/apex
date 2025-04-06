@@ -47,7 +47,7 @@ export function AuthLayout({ children, title }: { children: React.ReactNode; tit
             </h2>
             <Suspense>{children}</Suspense>
 
-            <div className="mt-2 text-center text-xs md:text-sm text-gray-600 max-w-[280px] mx-auto">
+            {/* <div className="mt-2 text-center text-xs md:text-sm text-gray-600 max-w-[280px] mx-auto">
               By clicking continue, you agree to our{' '}
               <Link href="/terms" className="text-gray-600 hover:text-gray-800 underline">
                 Terms of Service
@@ -57,7 +57,7 @@ export function AuthLayout({ children, title }: { children: React.ReactNode; tit
                 Privacy Policy
               </Link>
               .
-            </div>
+            </div> */}
           </div>
         </div>
       </div>

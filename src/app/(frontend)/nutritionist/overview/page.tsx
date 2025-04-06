@@ -21,7 +21,7 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { Card, CardContent } from '@/components/ui/card'
 import Header from '@/components/ui/header'
 import NutritionDashboard from './components/NutritionDashboard'
-import { DietTabContent } from '@/components/ui/diet-tab'
+import { DietTabContent } from '@/app/(frontend)/nutritionist/components/diet-tab'
 
 // Define the main tabs
 const TABS = {

@@ -62,19 +62,17 @@ export function DietPlansList({
         console.log('Response getAthleteDietPlansAction in DietPlansList:', response);
 
         // For direct response from diet-plans endpoint
-        const data = response.data as { docs: any[]; totalDocs: number }; // Add a type assertion
+        const data = response.data; // Add a type assertion
         if (data?.docs && Array.isArray(data.docs)) {
           // This handles the diet-plan-days with associated diet-plans
           if ((response.data as { totalDocs: number }).totalDocs > 0) {
             // Extract unique diet plans from diet plan days
-            const uniquePlans: any[] | ((prevState: never[]) => never[]) = [];
+            const uniquePlans = [];
             const planIds = new Set();
 
-            (response.data as { docs: any[] }).docs.forEach(item => {
-              if (item.diet_plan && !planIds.has(item.diet_plan.id)) {
-                planIds.add(item.diet_plan.id);
-                uniquePlans.push(item.diet_plan);
-              }
+            response.data.docs.forEach(item => {
+                planIds.add(item.id);
+                uniquePlans.push(item);
             });
 
             console.log(`Found ${uniquePlans.length} unique diet plans`);

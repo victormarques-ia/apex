@@ -45,15 +45,15 @@ api_call "POST" "users" '{"email":"agency@test.com", "password": "password123", 
 AGENCY_USER_ID=$id
 
 # Nutritionist User
-api_call "POST" "users" '{"email":"nutritionist@test.com", "password": "password123", "role": "nutritionist", "name": "Test Nutritionist"}'
+api_call "POST" "users" '{"email":"nutritionist@test.com", "password": "password123", "role": "nutritionist", "name": "Jéssica"}'
 NUTRITIONIST_USER_ID=$id
 
 # Athlete User
-api_call "POST" "users" '{"email":"athlete@test.com", "password": "password123", "role": "athlete", "name": "Test Athlete"}'
+api_call "POST" "users" '{"email":"athlete@test.com", "password": "password123", "role": "athlete", "name": "Bianca"}'
 ATHLETE_USER_ID=$id
 
 # Trainer User
-api_call "POST" "users" '{"email":"trainer@test.com", "password": "password123", "role": "trainer", "name": "Test Trainer"}'
+api_call "POST" "users" '{"email":"trainer@test.com", "password": "password123", "role": "trainer", "name": "Paulo"}'
 TRAINER_USER_ID=$id
 
 # Step 2: Create Agency

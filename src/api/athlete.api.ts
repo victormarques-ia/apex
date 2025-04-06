@@ -352,6 +352,60 @@ export const AthleteApi: Endpoint[] = [
         )
       }
     },
-  }
+  },
+  {
+    method: 'post',
+    path: '/reports/create',
+    handler: async (req: PayloadRequest) => {
+      try {
+        // autenticação
+        if (!req.user) return Response.json({ error: 'Usuário não autenticado' }, { status: 401 })
+        const userId = req.user.id
+
+        // athleteId
+        const athleteProfile = await req.payload.find({ collection: 'athlete-profiles', where: { user: { equals: userId } }, depth: 0 })
+        if (!athleteProfile.docs?.length) return Response.json({ error: 'Perfil de atleta não encontrado' }, { status: 404 })
+        const athleteId = athleteProfile.docs[0].id
+
+        // dados do formulário
+        const { date, weight, bodyFat, abdominalFold, armMeasurement, thighFold } = await req.json()
+        if (!date) return Response.json({ error: 'Campo "date" é obrigatório' }, { status: 400 })
+        const reportDate = new Date(date)
+
+        // checa duplicidade pelo createdAt
+        const start = new Date(reportDate); start.setHours(0, 0, 0, 0)
+        const end   = new Date(reportDate); end.setHours(23, 59, 59, 999)
+
+        const dup = await req.payload.find({
+          collection: 'reports',
+          where: {
+            and: [
+              { athlete: { equals: athleteId } },
+              { createdAt: { greater_than_equal: start.toISOString(), less_than_equal: end.toISOString() } },
+            ],
+          },
+          limit: 1,
+        })
+        if (dup.totalDocs) return Response.json({ error: 'Já existe relatório para esta data' }, { status: 409 })
+
+        // cria relatório sem campo date, mas com createdAt = reportDate
+        const newReport = await req.payload.create({
+          collection: 'reports',
+          overrideAccess: true,
+          data: {
+            athlete: athleteId,
+            created_by: userId,
+            createdAt: reportDate,
+            content: JSON.stringify({ weight, bodyFat, abdominalFold, armMeasurement, thighFold }),
+          },
+        })
+
+        return Response.json({ data: newReport }, { status: 201 })
+      } catch (err) {
+        console.error('[POST /reports/create]:', err)
+        return Response.json({ error: 'Erro inesperado ao salvar relatório' }, { status: 500 })
+      }
+    },
+  },
   
 ]

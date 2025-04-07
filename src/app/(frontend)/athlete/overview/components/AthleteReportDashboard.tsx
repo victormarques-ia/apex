@@ -6,12 +6,12 @@ import { LineChart } from '@mui/x-charts/LineChart'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 
 interface Assessment {
-  date: string;
-  weight: number;
-  bodyFat: number;
-  abdominalFold: number;
-  armMeasurement: number;
-  thighFold: number;
+  date: string
+  weight: number
+  bodyFat: number
+  abdominalFold: number
+  armMeasurement: number
+  thighFold: number
 }
 
 const metricOptions = [
@@ -22,7 +22,13 @@ const metricOptions = [
   { key: 'thighFold', label: 'Dobra coxa (mm)', color: '#06B6D470' },
 ]
 
-const AthleteReportDashboard = ({ athleteId }: { athleteId: string }) => {
+const AthleteReportDashboard = ({
+  athleteId,
+  onlyView = false,
+}: {
+  athleteId: string
+  onlyView: boolean
+}) => {
   const [startDate, setStartDate] = useState<string>('2025-04-01')
   const [endDate, setEndDate] = useState<string>(format(new Date(), 'yyyy-MM-dd'))
   const [assessmentHistory, setAssessmentHistory] = useState<any[]>([])
@@ -46,7 +52,9 @@ const AthleteReportDashboard = ({ athleteId }: { athleteId: string }) => {
       const results: any[] = []
       for (const date of days) {
         try {
-          const res = await fetch(`/api/athlete-profiles/reports/latest?date=${date}&athleteId=${athleteId}`)
+          const res = await fetch(
+            `/api/athlete-profiles/reports/latest?date=${date}&athleteId=${athleteId}`,
+          )
           if (res.ok) {
             const json = await res.json()
             if (json?.data) {
@@ -64,7 +72,7 @@ const AthleteReportDashboard = ({ athleteId }: { athleteId: string }) => {
 
   const toggleMetric = (key: string) => {
     setSelectedMetrics((prev) =>
-      prev.includes(key) ? prev.filter((m) => m !== key) : [...prev, key]
+      prev.includes(key) ? prev.filter((m) => m !== key) : [...prev, key],
     )
   }
 
@@ -109,13 +117,20 @@ const AthleteReportDashboard = ({ athleteId }: { athleteId: string }) => {
         </CardHeader>
         <CardContent>
           <LineChart
-            series={metricOptions.filter(m => selectedMetrics.includes(m.key)).map(({ key, label, color }) => ({
-              data: assessmentHistory.map((a) => a[key]),
-              label,
-              color,
-            }))}
+            series={metricOptions
+              .filter((m) => selectedMetrics.includes(m.key))
+              .map(({ key, label, color }) => ({
+                data: assessmentHistory.map((a) => a[key]),
+                label,
+                color,
+              }))}
             height={300}
-            xAxis={[{ data: assessmentHistory.map((a) => format(addDays(new Date(a.date), 1), 'dd/MM')), scaleType: 'point' }]}
+            xAxis={[
+              {
+                data: assessmentHistory.map((a) => format(addDays(new Date(a.date), 1), 'dd/MM')),
+                scaleType: 'point',
+              },
+            ]}
             yAxis={[{ label: 'Valores' }]}
             margin={{ top: 40, bottom: 20, left: 40, right: 10 }}
             slotProps={{ legend: { position: { vertical: 'top', horizontal: 'middle' } } }}
@@ -123,128 +138,124 @@ const AthleteReportDashboard = ({ athleteId }: { athleteId: string }) => {
         </CardContent>
       </Card>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Nova Avaliação</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <form
-            className="space-y-4"
-            onSubmit={async (e) => {
-              e.preventDefault()
-              const form = e.currentTarget as HTMLFormElement
+      {!onlyView ? (
+        <Card>
+          <CardHeader>
+            <CardTitle>Nova Avaliação</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <form
+              className="space-y-4"
+              onSubmit={async (e) => {
+                e.preventDefault()
+                const form = e.currentTarget as HTMLFormElement
 
-              const payload: Assessment = {
-                date: (form.elements.namedItem('date') as HTMLInputElement).value,
-                weight: Number(
-                  (form.elements.namedItem('weight') as HTMLInputElement).value,
-                ),
-                bodyFat: Number(
-                  (form.elements.namedItem('bodyFat') as HTMLInputElement).value,
-                ),
-                abdominalFold: Number(
-                  (form.elements.namedItem('abdominalFold') as HTMLInputElement)
-                    .value,
-                ),
-                armMeasurement: Number(
-                  (form.elements.namedItem('armMeasurement') as HTMLInputElement)
-                    .value,
-                ),
-                thighFold: Number(
-                  (form.elements.namedItem('thighFold') as HTMLInputElement).value,
-                ),
-              }
+                const payload: Assessment = {
+                  date: (form.elements.namedItem('date') as HTMLInputElement).value,
+                  weight: Number((form.elements.namedItem('weight') as HTMLInputElement).value),
+                  bodyFat: Number((form.elements.namedItem('bodyFat') as HTMLInputElement).value),
+                  abdominalFold: Number(
+                    (form.elements.namedItem('abdominalFold') as HTMLInputElement).value,
+                  ),
+                  armMeasurement: Number(
+                    (form.elements.namedItem('armMeasurement') as HTMLInputElement).value,
+                  ),
+                  thighFold: Number(
+                    (form.elements.namedItem('thighFold') as HTMLInputElement).value,
+                  ),
+                }
 
-              const res = await fetch(
-                `/api/athlete-profiles/reports/create?athleteId=${athleteId}`,
-                {
-                  method: 'POST',
-                  headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify(payload),
-                },
-              )
-
-              if (res.ok) {
-                form.reset()
-                // adiciona localmente e reordena por data
-                setAssessmentHistory((prev) =>
-                  [...prev, payload].sort((a, b) => a.date.localeCompare(b.date)),
+                const res = await fetch(
+                  `/api/athlete-profiles/reports/create?athleteId=${athleteId}`,
+                  {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload),
+                  },
                 )
-                alert('Avaliação salva com sucesso!')
-              } else {
-                const { error } = await res.json()
-                alert(error ?? 'Não foi possível salvar a avaliação.')
-              }
-            }}
-          >
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <label className="flex flex-col text-sm">
-                Data da avaliação:
-                <input
-                  name="date"
-                  type="date"
-                  required
-                  defaultValue={format(new Date(), 'yyyy-MM-dd')}
-                  className="border px-2 py-1 rounded"
-                />
-              </label>
-              <label className="flex flex-col text-sm">
-                Peso (kg):
-                <input
-                  name="weight"
-                  type="number"
-                  step="0.1"
-                  required
-                  className="border px-2 py-1 rounded"
-                />
-              </label>
-              <label className="flex flex-col text-sm">
-                Percentual de gordura (%):
-                <input
-                  name="bodyFat"
-                  type="number"
-                  step="0.1"
-                  required
-                  className="border px-2 py-1 rounded"
-                />
-              </label>
-              <label className="flex flex-col text-sm">
-                Dobra abdominal (mm):
-                <input
-                  name="abdominalFold"
-                  type="number"
-                  required
-                  className="border px-2 py-1 rounded"
-                />
-              </label>
-              <label className="flex flex-col text-sm">
-                Circunferência do braço (cm):
-                <input
-                  name="armMeasurement"
-                  type="number"
-                  required
-                  className="border px-2 py-1 rounded"
-                />
-              </label>
-              <label className="flex flex-col text-sm">
-                Dobra da coxa (mm):
-                <input
-                  name="thighFold"
-                  type="number"
-                  required
-                  className="border px-2 py-1 rounded"
-                />
-              </label>
-            </div>
-            <button
-              type="submit"
-              className="mt-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+
+                if (res.ok) {
+                  form.reset()
+                  // adiciona localmente e reordena por data
+                  setAssessmentHistory((prev) =>
+                    [...prev, payload].sort((a, b) => a.date.localeCompare(b.date)),
+                  )
+                  alert('Avaliação salva com sucesso!')
+                } else {
+                  const { error } = await res.json()
+                  alert(error ?? 'Não foi possível salvar a avaliação.')
+                }
+              }}
             >
-              Enviar avaliação
-            </button>
-          </form>
-        </CardContent>
-      </Card>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <label className="flex flex-col text-sm">
+                  Data da avaliação:
+                  <input
+                    name="date"
+                    type="date"
+                    required
+                    defaultValue={format(new Date(), 'yyyy-MM-dd')}
+                    className="border px-2 py-1 rounded"
+                  />
+                </label>
+                <label className="flex flex-col text-sm">
+                  Peso (kg):
+                  <input
+                    name="weight"
+                    type="number"
+                    step="0.1"
+                    required
+                    className="border px-2 py-1 rounded"
+                  />
+                </label>
+                <label className="flex flex-col text-sm">
+                  Percentual de gordura (%):
+                  <input
+                    name="bodyFat"
+                    type="number"
+                    step="0.1"
+                    required
+                    className="border px-2 py-1 rounded"
+                  />
+                </label>
+                <label className="flex flex-col text-sm">
+                  Dobra abdominal (mm):
+                  <input
+                    name="abdominalFold"
+                    type="number"
+                    required
+                    className="border px-2 py-1 rounded"
+                  />
+                </label>
+                <label className="flex flex-col text-sm">
+                  Circunferência do braço (cm):
+                  <input
+                    name="armMeasurement"
+                    type="number"
+                    required
+                    className="border px-2 py-1 rounded"
+                  />
+                </label>
+                <label className="flex flex-col text-sm">
+                  Dobra da coxa (mm):
+                  <input
+                    name="thighFold"
+                    type="number"
+                    required
+                    className="border px-2 py-1 rounded"
+                  />
+                </label>
+              </div>
+              <button
+                type="submit"
+                className="mt-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+              >
+                Enviar avaliação
+              </button>
+            </form>
+          </CardContent>
+        </Card>
+      ) : null}
     </div>
   )
 }

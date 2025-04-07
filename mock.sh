@@ -4,7 +4,7 @@
 # Usage: ./create_mock_data.sh [payload_token]
 
 # Define variables
-API_URL="http://localhost:3000/api"
+API_URL="${PAYLOAD_PUBLIC_SITE_URL:-http://localhost:3000}/api"
 PAYLOAD_TOKEN=${1:-"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwiY29sbGVjdGlvbiI6InVzZXJzIiwiZW1haWwiOiJ0ZXN0ZUB0ZXN0ZS5jb20iLCJpYXQiOjE3NDM5Nzg0ODQsImV4cCI6MTc0Mzk4NTY4NH0.jz70HUPODSetn2OxxIRrVSk3TkjBWCdJW7Rz_Vt4pCM"}
 AUTH_HEADER="Cookie: payload-token=$PAYLOAD_TOKEN"
 CONTENT_TYPE="Content-Type: application/json"

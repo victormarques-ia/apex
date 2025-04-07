@@ -61,10 +61,6 @@ RUN chown nextjs:nodejs .next
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 
-# Copy the mock.sh script
-COPY --chown=nextjs:nodejs mock.sh ./
-RUN chmod +x mock.sh
-
 USER nextjs
 
 EXPOSE 3000

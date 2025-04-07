@@ -106,11 +106,55 @@ export const TrainerApi: Endpoint[] = [
   },
   {
     method: 'get',
+    path: '/athlete-workout-plans',
+    handler: async (req: PayloadRequest) => {
+      try {
+        const { athleteId } = req.query
+
+        if (!athleteId) {
+          return Response.json(
+            { errors: [{ message: 'ID do atleta é obrigatório' }] },
+            { status: 400 },
+          )
+        }
+
+        // Fetch all workout plans for this athlete-trainer pair
+        const workoutPlans = await req.payload.find({
+          collection: 'workout-plans',
+          where: {
+            and: [
+              {
+                athlete: {
+                  equals: athleteId,
+                },
+              },
+            ],
+          },
+          depth: 2,
+        })
+
+        return Response.json({
+          data: workoutPlans,
+          success: true,
+        })
+      } catch (error) {
+        console.error('[TrainerApi][athlete-workout-plans]:', error)
+        return Response.json(
+          {
+            errors: [{ message: 'Erro inesperado ao buscar planos de treino do atleta.' }],
+            success: false,
+          },
+          { status: 500 },
+        )
+      }
+    },
+  },
+  {
+    method: 'get',
     path: '/workout-plans',
     handler: async (req) => {
       try {
         const { athleteId, date, workoutPlanId } = req.query
-        const trainerId = await getLoggedInTrainerId(req)
 
         // Check if it has a diet plan associated with it
         const workoutPlans = await req.payload.find({
@@ -129,11 +173,7 @@ export const TrainerApi: Endpoint[] = [
                   equals: athleteId,
                 },
               },
-              {
-                trainer: {
-                  equals: trainerId,
-                },
-              },
+
               date
                 ? {
                     start_date: {
@@ -493,7 +533,7 @@ export const TrainerApi: Endpoint[] = [
     handler: async (req) => {
       try {
         const { exerciseId, workoutPlanId } = req.query
-
+        console.log('Request query:', req.query)
         // Check if it has a diet plan associated with it
         const exerciseWorkouts = await req.payload.find({
           collection: 'exercise-workouts',

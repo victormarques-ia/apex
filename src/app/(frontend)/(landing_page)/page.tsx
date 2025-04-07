@@ -18,6 +18,7 @@ import { User } from '@/payload-types'
 import { NewsletterForm } from './components/newsletter-form'
 import { ChartNoAxesCombined } from 'lucide-react'
 import { LogoutButton } from './components/logout-button'
+import { PriceSlider } from './components/PriceSlider' 
 
 export default function LandingPage() {
   const solutions = [
@@ -312,6 +313,16 @@ export default function LandingPage() {
           </div>
         </section>
 
+
+        {/* Price Slider Section*/}
+        <section id="pricing" className="py-12 bg-gray-50">
+        <h3 className="text-center text-primary text-2xl md:text-3xl font-medium mb-8">
+              Escolha a melhor opção para sua assessoria. 
+        </h3>
+          <div className="container mx-auto px-4 md:px-10 max-w-screen-lg">
+            <PriceSlider />
+          </div>
+        </section>
         {/* Newsletter Section */}
         <section className="py-12 bg-white">
           <div className="container mx-auto px-4 md:px-10 max-w-lg text-center">
@@ -350,6 +361,9 @@ export default function LandingPage() {
             </div>
           </div>
         </section> */}
+
+
+       
       </main>
 
       <footer id="contact" className="bg-gray-100 py-12">

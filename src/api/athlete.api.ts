@@ -406,33 +406,38 @@ export const AthleteApi: Endpoint[] = [
         if (!req.user) {
           return Response.json(
             { errors: [{ message: 'Usuário não autenticado' }] },
-            { status: 401 }
+            { status: 401 },
+          )
+        }
+        console.log('[AthleteApi][reports/latest] req.query:', req.query)
+        // Get athleteId directly from query params
+        const athleteId = req.query.athleteId || req.user.id
+
+        if (!athleteId) {
+          return Response.json(
+            { errors: [{ message: 'ID do atleta é obrigatório' }] },
+            { status: 400 },
           )
         }
 
-        console.log(req.query?.date)
-  
-        const userId = req.user.id
-  
-        const athleteProfile = await req.payload.find({
+        // Verify if athlete exists
+        const athleteProfile = await req.payload.findByID({
           collection: 'athlete-profiles',
-          where: { user: { equals: userId } },
-          depth: 0,
+          id: athleteId as string,
         })
-  
-        if (!athleteProfile.docs?.length) {
+        console.log('[AthleteApi][reports/latest] athleteProfile:', athleteProfile)
+        if (!athleteProfile) {
           return Response.json(
             { errors: [{ message: 'Perfil de atleta não encontrado' }] },
-            { status: 404 }
+            { status: 404 },
           )
         }
-  
-        const athleteId = athleteProfile.docs[0].id
-  
+
         const dateParam = req.query?.date
         const filterDate = dateParam ? new Date(dateParam as string) : new Date()
         filterDate.setHours(23, 59, 59, 999)
 
+        // Find reports for this athlete
         const reports = await req.payload.find({
           collection: 'reports',
           where: {
@@ -445,24 +450,23 @@ export const AthleteApi: Endpoint[] = [
           limit: 2,
         })
 
-  
-        var [latest, previous] = reports.docs
-  
+        let [latest, previous] = reports.docs
+
         if (!latest) {
           return Response.json(
             { errors: [{ message: 'Nenhum relatório encontrado' }] },
-            { status: 404 }
+            { status: 404 },
           )
         }
 
-        if(!previous){
+        if (!previous) {
           previous = latest
         }
-  
-        // Parse dos dados principais
+
+        // Parse report content
         const currentContent = JSON.parse(latest.content)
         const lastContent = previous ? JSON.parse(previous.content) : null
-  
+
         const responseData = {
           weight: currentContent.weight,
           bodyFat: currentContent.bodyFat,
@@ -479,13 +483,13 @@ export const AthleteApi: Endpoint[] = [
               }
             : undefined,
         }
-  
+
         return Response.json({ data: responseData })
       } catch (error) {
         console.error('[AthleteApi][reports/latest]:', error)
         return Response.json(
           { errors: [{ message: 'Erro inesperado ao buscar relatórios' }] },
-          { status: 500 }
+          { status: 500 },
         )
       }
     },
@@ -500,8 +504,13 @@ export const AthleteApi: Endpoint[] = [
         const userId = req.user.id
 
         // athleteId
-        const athleteProfile = await req.payload.find({ collection: 'athlete-profiles', where: { user: { equals: userId } }, depth: 0 })
-        if (!athleteProfile.docs?.length) return Response.json({ error: 'Perfil de atleta não encontrado' }, { status: 404 })
+        const athleteProfile = await req.payload.find({
+          collection: 'athlete-profiles',
+          where: { user: { equals: userId } },
+          depth: 0,
+        })
+        if (!athleteProfile.docs?.length)
+          return Response.json({ error: 'Perfil de atleta não encontrado' }, { status: 404 })
         const athleteId = athleteProfile.docs[0].id
 
         // dados do formulário
@@ -510,20 +519,28 @@ export const AthleteApi: Endpoint[] = [
         const reportDate = new Date(date)
 
         // checa duplicidade pelo createdAt
-        const start = new Date(reportDate); start.setHours(0, 0, 0, 0)
-        const end   = new Date(reportDate); end.setHours(23, 59, 59, 999)
+        const start = new Date(reportDate)
+        start.setHours(0, 0, 0, 0)
+        const end = new Date(reportDate)
+        end.setHours(23, 59, 59, 999)
 
         const dup = await req.payload.find({
           collection: 'reports',
           where: {
             and: [
               { athlete: { equals: athleteId } },
-              { createdAt: { greater_than_equal: start.toISOString(), less_than_equal: end.toISOString() } },
+              {
+                createdAt: {
+                  greater_than_equal: start.toISOString(),
+                  less_than_equal: end.toISOString(),
+                },
+              },
             ],
           },
           limit: 1,
         })
-        if (dup.totalDocs) return Response.json({ error: 'Já existe relatório para esta data' }, { status: 409 })
+        if (dup.totalDocs)
+          return Response.json({ error: 'Já existe relatório para esta data' }, { status: 409 })
 
         // cria relatório sem campo date, mas com createdAt = reportDate
         const newReport = await req.payload.create({
@@ -544,5 +561,4 @@ export const AthleteApi: Endpoint[] = [
       }
     },
   },
-  
 ]

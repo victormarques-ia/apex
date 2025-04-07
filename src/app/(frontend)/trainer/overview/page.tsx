@@ -29,7 +29,8 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import TrainerDashboard from './components/trainerDashboard'
-import { DietTabContent } from '@/components/ui/diet-tab'
+import { DietTabContent } from '@/app/(frontend)/nutritionist/components/diet-tab'
+import { WorkoutTabContent } from '@/app/(frontend)/trainer/components/workout-tab'
 import Header from '@/components/ui/header'
 
 // Define the main tabs
@@ -173,32 +174,10 @@ export default function TrainerOverviewPage() {
       />
       <div className="mb-6">
         <h1 className="text-2xl font-bold">Painel de Treinador</h1>
-
-        {/* Athlete selector */}
-        <div className="mt-4">
-          <Select value={selectedAthleteId} onValueChange={handleAthleteChange}>
-            <SelectTrigger className="w-full max-w-xs">
-              <SelectValue placeholder="Selecione um atleta" />
-            </SelectTrigger>
-            <SelectContent>
-              {athletes.map((athlete) => (
-                <SelectItem key={athlete.id} value={athlete.id}>
-                  {athlete.user.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
       </div>
 
       {/* Main content with tabs */}
       <Tabs value={activeTab} onValueChange={handleTabChange}>
-        <TabsList className="mb-4">
-          <TabsTrigger value={TABS.OVERVIEW}>Overview</TabsTrigger>
-          <TabsTrigger value={TABS.DIET}>Dieta</TabsTrigger>
-          <TabsTrigger value={TABS.TRAINING}>Treinos</TabsTrigger>
-        </TabsList>
-
         {/* Tab contents - will be filled with actual components later */}
         <Card>
           <CardContent className="p-6">
@@ -210,7 +189,11 @@ export default function TrainerOverviewPage() {
 
             <TabsContent value={TABS.DIET} className="mt-0">
               {selectedAthleteId ? (
-                <DietTabContent athleteId={selectedAthleteId} nutritionistId={'-1'} onlyView={true} />
+                <DietTabContent
+                  athleteId={selectedAthleteId}
+                  nutritionistId={'-1'}
+                  onlyView={true}
+                />
               ) : (
                 <div className="min-h-[600px] flex items-center justify-center">
                   <p>Selecione um atleta para visualizar o plano alimentar</p>
@@ -219,12 +202,17 @@ export default function TrainerOverviewPage() {
             </TabsContent>
 
             <TabsContent value={TABS.TRAINING} className="mt-0">
-              {/* Training component will be placed here */}
-              <div className="min-h-[600px]">
-                <h2 className="text-xl font-semibold mb-4">Treinos</h2>
-                <p>Conteúdo dos treinos para o atleta selecionado. ID: {selectedAthleteId}</p>
-                {/* Training component will be loaded here */}
-              </div>
+              {selectedAthleteId ? (
+                <WorkoutTabContent
+                  athleteId={selectedAthleteId}
+                  trainerId={'-1'}
+                  onlyView={false}
+                />
+              ) : (
+                <div className="min-h-[600px] flex items-center justify-center">
+                  <p>Selecione um atleta para visualizar o plano de treinos</p>
+                </div>
+              )}
             </TabsContent>
           </CardContent>
         </Card>

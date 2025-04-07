@@ -1,66 +1,66 @@
 /*
-  * ATENÇÃO FRONTENDERS: Modifique o arquivo abaixo para atender às suas necessidades
-  * ATENÇÃO FRONTENDERS: Modifique o arquivo abaixo para atender às suas necessidades
-  * ATENÇÃO FRONTENDERS: Modifique o arquivo abaixo para atender às suas necessidades
-  * ATENÇÃO FRONTENDERS: Modifique o arquivo abaixo para atender às suas necessidades
-  * ATENÇÃO FRONTENDERS: Modifique o arquivo abaixo para atender às suas necessidades
-  * ATENÇÃO FRONTENDERS: Modifique o arquivo abaixo para atender às suas necessidades
-  * ATENÇÃO FRONTENDERS: Modifique o arquivo abaixo para atender às suas necessidades
-  * ATENÇÃO FRONTENDERS: Modifique o arquivo abaixo para atender às suas necessidades
-  * ATENÇÃO FRONTENDERS: Modifique o arquivo abaixo para atender às suas necessidades
-  * ATENÇÃO FRONTENDERS: Modifique o arquivo abaixo para atender às suas necessidades
-  * ATENÇÃO FRONTENDERS: Modifique o arquivo abaixo para atender às suas necessidades
-  * ATENÇÃO FRONTENDERS: Modifique o arquivo abaixo para atender às suas necessidades
-  * ATENÇÃO FRONTENDERS: Modifique o arquivo abaixo para atender às suas necessidades
-  * ATENÇÃO FRONTENDERS: Modifique o arquivo abaixo para atender às suas necessidades
-*/
-'use client';
+ * ATENÇÃO FRONTENDERS: Modifique o arquivo abaixo para atender às suas necessidades
+ * ATENÇÃO FRONTENDERS: Modifique o arquivo abaixo para atender às suas necessidades
+ * ATENÇÃO FRONTENDERS: Modifique o arquivo abaixo para atender às suas necessidades
+ * ATENÇÃO FRONTENDERS: Modifique o arquivo abaixo para atender às suas necessidades
+ * ATENÇÃO FRONTENDERS: Modifique o arquivo abaixo para atender às suas necessidades
+ * ATENÇÃO FRONTENDERS: Modifique o arquivo abaixo para atender às suas necessidades
+ * ATENÇÃO FRONTENDERS: Modifique o arquivo abaixo para atender às suas necessidades
+ * ATENÇÃO FRONTENDERS: Modifique o arquivo abaixo para atender às suas necessidades
+ * ATENÇÃO FRONTENDERS: Modifique o arquivo abaixo para atender às suas necessidades
+ * ATENÇÃO FRONTENDERS: Modifique o arquivo abaixo para atender às suas necessidades
+ * ATENÇÃO FRONTENDERS: Modifique o arquivo abaixo para atender às suas necessidades
+ * ATENÇÃO FRONTENDERS: Modifique o arquivo abaixo para atender às suas necessidades
+ * ATENÇÃO FRONTENDERS: Modifique o arquivo abaixo para atender às suas necessidades
+ * ATENÇÃO FRONTENDERS: Modifique o arquivo abaixo para atender às suas necessidades
+ */
+'use client'
 
-import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import { format } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
-import { BarChart } from '@mui/x-charts/BarChart';
-
+import React, { useState, useEffect } from 'react'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
+import { format } from 'date-fns'
+import { ptBR } from 'date-fns/locale'
+import { BarChart } from '@mui/x-charts/BarChart'
+import AthleteReportDashboard from '@/app/(frontend)/athlete/overview/components/AthleteReportDashboard'
 
 const TrainerDashboard = ({ athleteId }: { athleteId: string }) => {
-  const [activeTab, setActiveTab] = useState('overview');
-  const [loading, setLoading] = useState(true);
-  const [caloriesBurned, setCaloriesBurned] = useState<number>(0);
-  const [totalActivityTime, setTotalActivityTime] = useState<number>(0);
+  const [activeTab, setActiveTab] = useState('overview')
+  const [loading, setLoading] = useState(true)
+  const [caloriesBurned, setCaloriesBurned] = useState<number>(0)
+  const [totalActivityTime, setTotalActivityTime] = useState<number>(0)
   const [dateRange, setDateRange] = useState(() => {
-    const today = new Date();
+    const today = new Date()
     // Get current week's Monday and Sunday
-    const currentDay = today.getDay();
-    const diff = currentDay === 0 ? 6 : currentDay - 1; // Adjust for Sunday (0)
-    
-    const monday = new Date(today);
-    monday.setDate(today.getDate() - diff);
-    
-    const sunday = new Date(monday);
-    sunday.setDate(monday.getDate() + 6);
-    
+    const currentDay = today.getDay()
+    const diff = currentDay === 0 ? 6 : currentDay - 1 // Adjust for Sunday (0)
+
+    const monday = new Date(today)
+    monday.setDate(today.getDate() - diff)
+
+    const sunday = new Date(monday)
+    sunday.setDate(monday.getDate() + 6)
+
     return {
       from: format(monday, 'yyyy-MM-dd'),
       to: format(sunday, 'yyyy-MM-dd'),
       startDate: monday,
-      endDate: sunday
-    };
-  });
+      endDate: sunday,
+    }
+  })
 
   useEffect(() => {
-    if (!athleteId) return;
-    
+    if (!athleteId) return
+
     const fetchDashboardData = async () => {
       try {
-        setLoading(true);
-        
+        setLoading(true)
+
         // Track successful API calls
-        let mealDataSuccess = false;
-        
-        let totalCaloriasBurned = 0;
-        let totalActivityTime = 0;
+        let mealDataSuccess = false
+
+        let totalCaloriasBurned = 0
+        let totalActivityTime = 0
 
         // Default data structures
         let mealsData = {
@@ -69,64 +69,60 @@ const TrainerDashboard = ({ athleteId }: { athleteId: string }) => {
             protein: 0,
             carbs: 0,
             fat: 0,
-            water: 0
-          }
-        };
-        
+            water: 0,
+          },
+        }
+
         // Fetch physical activity log data
         try {
-          const activityResponse = await fetch(`/api/physical-activity-logs`);
+          const activityResponse = await fetch(`/api/physical-activity-logs`)
 
           if (activityResponse.ok) {
-            const responseData = await activityResponse.json();
-            for(const activity of responseData.docs) {
-                if(activity.athlete.id === athleteId) {
-                    totalCaloriasBurned += activity.calories_burned || 0;
-                    totalActivityTime += activity.duration_minutes || 0;
-                }
+            const responseData = await activityResponse.json()
+            for (const activity of responseData.docs) {
+              if (activity.athlete.id === athleteId) {
+                totalCaloriasBurned += activity.calories_burned || 0
+                totalActivityTime += activity.duration_minutes || 0
+              }
             }
-            console.log('pao', responseData);
-            mealsData = responseData;
-            mealDataSuccess = true;
+            console.log('pao', responseData)
+            mealsData = responseData
+            mealDataSuccess = true
           } else {
-            console.error('activity API returned error:', activityResponse.status);
+            console.error('activity API returned error:', activityResponse.status)
           }
         } catch (mealError) {
-          console.error('Error fetching activity data:', mealError);
+          console.error('Error fetching activity data:', mealError)
         }
-        
-        
-        
-        setCaloriesBurned(totalCaloriasBurned);
-        setTotalActivityTime(totalActivityTime);
-          
+
+        setCaloriesBurned(totalCaloriasBurned)
+        setTotalActivityTime(totalActivityTime)
       } catch (err) {
-        console.error('Unexpected error in dashboard component:', err);
-        
+        console.error('Unexpected error in dashboard component:', err)
       } finally {
-        setLoading(false);
+        setLoading(false)
       }
-    };
-    
-    fetchDashboardData();
-  }, [athleteId, dateRange]);
-  
+    }
+
+    fetchDashboardData()
+  }, [athleteId, dateRange])
+
   // Fetch data for a different week
   const handleDateChange = (weeks: number) => {
     // Calculate new dates by shifting weeks
-    const newStartDate = new Date(dateRange.startDate);
-    newStartDate.setDate(newStartDate.getDate() + (weeks * 7));
-    
-    const newEndDate = new Date(newStartDate);
-    newEndDate.setDate(newStartDate.getDate() + 6);
-    
+    const newStartDate = new Date(dateRange.startDate)
+    newStartDate.setDate(newStartDate.getDate() + weeks * 7)
+
+    const newEndDate = new Date(newStartDate)
+    newEndDate.setDate(newStartDate.getDate() + 6)
+
     setDateRange({
       from: format(newStartDate, 'yyyy-MM-dd'),
       to: format(newEndDate, 'yyyy-MM-dd'),
       startDate: newStartDate,
-      endDate: newEndDate
-    });
-  };
+      endDate: newEndDate,
+    })
+  }
 
   if (loading) {
     return (
@@ -139,32 +135,37 @@ const TrainerDashboard = ({ athleteId }: { athleteId: string }) => {
           </CardContent>
         </Card>
       </div>
-    );
+    )
   }
 
   return (
     <div className="space-y-4">
-      <Tabs defaultValue="overview" className="w-full" value={activeTab} onValueChange={setActiveTab}>
+      <Tabs
+        defaultValue="overview"
+        className="w-full"
+        value={activeTab}
+        onValueChange={setActiveTab}
+      >
         <TabsList className="mb-4">
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="avaliacao">Avaliação</TabsTrigger>
-          <TabsTrigger value="reports">Reports</TabsTrigger>
         </TabsList>
-        
+
         <TabsContent value="overview" className="space-y-4">
           <div className="flex justify-between items-center">
             <h2 className="text-xl font-bold">Painel</h2>
             <div className="flex gap-2">
-              <button 
+              <button
                 onClick={() => handleDateChange(-1)}
                 className="px-3 py-1 bg-gray-200 rounded-md hover:bg-gray-300"
               >
                 Semana Anterior
               </button>
               <span className="px-4 py-1 bg-gray-100 rounded-md">
-                {format(dateRange.startDate, 'dd MMM', { locale: ptBR })} - {format(dateRange.endDate, 'dd MMM, yyyy', { locale: ptBR })}
+                {format(dateRange.startDate, 'dd MMM', { locale: ptBR })} -{' '}
+                {format(dateRange.endDate, 'dd MMM, yyyy', { locale: ptBR })}
               </span>
-              <button 
+              <button
                 onClick={() => handleDateChange(1)}
                 className="px-3 py-1 bg-gray-200 rounded-md hover:bg-gray-300"
               >
@@ -172,137 +173,135 @@ const TrainerDashboard = ({ athleteId }: { athleteId: string }) => {
               </button>
             </div>
           </div>
-          
-          
-            <>
-              {/* Macronutrient cards */}
-              <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-                {/* Calorias Queimadas */}
-                <Card className="bg-red-100">
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-sm font-medium">Calorias Queimadas</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-2xl font-bold">{Math.round(caloriesBurned)} kcal</div>
-                    <div className="text-xs text-gray-600">{53}% da meta diária</div>
-                    <div className="w-full bg-gray-200 h-2 mt-2 rounded-full overflow-hidden">
-                      <div 
-                        className="bg-red-500 h-full rounded-full"
-                        style={{ width: `${Math.min(53, 100)}%` }}
-                      ></div>
-                    </div>
-                  </CardContent>
-                </Card>
 
-                {/* Tempo de treino */}
-                <Card className="bg-green-100">
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-sm font-medium">Tempo de treino</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-2xl font-bold">{Math.round(totalActivityTime)} min</div>
-                    <div className="text-xs text-gray-600">{60}% da meta diária</div>
-                    <div className="w-full bg-gray-200 h-2 mt-2 rounded-full overflow-hidden">
-                      <div 
-                        className="bg-red-500 h-full rounded-full"
-                        style={{ width: `${Math.min(60, 100)}%` }}
-                      ></div>
-                      </div>
-                  </CardContent>
-                </Card>
+          <>
+            {/* Macronutrient cards */}
+            <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+              {/* Calorias Queimadas */}
+              <Card className="bg-red-100">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-medium">Calorias Queimadas</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">{Math.round(caloriesBurned)} kcal</div>
+                  <div className="text-xs text-gray-600">{53}% da meta diária</div>
+                  <div className="w-full bg-gray-200 h-2 mt-2 rounded-full overflow-hidden">
+                    <div
+                      className="bg-red-500 h-full rounded-full"
+                      style={{ width: `${Math.min(53, 100)}%` }}
+                    ></div>
+                  </div>
+                </CardContent>
+              </Card>
 
-                {/* Sets */}
-                <Card className="bg-purple-100">
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-sm font-medium">Sets</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-2xl font-bold">{Math.round(10)}</div>
-                    <div className="text-xs text-gray-600">{50}% da meta diária</div>
-                    <div className="w-full bg-gray-200 h-2 mt-2 rounded-full overflow-hidden">
-                      <div 
-                        className="bg-red-500 h-full rounded-full"
-                        style={{ width: `${Math.min(50, 100)}%` }}
-                      ></div>
-                      </div>
-                  </CardContent>
-                </Card>
-              </div>
+              {/* Tempo de treino */}
+              <Card className="bg-green-100">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-medium">Tempo de treino</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">{Math.round(totalActivityTime)} min</div>
+                  <div className="text-xs text-gray-600">{60}% da meta diária</div>
+                  <div className="w-full bg-gray-200 h-2 mt-2 rounded-full overflow-hidden">
+                    <div
+                      className="bg-red-500 h-full rounded-full"
+                      style={{ width: `${Math.min(60, 100)}%` }}
+                    ></div>
+                  </div>
+                </CardContent>
+              </Card>
 
-              {/* Statistics and chart */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <Card className="md:col-span-2">
-                  <CardHeader>
-                    <CardTitle>Gráfico</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="h-80 flex items-center justify-center">
-                      {/* Chart placeholder */}
-                        <div className="w-full h-full flex items-center justify-center">
-                        <BarChart
-                          series={[
-                          { data: [53, 55, 40, 70, 80, 80], color: '#EF444470', label: 'Calorias Queimadas ' }, // Calorias (red)
-                          { data: [70, 90, 100, 120, 80, 70], color: '#10B98170', label: 'Tempo de treino' }, // Carboidratos (green)
+              {/* Sets */}
+              <Card className="bg-purple-100">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-medium">Sets</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">{Math.round(10)}</div>
+                  <div className="text-xs text-gray-600">{50}% da meta diária</div>
+                  <div className="w-full bg-gray-200 h-2 mt-2 rounded-full overflow-hidden">
+                    <div
+                      className="bg-red-500 h-full rounded-full"
+                      style={{ width: `${Math.min(50, 100)}%` }}
+                    ></div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Statistics and chart */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <Card className="md:col-span-2">
+                <CardHeader>
+                  <CardTitle>Gráfico</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="h-80 flex items-center justify-center">
+                    {/* Chart placeholder */}
+                    <div className="w-full h-full flex items-center justify-center">
+                      <BarChart
+                        series={[
+                          {
+                            data: [53, 55, 40, 70, 80, 80],
+                            color: '#EF444470',
+                            label: 'Calorias Queimadas ',
+                          }, // Calorias (red)
+                          {
+                            data: [70, 90, 100, 120, 80, 70],
+                            color: '#10B98170',
+                            label: 'Tempo de treino',
+                          }, // Carboidratos (green)
                           { data: [50, 40, 42, 38, 56, 55], color: '#8B5CF670', label: 'Sets' }, // Proteínas (purple)
-                          ]}
-                          height={300}
-                          yAxis={[{label: 'meta (%)', tickSize: 10}]}
-                          xAxis={[{ data: ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sab'], scaleType: 'band' }]}
-                          margin={{ top: 40, bottom: 20, left: 40, right: 10 }}
-                          slotProps={{
+                        ]}
+                        height={300}
+                        yAxis={[{ label: 'meta (%)', tickSize: 10 }]}
+                        xAxis={[
+                          { data: ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sab'], scaleType: 'band' },
+                        ]}
+                        margin={{ top: 40, bottom: 20, left: 40, right: 10 }}
+                        slotProps={{
                           legend: {
-                            position:  { vertical: 'top', horizontal: 'middle' },
+                            position: { vertical: 'top', horizontal: 'middle' },
                           },
-                          }}
-                        />                      
-                        </div>
+                        }}
+                      />
                     </div>
-                  </CardContent>
-                </Card>
+                  </div>
+                </CardContent>
+              </Card>
 
-                {/* TODO: PEGAR DADOS AO INVES DE MOCKAR */}
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Estatísticas</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-4">
-                      <div className="flex justify-between">
-                        <span>Distância Semanal</span>
-                        <span className="font-bold">39km</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span>Tempo de exercício</span>
-                        <span className="font-bold">{Math.round(totalActivityTime)} min</span>
-                      </div>
+              {/* TODO: PEGAR DADOS AO INVES DE MOCKAR */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Estatísticas</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    <div className="flex justify-between">
+                      <span>Distância Semanal</span>
+                      <span className="font-bold">39km</span>
                     </div>
-                  </CardContent>
-                </Card>
-              </div>
-            </>
-          
+                    <div className="flex justify-between">
+                      <span>Tempo de exercício</span>
+                      <span className="font-bold">{Math.round(totalActivityTime)} min</span>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </>
         </TabsContent>
-        
+
         <TabsContent value="avaliacao">
           <Card>
             <CardContent className="p-6">
-              <h2 className="text-xl font-bold mb-4">Avaliação</h2>
-              <p>Conteúdo da avaliação para o atleta selecionado.</p>
-            </CardContent>
-          </Card>
-        </TabsContent>
-        
-        <TabsContent value="reports">
-          <Card>
-            <CardContent className="p-6">
-              <h2 className="text-xl font-bold mb-4">Reports</h2>
-              <p>Conteúdo dos reports para o atleta selecionado.</p>
+              <AthleteReportDashboard athleteId={athleteId} onlyView={true} />
             </CardContent>
           </Card>
         </TabsContent>
       </Tabs>
     </div>
-  );
-};
+  )
+}
 
-export default TrainerDashboard;
+export default TrainerDashboard

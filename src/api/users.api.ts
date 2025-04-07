@@ -17,7 +17,6 @@ export const UsersApi: Endpoint[] = [
     path: '/newsletter',
     handler: withValidation(newsletterSchema)(async (req, validatedData) => {
       try {
-        console.log('[UsersApi][newsletter]:', validatedData)
         const { email } = validatedData
 
         // TODO: Register email in newsletter

@@ -21,7 +21,8 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { Card, CardContent } from '@/components/ui/card'
 import Header from '@/components/ui/header'
 import NutritionDashboard from './components/NutritionDashboard'
-import { DietTabContent } from '@/components/ui/diet-tab'
+import { DietTabContent } from '@/app/(frontend)/nutritionist/components/diet-tab'
+import { WorkoutTabContent } from '@/app/(frontend)/trainer/components/workout-tab'
 
 // Define the main tabs
 const TABS = {
@@ -205,9 +206,18 @@ export default function NutritionistOverviewPage() {
             )}
 
             {activeTab === TABS.TRAINING && (
-              <div className="min-h-[600px]">
-                <h2 className="text-xl font-semibold mb-4">Treinos</h2>
-                <p>Conteúdo dos treinos para o atleta selecionado. ID: {selectedAthleteId}</p>
+              <div>
+                {selectedAthleteId ? (
+                  <WorkoutTabContent
+                    athleteId={selectedAthleteId}
+                    trainerId={'-1'}
+                    onlyView={true}
+                  />
+                ) : (
+                  <div className="min-h-[600px] flex items-center justify-center">
+                    <p>Selecione um atleta para visualizar o plano de treino</p>
+                  </div>
+                )}
               </div>
             )}
           </CardContent>

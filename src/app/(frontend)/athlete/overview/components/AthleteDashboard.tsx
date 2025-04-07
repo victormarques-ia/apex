@@ -49,7 +49,10 @@ const AthleteDashboard = ({ athleteId }: { athleteId: string }) => {
 
         // Fetch reports data
         try {
-          const assessmentResponse = await fetch('/api/athlete-profiles/reports/latest')
+          const date = format(currentDate, 'yyyy-MM-dd')
+          const assessmentResponse = await fetch(
+            `/api/athlete-profiles/reports/latest?date=${date}&athleteId=${athleteId}`,
+          )
           if (assessmentResponse.ok) {
             const assessmentResult = await assessmentResponse.json()
             if (assessmentResult.data) {

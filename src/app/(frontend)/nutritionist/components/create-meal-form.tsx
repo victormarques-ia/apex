@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Loader } from 'lucide-react';
 import { createMealAction } from '@/app/(frontend)/nutrition/actions/meal-plan.action';
+import { getAthleteDietPlansAction } from '@/app/(frontend)/nutrition/actions/diet-plans.action';
 
 interface CreateMealFormProps {
   athleteId: string;

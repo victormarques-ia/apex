@@ -34,31 +34,6 @@ api_call() {
 # Clear terminal
 clear
 
-echo -e "\n🧹 Cleaning up existing database records..."
-
-docker exec -i $(docker ps -qf "name=postgres") psql -U postgres -d admin <<EOF
-DO \$\$
-DECLARE
-    stmt text;
-BEGIN
-    -- Desativa temporariamente as constraints
-    EXECUTE 'SET session_replication_role = replica';
-
-    -- Trunca todas as tabelas do schema public
-    FOR stmt IN
-        SELECT 'TRUNCATE TABLE "' || tablename || '" RESTART IDENTITY CASCADE;' 
-        FROM pg_tables 
-        WHERE schemaname = 'public'
-    LOOP
-        EXECUTE stmt;
-    END LOOP;
-
-    -- Reativa constraints
-    EXECUTE 'SET session_replication_role = origin';
-END;
-\$\$;
-EOF
-
 echo "=== PayloadCMS Mock Data Generator ==="
 echo "Using token: ${PAYLOAD_TOKEN:0:20}..."
 echo "======================================="

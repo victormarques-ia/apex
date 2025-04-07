@@ -12,13 +12,14 @@ import {
   SheetTitle,
   SheetTrigger,
 } from '@/components/ui/sheet'
-import { ChartColumnStacked, Menu, Play, UserCircle, UserRoundPen, Watch } from 'lucide-react'
+import { ChartColumnStacked, Menu, UserCircle, UserRoundPen, Watch, MessageSquare } from 'lucide-react'
 import { fetchFromApi } from '@/app/utils/fetch-from-api'
 import { User } from '@/payload-types'
 import { NewsletterForm } from './components/newsletter-form'
 import { ChartNoAxesCombined } from 'lucide-react'
 import { LogoutButton } from './components/logout-button'
-import { PriceSlider } from './components/PriceSlider' 
+import { PriceSlider } from './components/PriceSlider'
+import VideoSection from './components/VideoSection'
 
 export default function LandingPage() {
   const solutions = [
@@ -54,8 +55,8 @@ export default function LandingPage() {
     },
     {
       iconSrc: <ChartColumnStacked className="h-8 w-8 text-primary" />,
-      title: 'Análise Biomecânica',
-      description: 'Avaliações detalhadas para otimizar a técnica e prevenir lesões',
+      title: 'Integração real entre especialistas ',
+      description: 'Diferentes profissionais trabalham juntos, com visão unificada sobre o cliente',
       iconAlt: 'Halter',
     },
     {
@@ -74,25 +75,46 @@ export default function LandingPage() {
       iconWidth: 32,
       iconHeight: 32,
     },
+    
   ]
 
   const testimonials = [
     {
-      text: 'A Apex revolucionou a forma como gerenciamos nossos atletas. Agora, cada treino é otimizado com dados reais.',
-      authorName: 'Carlos Mendes',
-      authorRole: 'Preparador Físico - TeamRun',
+      text: 'Esse aplicativo que integra o acompanhamento de profissionais da nutrição e educação física,  vendo a evolução de ambos, já é algo que consegue ser 100% ',
+      authorName: 'Arlindo',
+      authorRole: 'Corredor amador',
     },
     {
-      text: 'A integração entre todos os dados na Apex deixou o treinamento muito mais eficiente. O feedback instantâneo é um diferencial!',
-      authorName: 'Ana Oliveira',
-      authorRole: 'Treinadora Esportiva',
+      text: 'Vocês oferecem algo melhor que os outros apps. Um combo.',
+      authorName: 'Alex',
+      authorRole: 'Corredor Profissional',
     },
     {
-      text: 'Com a Apex, controlamos tudo em um só lugar. Além, claro, dos ótimos resultados conseguidos pelos nossos atletas com melhor planejamento.',
-      authorName: 'Felipe Souza',
-      authorRole: 'Fundador Elite Runners',
+      text: 'A gente conseguir visualizar diariamente como se deu a variação de treino do atleta possibilita estimar de maneira muito mais precisa a necessidade de macro/micro nutrientes e energética dele. ',
+      authorName: 'Fabiana',
+      authorRole: 'Nutricionista especialista em nutrição esportiva',
+    },
+
+    {
+      text: 'A nutricionista é fundamental, para que haja um equilibrio do que o corredor gasta com o que ele come.',
+      authorName: 'Vanessa',
+      authorRole: 'Dona de Assessoria',
+    },
+    {
+      text: 'Um acompanhamento como este é fundamental para ter bom rendimento. É básico ter um acompanhamento da nutrição com a atividade física.',
+      authorName: 'Haroldo Dutra',
+      authorRole: 'Treinador de Corrida',
     },
   ]
+//  https://www.youtube.com/embed/YOUR_VIDEO_ID
+  const videoUrl = 'https://www.youtube.com/embed/s2_T6oL1LXY' // Replace with your actual video URL
+  const thumbnailUrl = '/assets/homepage/video.jpg'
+
+  interface VideoSectionProps {
+    videoUrl: string
+    thumbnailUrl: string
+  }
+  
 
   return (
     <div className="flex flex-col min-h-screen mx-auto">
@@ -258,9 +280,10 @@ export default function LandingPage() {
         {/* Features Section */}
         <section className="py-12 bg-gray-50">
           <div className="container mx-auto px-4 md:px-10 max-w-screen-lg">
-            <h2 className="text-center text-primary text-2xl md:text-3xl font-medium mb-8">
-              Transforme sua assessoria com a Apex
-            </h2>
+            <h2 className="text-center text-accent mb-2 text-xl md:text-2xl">Motivos</h2>
+            <h3 className="text-center text-primary text-2xl md:text-3xl font-medium mb-8">
+              Por que Escolher a Apex?
+            </h3>
 
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mx-auto h-full">
               {features.map((feature, index) => (
@@ -271,29 +294,9 @@ export default function LandingPage() {
         </section>
 
         {/* Video Section */}
-        <section className="py-12 bg-gray-50">
-          <div className="container mx-auto px-4 md:px-10 max-w-screen-lg">
-            <h2 className="text-center text-accent mb-2 text-xl md:text-2xl">Motivos</h2>
-            <h3 className="text-center text-primary text-2xl md:text-3xl font-medium mb-8">
-              Por que Escolher a Apex?
-            </h3>
-
-            <div className="max-w-3xl mx-auto bg-gray-100 rounded-lg aspect-video flex items-center justify-center relative overflow-hidden">
-              <div
-                className="absolute inset-0"
-                style={{
-                  backgroundImage: "url('/assets/homepage/video.jpg')",
-                  backgroundSize: 'cover',
-                  backgroundPosition: 'center',
-                  opacity: 0.7,
-                }}
-              ></div>
-              <button className="w-16 h-16 rounded-full bg-white flex items-center justify-center shadow-md z-10">
-                <Play className="w-8 h-8 text-primary" />
-              </button>
-            </div>
-          </div>
-        </section>
+        <div>
+          <VideoSection videoUrl={videoUrl} thumbnailUrl={thumbnailUrl} />
+        </div>
 
         {/* Testimonials Section */}
         <section id="testimonials" className="py-12 bg-white">
@@ -302,7 +305,7 @@ export default function LandingPage() {
               Resultados que fazem a diferença!
             </h2>
             <h3 className="text-center text-primary text-2xl md:text-3xl font-medium mb-8">
-              O que Nossos Clientes Dizem?
+              O que Falam do Apex?
             </h3>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mx-auto">
@@ -313,12 +316,11 @@ export default function LandingPage() {
           </div>
         </section>
 
-
         {/* Price Slider Section*/}
         <section id="pricing" className="py-12 bg-gray-50">
-        <h3 className="text-center text-primary text-2xl md:text-3xl font-medium mb-8">
-              Escolha a melhor opção para sua assessoria. 
-        </h3>
+          <h3 className="text-center text-primary text-2xl md:text-3xl font-medium mb-8">
+            Escolha a melhor opção para sua assessoria.
+          </h3>
           <div className="container mx-auto px-4 md:px-10 max-w-screen-lg">
             <PriceSlider />
           </div>
@@ -361,9 +363,6 @@ export default function LandingPage() {
             </div>
           </div>
         </section> */}
-
-
-       
       </main>
 
       <footer id="contact" className="bg-gray-100 py-12">

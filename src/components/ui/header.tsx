@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import { useRouter, usePathname, useSearchParams } from 'next/navigation'
 import { MessageSquare, Bell, LogOut } from 'lucide-react'
 import {
@@ -124,6 +125,17 @@ export default function Header({
       <div className="w-full bg-white border-b border-gray-200 py-4 px-6 fixed top-0 left-0 right-0 z-10">
         <div className="container mx-auto flex justify-between items-center">
           <div className="flex items-center space-x-8">
+            {/* Apex Logo */}
+            <Link href="/" className="flex items-center">
+              <Image
+                src="/assets/logo.svg"
+                alt="Apex Logo"
+                width={40}
+                height={40}
+                className="mr-2"
+              />
+            </Link>
+
             {/* Left side content */}
             <div className="font-semibold text-blue-700 cursor-pointer">Olá, {userName}!</div>
 

@@ -30,6 +30,7 @@ import {
 } from '@/components/ui/select'
 import TrainerDashboard from './components/trainerDashboard'
 import { DietTabContent } from '@/app/(frontend)/nutritionist/components/diet-tab'
+import { WorkoutTabContent } from '@/app/(frontend)/trainer/components/workout-tab'
 import Header from '@/components/ui/header'
 
 // Define the main tabs
@@ -201,12 +202,17 @@ export default function TrainerOverviewPage() {
             </TabsContent>
 
             <TabsContent value={TABS.TRAINING} className="mt-0">
-              {/* Training component will be placed here */}
-              <div className="min-h-[600px]">
-                <h2 className="text-xl font-semibold mb-4">Treinos</h2>
-                <p>Conteúdo dos treinos para o atleta selecionado. ID: {selectedAthleteId}</p>
-                {/* Training component will be loaded here */}
-              </div>
+              {selectedAthleteId ? (
+                <WorkoutTabContent
+                  athleteId={selectedAthleteId}
+                  trainerId={'-1'}
+                  onlyView={false}
+                />
+              ) : (
+                <div className="min-h-[600px] flex items-center justify-center">
+                  <p>Selecione um atleta para visualizar o plano de treinos</p>
+                </div>
+              )}
             </TabsContent>
           </CardContent>
         </Card>

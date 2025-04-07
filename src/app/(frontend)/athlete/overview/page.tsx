@@ -7,6 +7,7 @@ import Header from '@/components/ui/header'
 import AthleteDashboard from './components/AthleteDashboard'
 import AthleteReportDashboard from './components/AthleteReportDashboard'
 import { AthleteReadOnlyDietTab } from '@/components/ui/athlete-diet-tab'
+import { WorkoutTabContent } from '@/app/(frontend)/trainer/components/workout-tab'
 import DailyConsumptionComponent from './components/daily-consumption'
 
 // Define the main tabs
@@ -206,18 +207,7 @@ export default function AthleteOverviewPage() {
         </Card>
       )
     } else if (activeTab === TABS.TRAINING) {
-      return (
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg font-semibold">Treinos</CardTitle>
-          </CardHeader>
-          <CardContent className="p-6">
-            <div className="min-h-[600px]">
-              <p>Visualização dos seus treinos programados.</p>
-            </div>
-          </CardContent>
-        </Card>
-      )
+      return <WorkoutTabContent athleteId={athleteId} trainerId={'-1'} onlyView={true} />
     }
   }
 

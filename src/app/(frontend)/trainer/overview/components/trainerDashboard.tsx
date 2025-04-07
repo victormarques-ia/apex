@@ -22,6 +22,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import { format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import { BarChart } from '@mui/x-charts/BarChart'
+import AthleteReportDashboard from '@/app/(frontend)/athlete/overview/components/AthleteReportDashboard'
 
 const TrainerDashboard = ({ athleteId }: { athleteId: string }) => {
   const [activeTab, setActiveTab] = useState('overview')
@@ -294,8 +295,7 @@ const TrainerDashboard = ({ athleteId }: { athleteId: string }) => {
         <TabsContent value="avaliacao">
           <Card>
             <CardContent className="p-6">
-              <h2 className="text-xl font-bold mb-4">Avaliação</h2>
-              <p>Conteúdo da avaliação para o atleta selecionado.</p>
+              <AthleteReportDashboard athleteId={athleteId} onlyView={true} />
             </CardContent>
           </Card>
         </TabsContent>
